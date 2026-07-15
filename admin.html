@@ -754,7 +754,7 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
     </div>
     <p>Войди под администраторской почтой. После входа все изменения будут сохраняться в общей базе и сразу появляться на публичном табло.</p>
     <label for="onlineEmail">Почта</label>
-    <input id="onlineEmail" type="email" value="a.umarov@ivideon.com" autocomplete="username">
+    <input id="onlineEmail" type="email" placeholder="name@ivideon.com" autocomplete="username">
     <label for="onlinePassword">Пароль</label>
     <input id="onlinePassword" type="password" autocomplete="current-password" placeholder="Пароль пользователя Supabase">
     <button class="btn btn-primary" id="onlineLoginBtn">Войти</button>
@@ -832,16 +832,16 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
 
     <div id="adminBody" class="hidden">
       <nav class="tabs">
-        <button class="tab active" data-tab="setup">① Настройка</button>
+        <button class="tab" data-tab="setup">① Настройка</button>
         <button class="tab" data-tab="play">② Выстрел недели</button>
-        <button class="tab" data-tab="stats">③ Статистика</button>
+        <button class="tab active" data-tab="stats">③ Статистика</button>
         <button class="tab" data-tab="fair">④ Честность</button>
         <button class="tab" data-tab="games">⑤ Игры</button>
         <button class="tab" data-tab="data">⑥ Данные</button>
       </nav>
 
       <!-- SETUP -->
-      <section class="tabpane" id="pane-setup">
+      <section class="tabpane hidden" id="pane-setup">
         <div class="panel">
           <h2>Публичное объявление</h2>
           <div class="hint">Крупный текст на табло, который видит команда всегда. Например: «На этой неделе стреляет Иванов!» или девиз турнира.</div>
@@ -851,14 +851,19 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
           </div>
         </div>
 
-        <div class="panel">
-          <h2>Порог допуска к розыгрышу</h2>
-          <div class="hint">Стреляют только те, кто взял планку по звонкам. Среди прошедших — два выстрела: лидеру по звонкам и лидеру по выручке. Порог и правило видны команде на табло. Само значение звонков ты берёшь из PowerBI и вводишь при выстреле — игра сверит с порогом автоматически.</div>
-          <div class="row">
-            <div><label class="fld">Порог, звонков/нед.</label><input id="thrInput" type="number" min="0" style="width:150px"></div>
-            <div style="flex:1;min-width:280px"><label class="fld">Пояснение (текст на табло)</label><input id="thrNote" style="width:100%"></div>
-            <button class="btn btn-blue btn-sm" id="saveThrBtn">Сохранить</button>
+        <div class="panel" id="metricsPanel">
+          <h2>Параметры для получения выстрела</h2>
+          <div class="hint">Для каждой игры можно задать собственные показатели: звонки, встречи, выручку, оплаты, проекты или любые другие числовые результаты. Показатель можно включать и выключать, делать обязательным и задавать минимальный порог допуска.</div>
+          <div id="metricConfigList" class="metric-config-list"></div>
+          <div class="metric-add-box">
+            <div style="flex:1;min-width:180px"><label class="fld">Название показателя</label><input id="metricNameInput" placeholder="Напр. Встречи" style="width:100%"></div>
+            <div style="width:130px"><label class="fld">Единица</label><input id="metricUnitInput" placeholder="шт., ₽, %" style="width:100%"></div>
+            <label class="metric-check"><input id="metricRequiredInput" type="checkbox" checked> Обязательный</label>
+            <label class="metric-check"><input id="metricThresholdInput" type="checkbox"> Использовать порог</label>
+            <div style="width:130px"><label class="fld">Порог</label><input id="metricThresholdValue" type="number" min="0" placeholder="0" style="width:100%"></div>
+            <button class="btn btn-primary btn-sm" id="addMetricBtn">Добавить показатель</button>
           </div>
+          <small class="note">Изменения применяются сразу. Уже сделанные выстрелы сохраняют свои старые значения.</small>
         </div>
 
         <div class="panel">
@@ -935,9 +940,9 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
           <div class="hint">Выбери победителя, впиши его показатели за неделю (за что дан выстрел), дай назвать клетку и кликни её — результат увидят все на табло.</div>
           <div class="row" style="margin-bottom:16px">
             <div style="min-width:230px"><label class="fld">Победитель недели</label><select id="shooterSel" style="width:100%"></select></div>
-            <div><label class="fld">Звонков за неделю</label><input id="callsInput" type="number" min="0" placeholder="напр. 350" style="width:150px"><div id="gateFlag" style="font-size:12px;margin-top:5px;color:var(--ink-dim)"></div></div>
-            <div><label class="fld">Выручка за неделю, ₽</label><input id="revInput" type="number" min="0" placeholder="напр. 1200000" style="width:180px"></div>
+            <div id="metricInputs" class="metric-inputs"></div>
           </div>
+          <div id="gateFlag" class="gate-summary"></div>
           <div class="board-area">
             <div>
               <table class="brd" id="playBoard"></table>
@@ -956,7 +961,7 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
       </section>
 
       <!-- STATS -->
-      <section class="tabpane hidden" id="pane-stats">
+      <section class="tabpane" id="pane-stats">
         <div class="panel">
           <h2>Лидеры турнира</h2>
           <div class="cards" id="leaderCards"></div>
@@ -999,22 +1004,22 @@ body[data-theme="dark"] .online-auth{background:radial-gradient(900px 460px at 1
       <section class="tabpane hidden" id="pane-games">
         <div class="panel">
           <h2>Турниры</h2>
-          <div class="hint">Можно вести несколько турниров одновременно — например, отдельно для отдела продаж ПВЗ и для офисных подчинённых. Переключайся между ними здесь. Активный турнир показывается на табло.</div>
+          <div class="hint">Каждый администратор может создать отдельную игру и настроить собственные показатели для выстрела. В публичном табло участники сами выбирают, какую игру смотреть. Отмеченная здесь игра открывается у новых посетителей по умолчанию.</div>
           <div id="gameList"></div>
           <div class="divider"></div>
           <div class="row">
             <div style="flex:1;min-width:240px"><label class="fld">Название нового турнира</label><input id="newGameName" placeholder="Напр. Офис — конкурс менеджеров" style="width:100%"></div>
             <button class="btn btn-primary" id="newGameBtn">➕ Инициировать новую игру</button>
           </div>
-          <small class="note">При создании попросит подтверждение, чтобы не нажать случайно.</small>
+          <small class="note">После создания откроется вкладка «Настройка», где можно добавить, отключить или удалить любые показатели.</small>
         </div>
       </section>
 
       <!-- DATA -->
       <section class="tabpane hidden" id="pane-data">
         <div class="panel">
-          <h2>Сайт-табло для команды (GitHub Pages)</h2>
-          <div class="hint">Собирает файл <b>index.html</b> — статичное публичное табло с текущим состоянием игры. В файле <b>нет</b> расстановки живых кораблей, секретных призов и пароля — только то, что уже открыто выстрелами. Его безопасно выкладывать в открытый интернет. Обновляй после каждого еженедельного выстрела: собрал → загрузил в GitHub → ссылка у команды показывает свежее табло.</div>
+          <h2>Резервный статичный экспорт</h2>
+          <div class="hint">Создаёт автономный снимок только выбранной игры. Для постоянной работы используй основное онлайн-табло — оно показывает все игры и обновляется автоматически. В файле <b>нет</b> расстановки живых кораблей, секретных призов и пароля — только то, что уже открыто выстрелами. Его безопасно выкладывать в открытый интернет. Обновляй после каждого еженедельного выстрела: собрал → загрузил в GitHub → ссылка у команды показывает свежее табло.</div>
           <div class="row">
             <button class="btn btn-primary" id="buildSiteBtn">⬇ Собрать index.html для публикации</button>
             <span id="buildSiteMsg" style="align-self:center;font-size:13px;color:var(--ink-dim)"></span>
@@ -1061,24 +1066,42 @@ const LS_KEY='ivideon_seabattle_v2';
 const THEME_KEY='ivideon_seabattle_theme';
 const SHIP_NAMES={1:'Катер',2:'Эсминец',3:'Крейсер',4:'Линкор',5:'Флагман'};
 const DEFAULT_PRIZES={1:'Книга от Али',2:'1000 ₽',3:'2500 ₽',4:'Day off',5:'5000 ₽'};
+function defaultMetrics(){return [
+  {id:'calls',label:'Звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:250,thresholdNote:'минимум для допуска'},
+  {id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}
+]}
+function metricSlug(label){const base=(label||'metric').toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,24)||'metric';return base+'_'+Date.now().toString(36)+Math.floor(Math.random()*999).toString(36)}
+function ensureMetrics(g){
+  if(!Array.isArray(g.metrics)||!g.metrics.length){g.metrics=defaultMetrics()}
+  g.metrics=g.metrics.map((m,i)=>({id:m.id||metricSlug(m.label||('Показатель '+(i+1))),label:m.label||('Показатель '+(i+1)),unit:m.unit||'',enabled:m.enabled!==false,required:m.required!==false,thresholdEnabled:!!m.thresholdEnabled,threshold:Number(m.threshold||0),thresholdNote:m.thresholdNote||''}));
+  const calls=g.metrics.find(m=>m.id==='calls');if(calls){g.threshold=calls.thresholdEnabled?Number(calls.threshold||0):0;g.thresholdNote=calls.thresholdNote||''}
+  return g.metrics;
+}
+function activeMetrics(g){return ensureMetrics(g).filter(m=>m.enabled)}
+function shotMetricValue(s,id){if(s.metricValues&&s.metricValues[id]!==undefined&&s.metricValues[id]!==null)return Number(s.metricValues[id]);if(id==='calls'&&s.calls!==undefined&&s.calls!==null)return Number(s.calls);if(id==='revenue'&&s.revenue!==undefined&&s.revenue!==null)return Number(s.revenue);return null}
+function fmtMetricValue(metric,value){if(value===null||value===undefined||value===''||Number.isNaN(Number(value)))return '—';return Number(value).toLocaleString('ru-RU')+(metric.unit?' '+metric.unit:'')}
 
-function newGameObj(name){
+
+function newGameObj(name,ownerEmail){
   return {
     id:'g'+Date.now()+Math.floor(Math.random()*1000),
-    name:name||'Отдел по работе ПВЗ',
-    banner:'Морской бой · отдел по работе ПВЗ',
+    name:name||'Новая игра',ownerEmail:(ownerEmail||'').toLowerCase(),
+    banner:'Морской бой · '+(name||'Новая игра'),
     size:8, managers:[], cells:{}, ships:[], shots:[], week:1,
     sealed:false, salt:null, hash:null,
-    finalPrizeSunk:'Кубок + медаль + книга', finalPrizeShots:'Книга', secretsRevealed:false,
-    threshold:250, thresholdNote:'успешных звонков (от 1 мин.) в неделю · в среднем 50/день × 5 раб. дней'
+    finalPrizeSunk:'Главный приз', finalPrizeShots:'Приз за активность', secretsRevealed:false,
+    threshold:250, thresholdNote:'минимум для допуска',metrics:defaultMetrics()
   };
 }
-function blankRoot(){ const g=newGameObj('Отдел по работе ПВЗ'); return {v:2,pwHash:null,activeId:g.id,games:[g]} }
+function blankRoot(){ const g=newGameObj('Отдел по работе ПВЗ','a.umarov@ivideon.com'); return {v:3,pwHash:null,activeId:g.id,publicDefaultId:g.id,games:[g]} }
 
 let ROOT=loadRoot();
 function normalizeRoot(p){
   if(!p||!p.games||!p.games.length)return blankRoot();
-  p.games.forEach(g=>{if(g.threshold===undefined)g.threshold=250;if(g.thresholdNote===undefined)g.thresholdNote='успешных звонков (от 1 мин.) в неделю · в среднем 50/день × 5 раб. дней'});
+  p.v=Math.max(Number(p.v||2),3);
+  p.games.forEach(g=>{if(g.threshold===undefined)g.threshold=250;if(g.thresholdNote===undefined)g.thresholdNote='минимум для допуска';if(g.ownerEmail===undefined)g.ownerEmail='';ensureMetrics(g);(g.shots||[]).forEach(s=>{if(!s.metricValues){s.metricValues={};if(s.calls!==undefined&&s.calls!==null)s.metricValues.calls=s.calls;if(s.revenue!==undefined&&s.revenue!==null)s.metricValues.revenue=s.revenue}})});
+  if(!p.games.some(g=>g.id===p.activeId))p.activeId=p.games[0].id;
+  if(!p.publicDefaultId||!p.games.some(g=>g.id===p.publicDefaultId))p.publicDefaultId=p.activeId;
   return p;
 }
 function loadRoot(){ try{const r=localStorage.getItem(LS_KEY);if(r)return normalizeRoot(JSON.parse(r))}catch(e){} return blankRoot() }
@@ -1086,6 +1109,8 @@ function G(){ return ROOT.games.find(x=>x.id===ROOT.activeId)||ROOT.games[0] }
 
 const ONLINE_CFG=window.IVIDEON_SEABATTLE_CONFIG||{};
 const CLOUD_ROW_ID=ONLINE_CFG.rowId||'main';
+const CLOUD_CATALOG_ID='catalog';
+const cloudGameRowId=id=>'game:'+id;
 const sbClient=(window.supabase&&ONLINE_CFG.supabaseUrl&&ONLINE_CFG.supabasePublishableKey)
   ? window.supabase.createClient(ONLINE_CFG.supabaseUrl,ONLINE_CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})
   : null;
@@ -1097,9 +1122,10 @@ function setSyncStatus(mode,text){
   if(!box||!label)return; box.classList.remove('syncing','ok','error'); if(mode)box.classList.add(mode); label.textContent=text;
 }
 function safePublicGame(g){
+  ensureMetrics(g);
   const sunkIds=g.ships.filter(s=>isSunk(g,s)).map(s=>s.id);
   const shots=g.shots.map(s=>({
-    week:s.week,manager:s.manager,calls:s.calls??null,revenue:s.revenue??null,passedGate:s.passedGate??null,
+    week:s.week,manager:s.manager,calls:s.calls??null,revenue:s.revenue??null,metricValues:{...(s.metricValues||{})},gateResults:{...(s.gateResults||{})},passedGate:s.passedGate??null,
     r:s.r,c:s.c,result:s.result,ts:s.ts||null,finalBlow:!!s.sunk,
     inSunkShip:s.result==='hit'&&sunkIds.includes(s.shipId),
     shipName:s.result==='hit'?((g.ships.find(x=>x.id===s.shipId)||{}).name||null):null,
@@ -1114,45 +1140,68 @@ function safePublicGame(g){
   });
   return {id:g.id,name:g.name,banner:g.banner,size:g.size,managers:g.managers.slice(),shots,ships,week:g.week,sealed:g.sealed,hash:g.hash||null,
     finalPrizeSunk:g.secretsRevealed?g.finalPrizeSunk:null,finalPrizeShots:g.secretsRevealed?g.finalPrizeShots:null,
-    secretsRevealed:!!g.secretsRevealed,threshold:g.threshold||0,thresholdNote:g.thresholdNote||''};
+    secretsRevealed:!!g.secretsRevealed,metrics:g.metrics.map(m=>({...m})),threshold:g.threshold||0,thresholdNote:g.thresholdNote||''};
 }
 function buildPublicState(root){
-  const g=root.games.find(x=>x.id===root.activeId)||root.games[0];
-  return {v:1,activeId:g.id,game:safePublicGame(g),updatedAt:new Date().toISOString()};
+  return {v:2,defaultGameId:root.publicDefaultId||root.activeId,games:root.games.map(safePublicGame),updatedAt:new Date().toISOString()};
 }
 function save(){
   try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}
   if(!cloudReady||!currentSession)return;
-  clearTimeout(cloudSaveTimer); setSyncStatus('syncing','Сохраняем…');
-  cloudSaveTimer=setTimeout(()=>{saveQueue=saveQueue.then(pushCloudState).catch(()=>{});},350);
+  clearTimeout(cloudSaveTimer);setSyncStatus('syncing','Сохраняем…');
+  cloudSaveTimer=setTimeout(()=>{saveQueue=saveQueue.then(pushCloudState).catch(e=>{setSyncStatus('error','Ошибка сохранения');console.error(e)})},350);
 }
+function cloudCatalogState(){return {v:1,defaultGameId:ROOT.publicDefaultId||ROOT.activeId,updatedAt:new Date().toISOString()}}
 async function pushCloudState(){
   if(!sbClient||!currentSession)return;
-  const privateState=JSON.parse(JSON.stringify(ROOT));
-  const publicState=buildPublicState(privateState);
-  const [priv,pub]=await Promise.all([
-    sbClient.from('game_private').upsert({id:CLOUD_ROW_ID,state:privateState},{onConflict:'id'}),
-    sbClient.from('game_public').upsert({id:CLOUD_ROW_ID,state:publicState},{onConflict:'id'})
+  const g=G();if(!g)return;
+  const catalog=cloudCatalogState(),privateGame=JSON.parse(JSON.stringify(g)),publicGame=safePublicGame(privateGame);
+  const results=await Promise.all([
+    sbClient.from('game_private').upsert({id:CLOUD_CATALOG_ID,state:catalog},{onConflict:'id'}),
+    sbClient.from('game_public').upsert({id:CLOUD_CATALOG_ID,state:catalog},{onConflict:'id'}),
+    sbClient.from('game_private').upsert({id:cloudGameRowId(g.id),state:privateGame},{onConflict:'id'}),
+    sbClient.from('game_public').upsert({id:cloudGameRowId(g.id),state:publicGame},{onConflict:'id'})
   ]);
-  if(priv.error)throw priv.error;if(pub.error)throw pub.error;
+  const failed=results.find(r=>r.error);if(failed)throw failed.error;
   setSyncStatus('ok','Сохранено онлайн');
 }
+async function pushAllCloudState(){
+  if(!sbClient||!currentSession)return;
+  const catalog=cloudCatalogState();
+  const privateRows=[{id:CLOUD_CATALOG_ID,state:catalog},...ROOT.games.map(g=>({id:cloudGameRowId(g.id),state:JSON.parse(JSON.stringify(g))}))];
+  const publicRows=[{id:CLOUD_CATALOG_ID,state:catalog},...ROOT.games.map(g=>({id:cloudGameRowId(g.id),state:safePublicGame(g)}))];
+  const [priv,pub]=await Promise.all([
+    sbClient.from('game_private').upsert(privateRows,{onConflict:'id'}),
+    sbClient.from('game_public').upsert(publicRows,{onConflict:'id'})
+  ]);
+  if(priv.error)throw priv.error;if(pub.error)throw pub.error;
+  setSyncStatus('ok','Все игры сохранены онлайн');
+}
 async function loadCloudState(){
-  setSyncStatus('syncing','Загружаем данные…');
-  const {data,error}=await sbClient.from('game_private').select('state').eq('id',CLOUD_ROW_ID).maybeSingle();
+  setSyncStatus('syncing','Загружаем игры…');
+  const {data,error}=await sbClient.from('game_private').select('id,state,updated_at');
   if(error)throw error;
-  if(data&&data.state){ROOT=normalizeRoot(data.state);try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}}
+  const rows=data||[],catalogRow=rows.find(r=>r.id===CLOUD_CATALOG_ID),gameRows=rows.filter(r=>String(r.id).startsWith('game:'));
+  const legacy=rows.find(r=>r.id===CLOUD_ROW_ID&&r.state&&Array.isArray(r.state.games));
+  if(gameRows.length){
+    const games=gameRows.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id))).map(r=>r.state).filter(Boolean);const defaultId=catalogRow&&catalogRow.state?catalogRow.state.defaultGameId:null;
+    const localActive=ROOT&&ROOT.activeId;const chosenActive=localActive&&games.some(g=>g.id===localActive)?localActive:((defaultId&&games.some(g=>g.id===defaultId))?defaultId:games[0].id);
+    ROOT=normalizeRoot({v:3,pwHash:null,activeId:chosenActive,publicDefaultId:(defaultId&&games.some(g=>g.id===defaultId))?defaultId:games[0].id,games});
+  }else if(legacy){
+    ROOT=normalizeRoot(legacy.state);
+  }
+  try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}
   cloudReady=true;adminUnlocked=true;
-  if(!data){await pushCloudState()}else{setSyncStatus('ok','Онлайн')}
+  if(!gameRows.length){await pushAllCloudState();if(legacy){await Promise.all([sbClient.from('game_private').delete().eq('id',CLOUD_ROW_ID),sbClient.from('game_public').delete().eq('id',CLOUD_ROW_ID)])}}else{setSyncStatus('ok','Онлайн')}
   document.getElementById('onlineAuth').classList.add('hidden');
   document.getElementById('onlineApp').classList.remove('hidden');
-  renderAdminAll();renderPublic();showView('public');
+  renderPublic();showView('admin');
 }
 async function handleOnlineSession(session){
   currentSession=session||null;
   if(!session){cloudReady=false;document.getElementById('onlineApp').classList.add('hidden');document.getElementById('onlineAuth').classList.remove('hidden');return}
-  const email=(session.user&&session.user.email||'').toLowerCase();
-  if(ONLINE_CFG.adminEmail&&email!==ONLINE_CFG.adminEmail.toLowerCase()){
+  const {data:isAdmin,error:adminError}=await sbClient.rpc('is_seabattle_admin');
+  if(adminError||isAdmin!==true){
     await sbClient.auth.signOut(); throw new Error('У этой учётной записи нет доступа к админке.');
   }
   await loadCloudState();
@@ -1256,7 +1305,10 @@ function showView(v){
   if(v==='admin'){
     document.getElementById('adminLocked').classList.toggle('hidden',adminUnlocked);
     document.getElementById('adminBody').classList.toggle('hidden',!adminUnlocked);
-    if(adminUnlocked) renderAdminAll();
+    if(adminUnlocked){
+      renderAdminAll();
+      activateAdminTab('stats');
+    }
   }
 }
 function askPassword(){
@@ -1275,32 +1327,32 @@ function askPassword(){
 }
 
 /* ================= admin tabs ================= */
-document.querySelectorAll('#adminBody .tab').forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll('#adminBody .tab').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.querySelectorAll('#adminBody .tabpane').forEach(p=>p.classList.add('hidden'));
-    document.getElementById('pane-'+t.dataset.tab).classList.remove('hidden');
-    const tab=t.dataset.tab;
-    if(tab==='setup') renderSetup();
-    if(tab==='play') renderPlay();
-    if(tab==='stats') renderStats();
-    if(tab==='fair') renderFair();
-    if(tab==='games') renderGames();
-    if(tab==='data') renderData();
-  };
-});
+function activateAdminTab(tab){
+  const button=document.querySelector(`#adminBody .tab[data-tab="${tab}"]`);
+  const pane=document.getElementById('pane-'+tab);
+  if(!button||!pane)return;
+  document.querySelectorAll('#adminBody .tab').forEach(x=>x.classList.remove('active'));
+  button.classList.add('active');
+  document.querySelectorAll('#adminBody .tabpane').forEach(p=>p.classList.add('hidden'));
+  pane.classList.remove('hidden');
+  if(tab==='setup') renderSetup();
+  if(tab==='play') renderPlay();
+  if(tab==='stats') renderStats();
+  if(tab==='fair') renderFair();
+  if(tab==='games') renderGames();
+  if(tab==='data') renderData();
+}
+document.querySelectorAll('#adminBody .tab').forEach(t=>{t.onclick=()=>activateAdminTab(t.dataset.tab)});
 function renderAdminAll(){
   document.getElementById('activeGameName').textContent=G().name;
-  renderSetup();
+  renderStats();
 }
 
 /* ================= SETUP ================= */
 function renderSetup(){
   const g=G();
   document.getElementById('bannerInput').value=g.banner||'';
-  document.getElementById('thrInput').value=g.threshold??250;
-  document.getElementById('thrNote').value=g.thresholdNote||'';
+  ensureMetrics(g);renderMetricConfig();
   document.getElementById('finSunk').value=g.finalPrizeSunk||'';
   document.getElementById('finShots').value=g.finalPrizeShots||'';
   document.getElementById('sizeSel').value=g.size;
@@ -1311,9 +1363,33 @@ function renderSetup(){
   if(g.sealed) lockSetup(); else unlockSetupUI();
 }
 document.getElementById('saveBannerBtn').onclick=()=>{G().banner=document.getElementById('bannerInput').value;save();flash('saveBannerBtn','Сохранено')};
-document.getElementById('saveThrBtn').onclick=()=>{const g=G();const v=parseInt(document.getElementById('thrInput').value);g.threshold=isNaN(v)?0:v;g.thresholdNote=document.getElementById('thrNote').value;save();flash('saveThrBtn','Сохранено')};
 document.getElementById('saveFinBtn').onclick=()=>{const g=G();g.finalPrizeSunk=document.getElementById('finSunk').value;g.finalPrizeShots=document.getElementById('finShots').value;save();flash('saveFinBtn','Сохранено')};
 function flash(id,txt){const b=document.getElementById(id);const o=b.textContent;b.textContent=txt;setTimeout(()=>b.textContent=o,1200)}
+
+function renderMetricConfig(){
+  const g=G(),box=document.getElementById('metricConfigList');if(!box)return;ensureMetrics(g);box.innerHTML='';
+  g.metrics.forEach((m,index)=>{
+    const row=document.createElement('div');row.className='metric-row'+(m.enabled?'':' off');
+    row.innerHTML=`<label class="metric-check"><input type="checkbox" class="metric-enabled" ${m.enabled?'checked':''}> Вкл.</label>
+      <input class="metric-label" type="text" value="${escapeAttr(m.label)}" aria-label="Название показателя">
+      <input class="metric-unit" type="text" value="${escapeAttr(m.unit)}" placeholder="Единица" aria-label="Единица">
+      <label class="metric-check metric-required"><input type="checkbox" ${m.required?'checked':''}> Обязательный</label>
+      <label class="metric-check metric-threshold-toggle"><input type="checkbox" ${m.thresholdEnabled?'checked':''}> Порог</label>
+      <div class="metric-threshold-wrap"><input class="metric-threshold" type="number" min="0" value="${Number(m.threshold||0)}" ${m.thresholdEnabled?'':'disabled'} aria-label="Минимальный порог"></div>
+      <button class="btn btn-danger btn-sm metric-delete" ${g.metrics.length<=1?'disabled':''}>Удалить</button>`;
+    const enabled=row.querySelector('.metric-enabled'),label=row.querySelector('.metric-label'),unit=row.querySelector('.metric-unit'),required=row.querySelector('.metric-required input'),thrToggle=row.querySelector('.metric-threshold-toggle input'),thr=row.querySelector('.metric-threshold'),del=row.querySelector('.metric-delete');
+    const apply=()=>{m.enabled=enabled.checked;m.label=label.value.trim()||('Показатель '+(index+1));m.unit=unit.value.trim();m.required=required.checked;m.thresholdEnabled=thrToggle.checked;m.threshold=Number(thr.value||0);thr.disabled=!m.thresholdEnabled;row.classList.toggle('off',!m.enabled);if(m.id==='calls'){g.threshold=m.thresholdEnabled?m.threshold:0;g.thresholdNote=m.thresholdNote||''}save()};
+    [enabled,label,unit,required,thrToggle,thr].forEach(el=>{el.onchange=apply});label.onblur=apply;unit.onblur=apply;
+    del.onclick=()=>{if(g.metrics.length<=1)return;if(!confirm('Удалить показатель «'+m.label+'»? Старые значения в истории останутся.'))return;g.metrics.splice(index,1);save();renderMetricConfig()};
+    box.appendChild(row);
+  });
+}
+document.getElementById('addMetricBtn').onclick=()=>{
+  const g=G(),name=document.getElementById('metricNameInput').value.trim(),unit=document.getElementById('metricUnitInput').value.trim();
+  if(!name){alert('Впиши название показателя.');return}
+  g.metrics.push({id:metricSlug(name),label:name,unit,enabled:true,required:document.getElementById('metricRequiredInput').checked,thresholdEnabled:document.getElementById('metricThresholdInput').checked,threshold:Number(document.getElementById('metricThresholdValue').value||0),thresholdNote:''});
+  document.getElementById('metricNameInput').value='';document.getElementById('metricUnitInput').value='';document.getElementById('metricThresholdValue').value='';document.getElementById('metricThresholdInput').checked=false;save();renderMetricConfig();
+};
 
 const mgrInput=document.getElementById('mgrInput');
 document.getElementById('addMgrBtn').onclick=addMgr;
@@ -1495,24 +1571,22 @@ document.getElementById('sealBtn').onclick=()=>{
 /* ================= PLAY ================= */
 const playBoard=document.getElementById('playBoard');
 function renderPlay(){
-  const g=G();
+  const g=G();ensureMetrics(g);
   document.getElementById('notSealedMsg').classList.toggle('hidden',g.sealed);
   document.getElementById('playPanel').classList.toggle('hidden',!g.sealed);
   if(!g.sealed)return;
   const sel=document.getElementById('shooterSel');
   sel.innerHTML=g.managers.length?g.managers.map(m=>`<option>${m}</option>`).join(''):'<option value="">— добавь менеджеров —</option>';
+  const box=document.getElementById('metricInputs');box.innerHTML='';
+  activeMetrics(g).forEach(m=>{const wrap=document.createElement('div');wrap.className='metric-input-card';wrap.innerHTML=`<label class="fld">${m.label}${m.required?' *':''}${m.unit?' · '+m.unit:''}</label><input id="metricInput_${m.id}" data-metric-id="${m.id}" type="number" min="0" step="any" placeholder="Введите значение"><div class="metric-gate" id="metricGate_${m.id}"></div>`;box.appendChild(wrap);wrap.querySelector('input').oninput=updateGateFlag});
   buildPlayBoard();
   document.getElementById('afloatCount').textContent=g.ships.filter(s=>!isSunk(g,s)).length+' / '+g.ships.length;
-  const ci=document.getElementById('callsInput');
-  ci.oninput=updateGateFlag; updateGateFlag();
+  updateGateFlag();
 }
 function updateGateFlag(){
-  const g=G(),el=document.getElementById('gateFlag');if(!el)return;
-  const v=document.getElementById('callsInput').value;
-  const thr=g.threshold||0;
-  if(v===''){el.style.color='var(--ink-dim)';el.textContent='порог: ≥'+thr+' звонков/нед.';return}
-  if(Number(v)>=thr){el.style.color='var(--green)';el.textContent='✓ порог пройден (≥'+thr+')'}
-  else{el.style.color='#ff8a9c';el.textContent='✗ ниже порога ('+thr+')'}
+  const g=G(),summary=document.getElementById('gateFlag');if(!summary)return;const messages=[];
+  activeMetrics(g).forEach(m=>{const input=document.getElementById('metricInput_'+m.id),el=document.getElementById('metricGate_'+m.id);if(!input||!el)return;const raw=input.value.trim();if(!m.thresholdEnabled){el.textContent=m.required?'обязательное поле':'необязательное поле';el.style.color='var(--ink-dim)';return}if(raw===''){el.textContent='порог: ≥'+fmtMetricValue(m,m.threshold);el.style.color='var(--ink-dim)';return}const ok=Number(raw)>=Number(m.threshold||0);el.textContent=(ok?'✓ порог пройден':'✗ ниже порога')+' (≥'+fmtMetricValue(m,m.threshold)+')';el.style.color=ok?'var(--green)':'#d82746';messages.push((ok?'✓ ':'✗ ')+m.label)});
+  summary.style.display=messages.length?'block':'none';summary.textContent=messages.join(' · ');
 }
 function buildPlayBoard(){
   const g=G(),n=g.size;let html='<tr><th></th>';
@@ -1540,28 +1614,24 @@ function paintShotBoard(boardEl,g){
   });
 }
 function shoot(r,c){
-  const g=G();
+  const g=G();ensureMetrics(g);
   const shooter=document.getElementById('shooterSel').value;
   if(!shooter){alert('Сначала выбери победителя недели.');return}
   if(shotAt(g,r,c)){alert('По этой клетке уже стреляли.');return}
-  const calls=document.getElementById('callsInput').value.trim();
-  const rev=document.getElementById('revInput').value.trim();
-  if(calls==='' || rev===''){alert('Сначала впиши результаты недели: и звонки, и выручку.');return}
-  const thr=g.threshold||0;
-  const passedGate = calls===''?null:(Number(calls)>=thr);
-  if(passedGate===false && !confirm(`${shooter}: ${calls} звонков — это ниже порога допуска (${thr}). Всё равно засчитать выстрел?`))return;
-  const key=r+','+c,cell=g.cells[key];
-  let result='miss',shipId=null,perkLabel=null;
-  if(cell&&cell.type==='ship'){result='hit';shipId=cell.shipId}
-  else if(cell&&cell.type==='perk'){result='perk';perkLabel=cell.perkLabel}
-  const shot={week:g.week,manager:shooter,calls:calls===''?null:Number(calls),revenue:rev===''?null:Number(rev),gateThreshold:thr,passedGate,r,c,result,shipId,perkLabel,ts:Date.now()};
-  g.shots.push(shot);
-  let sunkShip=null;
+  const metrics=activeMetrics(g);if(!metrics.length){alert('В настройках игры включи хотя бы один показатель для выстрела.');return}
+  const metricValues={},gateResults={},missing=[];
+  metrics.forEach(m=>{const input=document.getElementById('metricInput_'+m.id);const raw=input?input.value.trim():'';if(m.required&&raw==='')missing.push(m.label);metricValues[m.id]=raw===''?null:Number(raw);if(m.thresholdEnabled&&raw!=='')gateResults[m.id]=Number(raw)>=Number(m.threshold||0)});
+  if(missing.length){alert('Заполни обязательные показатели: '+missing.join(', '));return}
+  const failed=metrics.filter(m=>m.thresholdEnabled&&gateResults[m.id]===false);
+  if(failed.length&&!confirm(shooter+': ниже порога по показателям «'+failed.map(m=>m.label).join(', ')+'». Всё равно засчитать выстрел?'))return;
+  const passedGate=Object.keys(gateResults).length?Object.values(gateResults).every(Boolean):null;
+  const key=r+','+c,cell=g.cells[key];let result='miss',shipId=null,perkLabel=null;
+  if(cell&&cell.type==='ship'){result='hit';shipId=cell.shipId}else if(cell&&cell.type==='perk'){result='perk';perkLabel=cell.perkLabel}
+  const shot={week:g.week,manager:shooter,metricValues,gateResults,calls:metricValues.calls??null,revenue:metricValues.revenue??null,gateThreshold:g.threshold||0,passedGate,r,c,result,shipId,perkLabel,ts:Date.now()};
+  g.shots.push(shot);let sunkShip=null;
   if(result==='hit'){const ship=g.ships.find(s=>s.id===shipId);if(ship&&isSunk(g,ship)){sunkShip=ship;shot.sunk=true}}
-  g.week++;save();
-  buildPlayBoard();
-  document.getElementById('afloatCount').textContent=g.ships.filter(s=>!isSunk(g,s)).length+' / '+g.ships.length;
-  document.getElementById('callsInput').value='';document.getElementById('revInput').value='';updateGateFlag();
+  g.week++;save();buildPlayBoard();document.getElementById('afloatCount').textContent=g.ships.filter(s=>!isSunk(g,s)).length+' / '+g.ships.length;
+  metrics.forEach(m=>{const input=document.getElementById('metricInput_'+m.id);if(input)input.value=''});updateGateFlag();
   const cl=colLetter(c)+(r+1);
   if(sunkShip) showModal('🏆','Корабль потоплен!',`<p><b>${shooter}</b> добил <b>${sunkShip.name}</b> (${sunkShip.size} кл.) в клетке <b>${cl}</b>.</p><div class="prize">Приз: ${sunkShip.prize}</div><p style="font-size:13px">Вручается за финальный удар.</p>`);
   else if(result==='hit') showModal('💥','Попадание!',`<p><b>${shooter}</b> попал в <b>${cl}</b>. Корабль ранен, но на плаву.</p>`);
@@ -1577,15 +1647,10 @@ document.getElementById('undoBtn').onclick=()=>{
 
 /* ================= STATS ================= */
 function agg(g){
-  const m={};
-  g.managers.forEach(x=>m[x]={name:x,shots:0,hits:0,miss:0,perks:0,sunk:0,calls:0,rev:0,prizes:[]});
-  g.shots.forEach(s=>{
-    if(!m[s.manager])m[s.manager]={name:s.manager,shots:0,hits:0,miss:0,perks:0,sunk:0,calls:0,rev:0,prizes:[]};
-    const r=m[s.manager];r.shots++;r.calls+=s.calls||0;r.rev+=s.revenue||0;
-    if(s.result==='hit'){r.hits++;if(s.sunk){r.sunk++;const sh=g.ships.find(x=>x.id===s.shipId);if(sh)r.prizes.push(sh.prize)}}
-    else if(s.result==='perk'){r.perks++;r.prizes.push(s.perkLabel)}
-    else r.miss++;
-  });
+  const metrics=ensureMetrics(g),m={};
+  const fresh=name=>({name,shots:0,hits:0,miss:0,perks:0,sunk:0,calls:0,rev:0,metricTotals:{},prizes:[]});
+  g.managers.forEach(x=>m[x]=fresh(x));
+  g.shots.forEach(s=>{if(!m[s.manager])m[s.manager]=fresh(s.manager);const r=m[s.manager];r.shots++;metrics.forEach(metric=>{const v=shotMetricValue(s,metric.id);if(v!==null)r.metricTotals[metric.id]=(r.metricTotals[metric.id]||0)+v});r.calls=r.metricTotals.calls||0;r.rev=r.metricTotals.revenue||0;if(s.result==='hit'){r.hits++;if(s.sunk){r.sunk++;const sh=g.ships.find(x=>x.id===s.shipId);if(sh)r.prizes.push(sh.prize)}}else if(s.result==='perk'){r.perks++;r.prizes.push(s.perkLabel)}else r.miss++});
   return Object.values(m);
 }
 function leader(rows,key){let best=null;rows.forEach(r=>{if(r[key]>0&&(!best||r[key]>best[key]))best=r});return best}
@@ -1604,14 +1669,10 @@ function leaderCardsHTML(g,rows,forPublic){
          card('💥 Больше всего попаданий',lH,'hits','попаданий',null);
 }
 function statTableHTML(g,rows,forPublic){
-  rows=rows.slice().sort((a,b)=>b.sunk-a.sunk||b.hits-a.hits||b.shots-a.shots);
-  let t='<tr><th>Менеджер</th><th class="c">Выстрелы</th><th class="c">Попадания</th><th class="c">Потопления</th><th class="c">Плюшки</th><th class="c">Σ звонков</th><th class="c">Σ выручки</th>'+(forPublic?'':'<th>Выигрыш</th>')+'</tr>';
-  if(!rows.length)t+=`<tr><td colspan="${forPublic?7:8}" style="color:var(--ink-dim)">Пока пусто</td></tr>`;
-  rows.forEach(r=>{
-    t+=`<tr><td><b>${r.name}</b></td><td class="c">${r.shots}</td><td class="c">${r.hits}</td><td class="c">${r.sunk}</td><td class="c">${r.perks}</td><td class="c">${r.calls||'—'}</td><td class="c">${r.rev?r.rev.toLocaleString('ru-RU'):'—'}</td>`+
-      (forPublic?'':`<td>${r.prizes.length?r.prizes.join(', '):'—'}</td>`)+`</tr>`;
-  });
-  return t;
+  rows=rows.slice().sort((a,b)=>b.sunk-a.sunk||b.hits-a.hits||b.shots-a.shots);const metrics=activeMetrics(g);
+  let t='<tr><th>Менеджер</th><th class="c">Выстрелы</th><th class="c">Попадания</th><th class="c">Потопления</th><th class="c">Плюшки</th>'+metrics.map(m=>'<th class="c">Σ '+m.label+(m.unit?' · '+m.unit:'')+'</th>').join('')+(forPublic?'':'<th>Выигрыш</th>')+'</tr>';
+  const cols=5+metrics.length+(forPublic?0:1);if(!rows.length)t+=`<tr><td colspan="${cols}" style="color:var(--ink-dim)">Пока пусто</td></tr>`;
+  rows.forEach(r=>{t+=`<tr><td><b>${r.name}</b></td><td class="c">${r.shots}</td><td class="c">${r.hits}</td><td class="c">${r.sunk}</td><td class="c">${r.perks}</td>`+metrics.map(m=>`<td class="c">${fmtMetricValue(m,r.metricTotals[m.id]||0)}</td>`).join('')+(forPublic?'':`<td>${r.prizes.length?r.prizes.join(', '):'—'}</td>`)+`</tr>`});return t;
 }
 function fleetCardsHTML(g,forPublic){
   if(!g.ships.length)return '<span style="color:var(--ink-dim);font-size:13px">Флот ещё не расставлен</span>';
@@ -1640,18 +1701,10 @@ function renderStats(){
 
 /* ================= FAIR ================= */
 function renderFair(){
-  const g=G();
-  document.getElementById('hashBox').textContent=g.hash||'— поле не запечатано —';
-  let t='<tr><th class="c">Нед.</th><th>Менеджер</th><th class="c">Звонки</th><th class="c">Порог</th><th class="c">Выручка</th><th class="c">Клетка</th><th>Результат</th><th>Под клеткой</th><th>Дата и время</th></tr>';
-  if(!g.shots.length)t+='<tr><td colspan="9" style="color:var(--ink-dim)">Выстрелов ещё не было</td></tr>';
-  g.shots.forEach(s=>{
-    const cl=colLetter(s.c)+(s.r+1);let tag,under;
-    if(s.result==='hit'){const sh=g.ships.find(x=>x.id===s.shipId);tag='<span class="tag tag-hit">попадание</span>';under=(sh?sh.name:'корабль')+(s.sunk?' — ПОТОПЛЕН':'')}
-    else if(s.result==='perk'){tag='<span class="tag tag-perk">плюшка</span>';under=s.perkLabel}
-    else{tag='<span class="tag tag-miss">мимо</span>';under='вода'}
-    const gate = s.passedGate===true?'<span class="tag tag-miss" style="background:rgba(44,200,77,.2);color:#7fe39b">✓ прошёл</span>':(s.passedGate===false?'<span class="tag tag-hit">✗ ниже</span>':'—');
-    t+=`<tr><td class="c">${s.week}</td><td><b>${s.manager}</b></td><td class="c">${s.calls??'—'}</td><td class="c">${gate}</td><td class="c">${s.revenue?s.revenue.toLocaleString('ru-RU'):'—'}</td><td class="c">${cl}</td><td>${tag}</td><td>${under}</td><td>${fmtDateTime(s.ts)}</td></tr>`;
-  });
+  const g=G(),metrics=activeMetrics(g);document.getElementById('hashBox').textContent=g.hash||'— поле не запечатано —';
+  let t='<tr><th class="c">Нед.</th><th>Менеджер</th>'+metrics.map(m=>'<th class="c">'+m.label+'</th>').join('')+'<th class="c">Допуск</th><th class="c">Клетка</th><th>Результат</th><th>Под клеткой</th><th>Дата и время</th></tr>';
+  if(!g.shots.length)t+=`<tr><td colspan="${7+metrics.length}" style="color:var(--ink-dim)">Выстрелов ещё не было</td></tr>`;
+  g.shots.forEach(s=>{const cl=colLetter(s.c)+(s.r+1);let tag,under;if(s.result==='hit'){const sh=g.ships.find(x=>x.id===s.shipId);tag='<span class="tag tag-hit">попадание</span>';under=(sh?sh.name:'корабль')+(s.sunk?' — ПОТОПЛЕН':'')}else if(s.result==='perk'){tag='<span class="tag tag-perk">плюшка</span>';under=s.perkLabel}else{tag='<span class="tag tag-miss">мимо</span>';under='вода'}const gate=s.passedGate===true?'<span class="tag" style="background:rgba(44,200,77,.16);color:#168035">✓ прошёл</span>':(s.passedGate===false?'<span class="tag tag-hit">✗ ниже</span>':'—');t+=`<tr><td class="c">${s.week}</td><td><b>${s.manager}</b></td>`+metrics.map(m=>`<td class="c">${fmtMetricValue(m,shotMetricValue(s,m.id))}</td>`).join('')+`<td class="c">${gate}</td><td class="c">${cl}</td><td>${tag}</td><td>${under}</td><td>${fmtDateTime(s.ts)}</td></tr>`});
   document.getElementById('logTable').innerHTML=t;
 }
 document.getElementById('verifyBtn').onclick=()=>{
@@ -1684,7 +1737,10 @@ function removeGameById(gameId){
   showConfirm2('Удалить турнир?',`Турнир «<b>${g.name}</b>» будет удалён полностью. Действие необратимо.`,()=>{
     ROOT.games=ROOT.games.filter(x=>x.id!==gameId);
     if(ROOT.activeId===gameId) ROOT.activeId=(ROOT.games[0]||{}).id||null;
-    save();renderAdminAll();renderGames();renderPublic();
+    if(ROOT.publicDefaultId===gameId) ROOT.publicDefaultId=(ROOT.games[0]||{}).id||null;
+    try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}
+    if(cloudReady&&currentSession){saveQueue=saveQueue.then(async()=>{const [priv,pub]=await Promise.all([sbClient.from('game_private').delete().eq('id',cloudGameRowId(gameId)),sbClient.from('game_public').delete().eq('id',cloudGameRowId(gameId))]);if(priv.error)throw priv.error;if(pub.error)throw pub.error;await pushCloudState()}).catch(e=>{setSyncStatus('error','Ошибка удаления');console.error(e)})}
+    renderAdminAll();renderGames();renderPublic();
     document.querySelector('#adminBody .tab[data-tab="games"]').click();
   });
 }
@@ -1693,21 +1749,18 @@ function renderGames(){
   const box=document.getElementById('gameList');box.innerHTML='<div class="games-stack"></div>';
   const stack=box.firstElementChild;
   ROOT.games.forEach(g=>{
-    const active=g.id===ROOT.activeId;
+    const active=g.id===ROOT.activeId,isDefault=g.id===(ROOT.publicDefaultId||ROOT.activeId);
     const row=document.createElement('div');row.className='game-row'+(active?' active':'');
     const afloat=g.ships.length?g.ships.filter(s=>!isSunk(g,s)).length:0;
     row.innerHTML=`<div class="game-main"><div class="game-title">${g.name}</div>
-      <div class="game-meta">${g.sealed?'идёт':'настройка'} · нед. ${g.week} · кораблей на плаву ${g.ships.length?afloat+'/'+g.ships.length:'—'}</div></div>`;
-    const btns=document.createElement('div'); btns.className='game-actions';
-    if(active){
-      const badge=document.createElement('span'); badge.className='st st-placed'; badge.textContent='активный · на табло'; btns.appendChild(badge);
-    } else {
-      const b=document.createElement('button');b.className='btn btn-blue btn-sm';b.textContent='Сделать активным';
-      b.onclick=()=>{ROOT.activeId=g.id;save();renderAdminAll();renderGames();renderPublic()}; btns.appendChild(b);
-    }
-    const del=document.createElement('button');del.className='btn btn-danger btn-sm';del.textContent='Удалить';
-    del.onclick=()=>removeGameById(g.id); btns.appendChild(del);
-    row.appendChild(btns); stack.appendChild(row);
+      <div class="game-meta">${g.sealed?'идёт':'настройка'} · нед. ${g.week} · кораблей на плаву ${g.ships.length?afloat+'/'+g.ships.length:'—'}</div>${g.ownerEmail?'<span class="game-owner">'+g.ownerEmail+'</span>':''}</div>`;
+    const btns=document.createElement('div');btns.className='game-actions';
+    if(active){const badge=document.createElement('span');badge.className='st st-placed';badge.textContent='открыта для редактирования';btns.appendChild(badge)}
+    else{const open=document.createElement('button');open.className='btn btn-blue btn-sm';open.textContent='Открыть';open.onclick=()=>{ROOT.activeId=g.id;try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}renderAdminAll();renderGames();renderPublic()};btns.appendChild(open)}
+    if(isDefault){const badge=document.createElement('span');badge.className='st st-placed';badge.textContent='по умолчанию на табло';btns.appendChild(badge)}
+    else{const def=document.createElement('button');def.className='btn btn-ghost btn-sm';def.textContent='Сделать по умолчанию';def.onclick=()=>{ROOT.publicDefaultId=g.id;save();renderGames()};btns.appendChild(def)}
+    const del=document.createElement('button');del.className='btn btn-danger btn-sm';del.textContent='Удалить';del.onclick=()=>removeGameById(g.id);btns.appendChild(del);
+    row.appendChild(btns);stack.appendChild(row);
   });
 }
 document.getElementById('newGameBtn').onclick=()=>{
@@ -1717,7 +1770,7 @@ document.getElementById('newGameBtn').onclick=()=>{
     <div class="actions"><button class="btn btn-ghost" id="ngCancel">Отмена</button><button class="btn btn-primary" id="ngOk">Да, создать</button></div></div>`);
   document.getElementById('ngCancel').onclick=closeModal;
   document.getElementById('ngOk').onclick=()=>{
-    const g=newGameObj(name);ROOT.games.push(g);ROOT.activeId=g.id;save();closeModal();
+    const g=newGameObj(name,(currentSession&&currentSession.user&&currentSession.user.email)||'');ROOT.games.push(g);ROOT.activeId=g.id;if(!ROOT.publicDefaultId)ROOT.publicDefaultId=g.id;save();closeModal();
     document.getElementById('newGameName').value='';renderAdminAll();
     document.querySelector('#adminBody .tab[data-tab="setup"]').click();
   };
@@ -1734,7 +1787,7 @@ document.getElementById('exportBtn').onclick=()=>{
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').onchange=e=>{
   const f=e.target.files[0];if(!f)return;const rd=new FileReader();
-  rd.onload=()=>{try{const p=JSON.parse(rd.result);if(!p.games)throw 0;ROOT=p;save();location.reload()}catch(err){alert('Не удалось прочитать файл.')}};
+  rd.onload=async()=>{try{const p=JSON.parse(rd.result);if(!p.games)throw 0;ROOT=normalizeRoot(p);try{localStorage.setItem(LS_KEY,JSON.stringify(ROOT))}catch(e){}if(cloudReady&&currentSession)await pushAllCloudState();renderAdminAll();renderPublic();showView('public');alert('Резервная копия загружена.')}catch(err){alert('Не удалось прочитать файл: '+(err.message||err))}};
   rd.readAsText(f);
 };
 document.getElementById('setPwBtn').onclick=()=>{
@@ -1761,8 +1814,8 @@ function renderPublic(){
   const g=G();
   document.getElementById('activeGameName').textContent=g.name;
   document.getElementById('pubBanner').textContent=g.banner||g.name;
-  document.getElementById('pubWeek').innerHTML = (g.sealed?('Идёт неделя '+g.week+' · турнир: '+g.name):('Турнир «'+g.name+'» ещё готовится к старту'))
-    + (g.threshold?`<br><span style="color:var(--yellow)">🎯 Допуск к розыгрышу: ≥${g.threshold} ${g.thresholdNote||'звонков в неделю'}</span>`:'');
+  const gateLines=activeMetrics(g).filter(m=>m.thresholdEnabled).map(m=>'≥'+fmtMetricValue(m,m.threshold)+' '+m.label);
+  document.getElementById('pubWeek').innerHTML=(g.sealed?('Идёт неделя '+g.week+' · турнир: '+g.name):('Турнир «'+g.name+'» ещё готовится к старту'))+(gateLines.length?'<br><span style="color:var(--yellow)">🎯 Допуск: '+gateLines.join(' · ')+'</span>':'');
 
   // last shot
   const ls=document.getElementById('lastShotBox');
@@ -1771,7 +1824,7 @@ function renderPublic(){
     let icon='🌊',res='Мимо',col='var(--water-shot)';
     if(s.result==='hit'){icon=s.sunk?'🏆':'💥';res=s.sunk?'Потопление!':'Попадание';col='var(--red)'}
     else if(s.result==='perk'){icon='🎁';res='Плюшка';col='var(--purple)'}
-    const meta=[];if(s.calls!=null)meta.push(s.calls+' звонков'+(s.passedGate===true?' ✓':(s.passedGate===false?' ✗':'')));if(s.revenue!=null)meta.push(fmtRub(s.revenue));
+    const meta=activeMetrics(g).map(m=>{const v=shotMetricValue(s,m.id);return v===null?null:(m.label+': '+fmtMetricValue(m,v))}).filter(Boolean);if(s.passedGate===true)meta.push('допуск ✓');else if(s.passedGate===false)meta.push('ниже порога ✗');
     ls.style.display='flex';
     ls.innerHTML=`<div class="ls-icon">${icon}</div><div><div class="ls-name">${s.manager} → ${cl}</div>
       <div class="ls-meta">Неделя ${s.week}${meta.length?' · '+meta.join(' · '):''} · ${fmtDateTime(s.ts)}</div></div>
