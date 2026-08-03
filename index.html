@@ -1,90 +1,504 @@
 <!DOCTYPE html>
-<!-- build: v3.4 2026-07-15 -->
+<!-- build: v4.0 · treasure map -->
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Морской бой · Ivideon</title>
+<title>Карта сокровищ · Ivideon</title>
 <style>
-:root{--bg:#f5f7fa;--panel:rgba(255,255,255,.78);--panel-solid:#fff;--soft:#edf1f6;--line:#d5dde7;--ink:#001d32;--dim:#607487;--blue:#0095ff;--blue2:#0073f5;--yellow:#ffc600;--red:#e4002b;--purple:#4d49be;--green:#2cc84d;--water:#032842;--miss:#0a3a5c;--shadow:0 14px 36px rgba(0,29,50,.08)}
-*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:radial-gradient(900px 460px at 100% 0%,rgba(0,149,255,.13),transparent 60%),radial-gradient(760px 420px at -5% 100%,rgba(77,73,190,.07),transparent 62%),var(--bg);-webkit-font-smoothing:antialiased}body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(0,29,50,.023) 1px,transparent 1px),linear-gradient(90deg,rgba(0,29,50,.023) 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
-body[data-theme="dark"]{--bg:#071421;--panel:rgba(6,42,68,.76);--panel-solid:#062a44;--soft:#082e49;--line:#164b6d;--ink:#edf1f6;--dim:#afc3d1;--water:#021c2d;background:radial-gradient(900px 460px at 100% 0%,rgba(0,149,255,.18),transparent 60%),#071421}body[data-theme="dark"]:before{background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px)}
-button{font:inherit}.hidden{display:none!important}.wrap{max-width:1240px;margin:auto;padding:18px 22px 70px}.glass{background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 82%,transparent);backdrop-filter:blur(19px) saturate(1.12);-webkit-backdrop-filter:blur(19px) saturate(1.12);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.55)}
-.top{position:sticky;top:12px;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin-bottom:22px;border-radius:18px}.brand{display:flex;align-items:center;gap:13px;min-width:0}.vsymbol{width:45px;height:45px;flex:0 0 45px}.wordmark{font-size:14px;color:var(--blue);font-weight:800;letter-spacing:.05em}.title{font-size:20px;font-weight:900;letter-spacing:-.025em;line-height:1.08}.title span{color:var(--ink)}.sub{font-size:12px;color:var(--dim);margin-top:4px}.spacer{flex:1}.live{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);background:var(--soft);border-radius:999px;font-size:11.5px;font-weight:800;color:var(--dim)}.live i{width:8px;height:8px;border-radius:50%;background:#8a96a4}.live.ok i{background:var(--green);box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 14%,transparent)}.live.err i{background:var(--red)}.theme{display:flex;gap:4px;padding:4px;border-radius:11px;background:var(--soft)}.theme button{border:0;background:transparent;color:var(--dim);padding:8px 10px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer}.theme button.active{background:var(--panel-solid);color:var(--ink);box-shadow:0 6px 16px rgba(0,29,50,.07)}
-.banner{position:relative;overflow:hidden;isolation:isolate;padding:30px 34px;margin-bottom:20px;border-radius:22px;color:#fff;background:linear-gradient(135deg,#001d32 0%,#063a60 58%,#0095ff 100%);box-shadow:0 20px 44px rgba(0,29,50,.15)}.banner:before{content:"";position:absolute;z-index:-1;width:370px;height:370px;right:-130px;top:-220px;border:50px solid rgba(255,255,255,.09);border-radius:50%}.banner:after{content:"";position:absolute;z-index:-1;width:340px;height:130px;right:-35px;bottom:-75px;background:rgba(255,255,255,.06);transform:rotate(-10deg);border-radius:50%}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:9px}.btext{font-size:clamp(27px,3.3vw,40px);font-weight:900;letter-spacing:-.035em;line-height:1.12;max-width:850px}.bmeta{font-size:13.5px;color:rgba(255,255,255,.84);line-height:1.6;margin-top:12px}.bmeta strong{color:var(--yellow)}
-.panel{border-radius:18px;padding:24px;margin-bottom:19px;overflow:visible}.panel h2{font-size:22px;font-weight:900;letter-spacing:-.025em;margin-bottom:7px}.hint{font-size:13.5px;line-height:1.55;color:var(--dim);margin-bottom:18px}.last{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;margin-bottom:19px}.last-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:27px}.last-name{font-size:17px;font-weight:900}.last-meta{font-size:12.5px;color:var(--dim);margin-top:4px}.result{margin-left:auto;color:#fff;font-size:12px;font-weight:900;padding:7px 12px;border-radius:999px}
-.board-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,280px);gap:28px;align-items:start}.board-scroll{max-width:100%;overflow-x:auto;overflow-y:visible;padding:84px 3px 8px;margin-top:-84px;-webkit-overflow-scrolling:touch}.brd{border-collapse:separate;border-spacing:3px;background:linear-gradient(145deg,#001d32,#063b60);border:8px solid #001d32;border-radius:20px;box-shadow:0 20px 42px rgba(0,29,50,.18)}.brd th{height:26px;color:rgba(255,255,255,.77);font-size:12px;font-weight:900;text-align:center}.cell{width:clamp(46px,5.9vw,64px);height:clamp(46px,5.9vw,64px);position:relative;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(145deg,rgba(0,149,255,.13),rgba(0,149,255,.05));text-align:center}.cell.empty{background:linear-gradient(145deg,rgba(0,149,255,.13),rgba(0,149,255,.05))}.cell.miss{background:var(--miss)}.cell.hit{background:var(--red)}.cell.perk{background:var(--purple)}.cell.sunk{box-shadow:inset 0 0 0 3px var(--yellow),0 0 0 1px rgba(255,198,0,.45)}.mark{position:absolute;left:50%;top:7px;transform:translateX(-50%);font-size:clamp(17px,2.1vw,24px)}.who{position:absolute;left:5px;right:5px;bottom:5px;width:max-content;max-width:calc(100% - 10px);margin:auto;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.19);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);font-size:9px;line-height:1;color:#fff;font-weight:900;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cell[data-name]{cursor:help;transition:transform .16s,box-shadow .16s}.cell[data-name]:hover,.cell[data-name]:focus-visible{z-index:5;outline:none;transform:translateY(-2px) scale(1.035);box-shadow:0 10px 20px rgba(0,29,50,.2)}.legend{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);font-size:11px;color:var(--dim)}.legend i{width:11px;height:11px;border-radius:3px}.uxhint{margin-top:10px;padding:10px 12px;border-radius:11px;background:color-mix(in srgb,var(--blue) 8%,transparent);border:1px solid color-mix(in srgb,var(--blue) 14%,transparent);font-size:12px;line-height:1.45;color:var(--dim)}
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.card{position:relative;padding:17px;border-radius:15px;background:var(--panel-solid);border:1px solid var(--line);overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}.card.trophy:before{background:var(--yellow)}.card-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:800;margin-bottom:8px}.card-big{font-size:21px;font-weight:900;line-height:1.15}.card-num{font-size:13px;color:var(--blue2);font-weight:800;margin-top:5px}.fin{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:999px;background:var(--yellow);color:#001d32;font-size:10px;font-weight:900;text-transform:uppercase}.fin.secret{background:transparent;color:#927300;border:1px dashed #d9a900}.data-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:var(--panel-solid)}.data{width:100%;min-width:690px;border-collapse:collapse;font-size:13.5px}.data th{background:var(--soft);font-size:11px;text-transform:uppercase;letter-spacing:.035em;color:var(--dim);text-align:left;padding:11px 12px}.data td{padding:12px;border-top:1px solid var(--line)}.data .c{text-align:center}.fleet{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px}.ship{padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--panel-solid)}.ship.sunk{border-color:color-mix(in srgb,var(--yellow) 58%,var(--line));background:linear-gradient(145deg,color-mix(in srgb,var(--yellow) 14%,var(--panel-solid)),var(--panel-solid))}.ship-top{display:flex;justify-content:space-between;gap:8px;font-weight:900;color:var(--blue2)}.ship-prize{font-size:14px;font-weight:800;margin-top:8px}.hp{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin:9px 0}.hp span{display:block;height:100%;background:var(--red);border-radius:inherit}.ship.sunk .hp span{background:var(--yellow)}.ship-status{font-size:12px;color:var(--dim)}.hash{padding:15px;border-radius:12px;background:#001d32;color:#b8e1ff;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;word-break:break-all}.footer{text-align:center;color:var(--dim);font-size:12px;margin-top:25px}.empty-state{text-align:center;padding:64px 20px}.empty-state h2{font-size:24px}.empty-state p{color:var(--dim);line-height:1.55;margin-top:8px}
-.tooltip{position:fixed;z-index:9999;max-width:min(285px,calc(100vw - 24px));padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.97);border:1px solid rgba(0,29,50,.09);box-shadow:0 18px 42px rgba(0,29,50,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);pointer-events:none}.tooltip.hidden{display:none}.tt-name{font-size:13px;font-weight:900}.tt-res{font-size:12px;color:#253b4e;margin-top:4px;line-height:1.4}.tt-time{font-size:11px;color:#607487;margin-top:6px}.arrow{position:absolute;width:13px;height:13px;background:inherit;transform:translateX(-50%) rotate(45deg);bottom:-7px;border-right:1px solid rgba(0,29,50,.09);border-bottom:1px solid rgba(0,29,50,.09)}.tooltip.below .arrow{top:-7px;bottom:auto;border:0;border-left:1px solid rgba(0,29,50,.09);border-top:1px solid rgba(0,29,50,.09)}body[data-theme="dark"] .tooltip{background:rgba(8,46,73,.97);border-color:#164b6d;color:#fff}body[data-theme="dark"] .tt-res{color:#d7e4ed}body[data-theme="dark"] .tt-time{color:#afc3d1}
-@media(max-width:900px){.board-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.board-grid>aside{max-width:none}}@media(max-width:720px){.wrap{padding:10px 10px 48px}.top{position:relative;top:0;padding:12px}.brand{width:100%}.vsymbol{width:38px;height:38px;flex-basis:38px}.title{font-size:17px}.sub{display:none}.spacer{display:none}.live{order:3;flex:1;justify-content:center}.theme{order:4;width:100%}.theme button{flex:1}.banner{padding:24px 19px}.panel{padding:17px}.panel h2{font-size:20px}.board-scroll{padding-top:74px;margin-top:-74px}.brd{border-width:6px;border-spacing:2px}.cell{width:clamp(34px,8.4vw,50px);height:clamp(34px,8.4vw,50px)}.mark{font-size:clamp(14px,4vw,20px);top:4px}.who{font-size:7.2px;padding:2px 5px;bottom:3px}.last .result{margin-left:0}.legend{justify-content:center}}
+:root{
+  --bg:#f5f7fa;--panel:rgba(255,255,255,.80);--panel-solid:#fff;--soft:#edf1f6;--line:#d5dde7;
+  --ink:#001d32;--dim:#607487;--blue:#0095ff;--blue2:#0073f5;--navy:#001d32;
+  --gold:#c9992b;--gold-soft:#f6e6bd;--amber:#e0a02a;--violet:#5b52c9;--green:#2cc84d;--red:#e4002b;
+  --map:#e9dcbf;--map-2:#dccba4;--map-line:rgba(120,92,48,.30);--map-ink:#5d4720;
+  --shadow:0 14px 36px rgba(0,29,50,.08);
+  --sea:#0f4c73;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(900px 460px at 100% 0%,rgba(0,149,255,.13),transparent 60%),radial-gradient(760px 420px at -5% 100%,rgba(201,153,43,.09),transparent 62%),var(--bg);
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(0,29,50,.023) 1px,transparent 1px),linear-gradient(90deg,rgba(0,29,50,.023) 1px,transparent 1px);
+  background-size:54px 54px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+body[data-theme="dark"]{--bg:#071421;--panel:rgba(6,42,68,.78);--panel-solid:#062a44;--soft:#082e49;--line:#164b6d;--ink:#edf1f6;--dim:#afc3d1;
+  --map:#2a2517;--map-2:#211d13;--map-line:rgba(226,196,133,.22);--map-ink:#e6d4ac;--gold-soft:#3b3216;
+  background:radial-gradient(900px 460px at 100% 0%,rgba(0,149,255,.18),transparent 60%),#071421}
+body[data-theme="dark"]:before{background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px)}
+button,input,select{font:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1240px;margin:auto;padding:18px 22px calc(70px + env(safe-area-inset-bottom))}
+.glass{background:var(--panel);border:1px solid color-mix(in srgb,var(--line) 82%,transparent);backdrop-filter:blur(19px) saturate(1.12);-webkit-backdrop-filter:blur(19px) saturate(1.12);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.55)}
 
+/* header */
+.top{position:sticky;top:12px;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin-bottom:22px;border-radius:18px}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.vsymbol{width:45px;height:45px;flex:0 0 45px}
+.wordmark{font-size:14px;color:var(--blue);font-weight:800;letter-spacing:.05em}
+.title{font-size:20px;font-weight:900;letter-spacing:-.025em;line-height:1.08}
+.sub{font-size:12px;color:var(--dim);margin-top:4px}
+.spacer{flex:1}
+.live{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;min-height:38px;border:1px solid var(--line);background:var(--soft);border-radius:999px;font-size:11.5px;font-weight:800;color:var(--dim)}
+.live i{width:8px;height:8px;border-radius:50%;background:#8a96a4;flex:0 0 8px}
+.live.ok i{background:var(--green);box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 14%,transparent)}
+.live.err i{background:var(--red)}
+.theme{display:flex;gap:4px;padding:4px;border-radius:11px;background:var(--soft)}
+.theme button{border:0;background:transparent;color:var(--dim);min-height:38px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer}
+.theme button.active{background:var(--panel-solid);color:var(--ink);box-shadow:0 6px 16px rgba(0,29,50,.07)}
 .game-picker{display:flex;align-items:center;gap:8px;padding:5px 7px 5px 11px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
 .game-picker label{font-size:11px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
-.game-picker select{min-width:220px;max-width:360px;border:0;background:var(--panel-solid);color:var(--ink);padding:8px 30px 8px 10px;border-radius:8px;font:700 12.5px Arial,Helvetica,sans-serif;outline:none;cursor:pointer}
+.game-picker select{min-width:220px;max-width:360px;border:0;background:var(--panel-solid);color:var(--ink);min-height:40px;padding:8px 30px 8px 10px;border-radius:8px;font:700 16px Arial,Helvetica,sans-serif;outline:none;cursor:pointer}
 .game-picker select:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 20%,transparent)}
 .game-count{display:inline-flex;margin-left:8px;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.14);font-size:10.5px;font-weight:800}
+
+/* banner */
+.banner{position:relative;overflow:hidden;isolation:isolate;padding:30px 34px;margin-bottom:20px;border-radius:22px;color:#fff;
+  background:linear-gradient(135deg,#001d32 0%,#063a60 58%,#0095ff 100%);box-shadow:0 20px 44px rgba(0,29,50,.15)}
+.banner:before{content:"";position:absolute;z-index:-1;width:370px;height:370px;right:-130px;top:-220px;border:50px solid rgba(255,255,255,.09);border-radius:50%}
+.banner:after{content:"";position:absolute;z-index:-1;width:340px;height:130px;right:-35px;bottom:-75px;background:rgba(201,153,43,.16);transform:rotate(-10deg);border-radius:50%}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fff;margin-bottom:9px}
+.btext{font-size:clamp(24px,3.3vw,40px);font-weight:900;letter-spacing:-.035em;line-height:1.12;max-width:850px;overflow-wrap:anywhere}
+.bmeta{font-size:13.5px;color:rgba(255,255,255,.84);line-height:1.6;margin-top:12px;overflow-wrap:anywhere}
+.bmeta strong{color:#ffd97a}
+
+/* panels */
+.panel{border-radius:18px;padding:24px;margin-bottom:19px;overflow:visible}
+.panel h2{font-size:22px;font-weight:900;letter-spacing:-.025em;margin-bottom:7px}
+.hint{font-size:13.5px;line-height:1.55;color:var(--dim);margin-bottom:18px}
+.last{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;margin-bottom:19px}
+.last-icon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:12px;background:var(--soft)}
+.last-icon svg{width:28px;height:28px}
+.last-name{font-size:17px;font-weight:900;overflow-wrap:anywhere}
+.last-meta{font-size:12.5px;color:var(--dim);margin-top:4px;overflow-wrap:anywhere}
+.result{margin-left:auto;color:#fff;font-size:12px;font-weight:900;padding:7px 12px;border-radius:999px;white-space:nowrap}
+
+/* map */
+.board-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,280px);gap:28px;align-items:start}
+.board-scroll{max-width:100%;overflow-x:auto;overflow-y:visible;padding:84px 3px 8px;margin-top:-84px;-webkit-overflow-scrolling:touch}
+.brd{border-collapse:separate;border-spacing:3px;border:8px solid var(--navy);border-radius:20px;box-shadow:0 20px 42px rgba(0,29,50,.18);
+  background:
+    repeating-linear-gradient(115deg,transparent 0 22px,var(--map-line) 22px 23px),
+    repeating-linear-gradient(-25deg,transparent 0 30px,rgba(120,92,48,.13) 30px 31px),
+    radial-gradient(circle at 22% 26%,rgba(120,92,48,.16),transparent 42%),
+    radial-gradient(circle at 78% 74%,rgba(120,92,48,.13),transparent 45%),
+    linear-gradient(150deg,var(--map),var(--map-2))}
+.brd th{height:26px;color:var(--map-ink);font-size:12px;font-weight:900;text-align:center}
+.cell{width:clamp(44px,5.9vw,64px);height:clamp(44px,5.9vw,64px);position:relative;border:1px solid rgba(120,92,48,.22);border-radius:10px;text-align:center;vertical-align:middle;
+  background:linear-gradient(150deg,rgba(255,255,255,.30),rgba(255,255,255,.06))}
+.cell.empty{background:linear-gradient(150deg,rgba(120,92,48,.16),rgba(120,92,48,.09));border-color:rgba(120,92,48,.26)}
+.cell.fragment{background:linear-gradient(150deg,#f0b93f,#d1881c);border-color:rgba(120,70,10,.35)}
+.cell.find{background:linear-gradient(150deg,#7169dd,#4f47b4);border-color:rgba(40,34,120,.4)}
+.cell.done{box-shadow:inset 0 0 0 3px var(--gold),0 0 0 1px rgba(201,153,43,.5)}
+.mark{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:clamp(19px,2.4vw,26px);height:clamp(19px,2.4vw,26px);display:block}
+.mark svg{width:100%;height:100%;display:block}
+.who{position:absolute;left:5px;right:5px;bottom:5px;width:max-content;max-width:calc(100% - 10px);margin:auto;padding:3px 7px;border-radius:999px;
+  background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);font-size:9px;line-height:1;color:#fff;font-weight:900;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell.empty .who{color:#4a381a;background:rgba(255,255,255,.42);box-shadow:inset 0 0 0 1px rgba(120,92,48,.2)}
+.cell[data-name]{cursor:help;transition:transform .16s,box-shadow .16s}
+.cell[data-name]:hover,.cell[data-name]:focus-visible{z-index:5;outline:none;transform:translateY(-2px) scale(1.035);box-shadow:0 10px 20px rgba(0,29,50,.2)}
+.legend{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);font-size:11.5px;color:var(--dim)}
+.legend i{width:12px;height:12px;border-radius:4px;flex:0 0 12px}
+.uxhint{margin-top:10px;padding:10px 12px;border-radius:11px;background:color-mix(in srgb,var(--blue) 8%,transparent);border:1px solid color-mix(in srgb,var(--blue) 14%,transparent);font-size:12px;line-height:1.45;color:var(--dim)}
+
+/* cards + tables */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.card{position:relative;padding:17px;border-radius:15px;background:var(--panel-solid);border:1px solid var(--line);overflow:hidden}
+.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+.card.trophy:before{background:var(--gold)}
+.card-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:800;margin-bottom:8px}
+.card-big{font-size:21px;font-weight:900;line-height:1.15;overflow-wrap:anywhere}
+.card-num{font-size:13px;color:var(--blue2);font-weight:800;margin-top:5px}
+.fin{display:inline-block;margin-top:9px;padding:4px 8px;border-radius:999px;background:var(--gold);color:#25190a;font-size:10px;font-weight:900;text-transform:uppercase}
+.fin.secret{background:transparent;color:#8a6a12;border:1px dashed #c9992b}
+body[data-theme="dark"] .fin.secret{color:#e0be6a}
+.data-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:var(--panel-solid);-webkit-overflow-scrolling:touch}
+.data{width:100%;min-width:690px;border-collapse:collapse;font-size:13.5px}
+.data th{background:var(--soft);font-size:11px;text-transform:uppercase;letter-spacing:.035em;color:var(--dim);text-align:left;padding:11px 12px;white-space:nowrap}
+.data td{padding:12px;border-top:1px solid var(--line)}
+.data .c{text-align:center}
+
+/* treasure collection */
+.collection{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}
+.treasure{padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--panel-solid)}
+.treasure.done{border-color:color-mix(in srgb,var(--gold) 58%,var(--line));background:linear-gradient(145deg,color-mix(in srgb,var(--gold) 13%,var(--panel-solid)),var(--panel-solid))}
+.tr-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-weight:900;color:var(--blue2)}
+.tr-name{overflow-wrap:anywhere}
+.tr-badge{width:26px;height:26px;flex:0 0 26px}
+.tr-size{display:flex;gap:3px;margin-top:7px}
+.tr-size i{width:9px;height:9px;border-radius:3px;background:var(--soft);border:1px solid var(--line)}
+.tr-size i.on{background:var(--gold);border-color:var(--gold)}
+.tr-prize{font-size:14px;font-weight:800;margin-top:9px;overflow-wrap:anywhere}
+.hp{height:7px;background:var(--soft);border-radius:999px;overflow:hidden;margin:9px 0}
+.hp span{display:block;height:100%;background:var(--amber);border-radius:inherit}
+.treasure.done .hp span{background:var(--gold)}
+.tr-status{font-size:12px;color:var(--dim);overflow-wrap:anywhere}
+
+.hash{padding:15px;border-radius:12px;background:var(--navy);color:#e3d3ab;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;word-break:break-all}
+.footer{text-align:center;color:var(--dim);font-size:12px;margin-top:25px}
+.empty-state{text-align:center;padding:64px 20px}
+.empty-state h2{font-size:24px}
+.empty-state p{color:var(--dim);line-height:1.55;margin-top:8px}
+
+/* tooltip */
+.tooltip{position:fixed;z-index:9999;max-width:min(285px,calc(100vw - 24px));padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.97);
+  border:1px solid rgba(0,29,50,.09);box-shadow:0 18px 42px rgba(0,29,50,.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);pointer-events:none}
+.tooltip.hidden{display:none}
+.tt-name{font-size:13px;font-weight:900}
+.tt-res{font-size:12px;color:#253b4e;margin-top:4px;line-height:1.4}
+.tt-time{font-size:11px;color:#607487;margin-top:6px}
+.arrow{position:absolute;width:13px;height:13px;background:inherit;transform:translateX(-50%) rotate(45deg);bottom:-7px;border-right:1px solid rgba(0,29,50,.09);border-bottom:1px solid rgba(0,29,50,.09)}
+.tooltip.below .arrow{top:-7px;bottom:auto;border:0;border-left:1px solid rgba(0,29,50,.09);border-top:1px solid rgba(0,29,50,.09)}
+body[data-theme="dark"] .tooltip{background:rgba(8,46,73,.97);border-color:#164b6d;color:#fff}
+body[data-theme="dark"] .tt-res{color:#d7e4ed}
+body[data-theme="dark"] .tt-time{color:#afc3d1}
+
+@media(max-width:900px){.board-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.board-grid>aside{max-width:none}}
+@media(max-width:720px){
+  .wrap{padding:10px 10px calc(48px + env(safe-area-inset-bottom))}
+  .top{position:relative;top:0;padding:12px}
+  .brand{width:100%}.vsymbol{width:38px;height:38px;flex-basis:38px}.title{font-size:17px}.sub{display:none}.spacer{display:none}
+  .live{order:3;flex:1;justify-content:center}
+  .theme{order:4;width:100%}.theme button{flex:1}
+  .banner{padding:24px 19px}.panel{padding:17px}.panel h2{font-size:20px}
+  .board-scroll{padding-top:74px;margin-top:-74px}
+  .brd{border-width:6px;border-spacing:2px}
+  .cell{width:clamp(34px,8.4vw,50px);height:clamp(34px,8.4vw,50px)}
+  .mark{width:clamp(15px,4.2vw,21px);height:clamp(15px,4.2vw,21px);top:4px}
+  .who{font-size:7.2px;padding:2px 5px;bottom:3px}
+  .last .result{margin-left:0}
+  .legend{justify-content:flex-start}
+}
 @media(max-width:840px){.game-picker{order:3;width:100%}.game-picker select{flex:1;min-width:0;max-width:none}.live{margin-left:auto}}
 @media(max-width:520px){.game-picker label{display:none}.theme{width:100%}.theme button{flex:1}.live{width:100%;justify-content:center}}
-
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-empty" viewBox="0 0 24 24">
+    <path d="M2 17c2.4-2.6 4.4-2.6 6.8 0 2.4-2.6 4.4-2.6 6.8 0 2.4-2.6 4.4-2.6 6.4 0" fill="none" stroke="#6b5326" stroke-width="1.9" stroke-linecap="round"/>
+    <circle cx="8" cy="9.5" r="1.2" fill="#6b5326"/><circle cx="14.5" cy="7.5" r="1" fill="#6b5326"/><circle cx="17.5" cy="11" r="1.1" fill="#6b5326"/>
+  </symbol>
+  <symbol id="i-fragment" viewBox="0 0 24 24">
+    <path d="M12 2.6 21 9l-9 12.4L3 9z" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M12 2.6 21 9l-9 12.4z" fill="rgba(255,255,255,.35)"/>
+    <path d="M3 9h18M12 2.6 8 9l4 12.4M12 2.6 16 9l-4 12.4" fill="none" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-treasure" viewBox="0 0 24 24">
+    <path d="M3 10.5A5 5 0 0 1 8 5.5h8a5 5 0 0 1 5 5V19a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19z" fill="rgba(255,255,255,.3)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M3 12.6h18" stroke="#fff" stroke-width="1.6"/>
+    <rect x="10.3" y="10.6" width="3.4" height="4.6" rx="1" fill="#fff"/>
+  </symbol>
+  <symbol id="i-find" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.7" fill="none" stroke="#fff" stroke-width="1.7"/>
+    <path d="m15.2 8.8-1.9 4.5-4.5 1.9 1.9-4.5z" fill="#fff"/>
+    <circle cx="12" cy="12" r="1.15" fill="#4f47b4"/>
+  </symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24">
+    <path d="M6 21V3.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M6 4.4h11.6l-2.6 3.7 2.6 3.7H6z" fill="currentColor"/>
+  </symbol>
+</defs></svg>
+
 <div class="wrap">
 <header class="top glass">
   <div class="brand">
     <svg class="vsymbol" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="vgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0095FF"/><stop offset="1" stop-color="#0073F5"/></linearGradient></defs><polygon points="8,8 33,8 50,62 67,8 92,8 61,92 39,92" fill="url(#vgrad)"/></svg>
-    <div><div class="wordmark">ivideon</div><div class="title">Морской бой</div><div class="sub">Онлайн-площадка турниров</div></div>
+    <div><div class="wordmark">ivideon</div><div class="title">Карта сокровищ</div><div class="sub">Корпоративная игра достижений, азарта и командных открытий</div></div>
   </div>
   <div class="spacer"></div>
   <div class="game-picker"><label for="gameSelect">Игра</label><select id="gameSelect" aria-label="Выберите игру"></select></div>
   <div class="live" id="live"><i></i><span id="liveText">Подключение…</span></div>
   <div class="theme"><button id="lightBtn">☀️ Светлая</button><button id="darkBtn">🌙 Тёмная</button></div>
 </header>
-<main id="content"><div class="panel glass empty-state"><h2>Загружаем турнир…</h2><p>Подключаемся к общему табло.</p></div></main>
+<main id="content"><div class="panel glass empty-state"><h2>Разворачиваем карту…</h2><p>Подключаемся к общему табло.</p></div></main>
 <div class="footer" id="footer"></div>
 </div>
+
 <div class="tooltip hidden" id="tooltip"><div class="tt-name"></div><div class="tt-res"></div><div class="tt-time"></div><div class="arrow"></div></div>
+
 <script>
 'use strict';
 const cfg=window.IVIDEON_SEABATTLE_CONFIG||{};
-const rowId=cfg.rowId||'main';
 const sb=(window.supabase&&cfg.supabaseUrl&&cfg.supabasePublishableKey)?window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey):null;
 const PUBLIC_GAME_KEY='ivideon_seabattle_public_game';
 const PUBLIC_CACHE_PREFIX='ivideon_seabattle_public_cache_';
-let activeCell=null,lastState=null,lastDbTime=null,selectedGameId=new URLSearchParams(location.search).get('game')||'',catalog=[];
+const THEME_KEY='ivideon_seabattle_theme';
+
+/* --- Совместимость: внутренние ключи снимка (ships/shots/perk) остаются прежними,
+       меняется только то, что видит участник. --- */
+const TREASURE_NAMES={1:'Драгоценный камень',2:'Старинный сундук',3:'Коллекция артефактов',4:'Королевская сокровищница',5:'Затерянный клад'};
+const LEGACY_TREASURE_NAMES={'Катер':1,'Эсминец':2,'Крейсер':3,'Линкор':4,'Флагман':5};
+const LEGACY_FIND_LABELS={'Плюшка':'Неожиданная находка','Повторный выстрел':'Дополнительное открытие сектора'};
+function treasureName(t){if(!t)return '—';const n=(t.name||'').trim();if(n&&LEGACY_TREASURE_NAMES[n]===Number(t.size))return TREASURE_NAMES[t.size]||n;return n||TREASURE_NAMES[t.size]||'Сокровище'}
+function findLabel(raw){const v=(raw||'').trim();if(!v)return 'Неожиданная находка';return LEGACY_FIND_LABELS[v]||v}
+
+let activeCell=null,selectedGameId=new URLSearchParams(location.search).get('game')||'',catalog=[];
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const col=i=>String.fromCharCode(65+i);
 const shortName=n=>(n||'').trim().split(/\s+/)[0].slice(0,6);
-const dt=ts=>{if(!ts)return '—';try{return new Date(ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch{return '—'}};
+const icon=id=>'<svg aria-hidden="true"><use href="#'+id+'"/></svg>';
+const dt=ts=>{if(!ts)return '—';try{return new Date(ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return '—'}};
+
 function setLive(mode,text){const el=document.getElementById('live');el.className='live '+(mode||'');document.getElementById('liveText').textContent=text}
-function theme(t){document.body.dataset.theme=t;try{localStorage.setItem('ivideon_seabattle_theme',t)}catch(e){}document.getElementById('lightBtn').classList.toggle('active',t==='light');document.getElementById('darkBtn').classList.toggle('active',t==='dark')}
-document.getElementById('lightBtn').onclick=()=>theme('light');document.getElementById('darkBtn').onclick=()=>theme('dark');let initialTheme='light';try{initialTheme=localStorage.getItem('ivideon_seabattle_theme')||'light'}catch(e){}theme(initialTheme);
+function theme(t){document.body.dataset.theme=t;try{localStorage.setItem(THEME_KEY,t)}catch(e){}document.getElementById('lightBtn').classList.toggle('active',t==='light');document.getElementById('darkBtn').classList.toggle('active',t==='dark')}
+document.getElementById('lightBtn').onclick=()=>theme('light');
+document.getElementById('darkBtn').onclick=()=>theme('dark');
+let initialTheme='light';try{initialTheme=localStorage.getItem(THEME_KEY)||'light'}catch(e){}
+theme(initialTheme);
+
 function stateGames(state){if(!state)return[];if(Array.isArray(state.games))return state.games;if(state.game)return[state.game];return[]}
-function metrics(g){const list=Array.isArray(g.metrics)&&g.metrics.length?g.metrics:[{id:'calls',label:'Звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:!!g.threshold,threshold:Number(g.threshold||0)},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0}];return list.filter(m=>m.enabled!==false)}
-function shotMetricValue(s,id){if(s.metricValues&&s.metricValues[id]!==undefined&&s.metricValues[id]!==null)return Number(s.metricValues[id]);if(id==='calls'&&s.calls!==undefined&&s.calls!==null)return Number(s.calls);if(id==='revenue'&&s.revenue!==undefined&&s.revenue!==null)return Number(s.revenue);return null}
+function metrics(g){
+  const list=Array.isArray(g.metrics)&&g.metrics.length?g.metrics:[
+    {id:'calls',label:'Звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:!!g.threshold,threshold:Number(g.threshold||0)},
+    {id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0}];
+  return list.filter(m=>m.enabled!==false);
+}
+function openingMetricValue(s,id){
+  if(s.metricValues&&s.metricValues[id]!==undefined&&s.metricValues[id]!==null)return Number(s.metricValues[id]);
+  if(id==='calls'&&s.calls!==undefined&&s.calls!==null)return Number(s.calls);
+  if(id==='revenue'&&s.revenue!==undefined&&s.revenue!==null)return Number(s.revenue);
+  return null;
+}
 function fmtMetric(m,v){if(v===null||v===undefined||v===''||Number.isNaN(Number(v)))return '—';return Number(v).toLocaleString('ru-RU')+(m.unit?' '+m.unit:'')}
-function aggregate(g){const defs=metrics(g),map={};const fresh=name=>({name,shots:0,hits:0,sunk:0,perks:0,metricTotals:{}});(g.managers||[]).forEach(x=>map[x]=fresh(x));(g.shots||[]).forEach(s=>{if(!map[s.manager])map[s.manager]=fresh(s.manager);const r=map[s.manager];r.shots++;defs.forEach(m=>{const v=shotMetricValue(s,m.id);if(v!==null)r.metricTotals[m.id]=(r.metricTotals[m.id]||0)+v});if(s.result==='hit'){r.hits++;if(s.finalBlow)r.sunk++}else if(s.result==='perk')r.perks++});return Object.values(map)}
+
+function aggregate(g){
+  const defs=metrics(g),map={};
+  const fresh=name=>({name,openings:0,fragments:0,found:0,finds:0,metricTotals:{}});
+  (g.managers||[]).forEach(x=>map[x]=fresh(x));
+  (g.shots||[]).forEach(s=>{
+    if(!map[s.manager])map[s.manager]=fresh(s.manager);
+    const r=map[s.manager];r.openings++;
+    defs.forEach(m=>{const v=openingMetricValue(s,m.id);if(v!==null)r.metricTotals[m.id]=(r.metricTotals[m.id]||0)+v});
+    if(s.result==='hit'){r.fragments++;if(s.finalBlow)r.found++}
+    else if(s.result==='perk')r.finds++;
+  });
+  return Object.values(map);
+}
 function leader(rows,key){let best=null;rows.forEach(r=>{if(r[key]>0&&(!best||r[key]>best[key]))best=r});return best}
-function tooltipData(s){let result=s.result==='hit'?'Попадание':s.result==='perk'?'Плюшка':'Мимо';if(s.inSunkShip)result+=' · корабль потоплен';if(s.result==='perk'&&s.perkLabel)result+=' · '+s.perkLabel;return{name:s.manager,result,time:dt(s.ts)}}
-function boardHTML(g){const n=g.size||8,shots=g.shots||[];let h='<table class="brd"><tr><th></th>';for(let c=0;c<n;c++)h+='<th>'+col(c)+'</th>';h+='</tr>';for(let r=0;r<n;r++){h+='<tr><th>'+(r+1)+'</th>';for(let c=0;c<n;c++){const s=shots.find(x=>x.r===r&&x.c===c);if(!s){h+='<td class="cell empty"></td>';continue}const td=tooltipData(s),cls=s.result==='hit'?'hit':s.result==='perk'?'perk':'miss',mark=s.result==='hit'?'💥':s.result==='perk'?'🎁':'🌊';h+='<td tabindex="0" class="cell '+cls+(s.inSunkShip?' sunk':'')+'" data-name="'+esc(td.name)+'" data-result="'+esc(td.result)+'" data-time="'+esc(td.time)+'"><span class="mark">'+mark+'</span><span class="who">'+esc(shortName(s.manager))+'</span></td>'}h+='</tr>'}return h+'</table>'}
-function card(label,row,key,unit,finalText){return '<div class="card '+(finalText?'trophy':'')+'"><div class="card-label">'+esc(label)+'</div><div class="card-big">'+esc(row?row.name:'—')+'</div><div class="card-num">'+(row?esc(row[key]+' '+unit):'нет данных')+'</div>'+(finalText?'<div class="fin '+(finalText==='🔒 Секретный приз'?'secret':'')+'">'+esc(finalText)+'</div>':'')+'</div>'}
+
+/* Снимок не содержит размер сокровища внутри открытия — берём его
+   из коллекции по названию, иначе системные названия не переводятся. */
+function treasureByName(g,name){return (g&&g.ships||[]).find(t=>(t.name||'').trim()===(name||'').trim())||null}
+function resultInfo(s,g){
+  if(s.result==='hit'){
+    const complete=!!s.finalBlow||!!s.inSunkShip;
+    const ref=s.shipName?(treasureByName(g,s.shipName)||{name:s.shipName,size:s.shipSize}):null;
+    const name=ref?treasureName(ref):'';
+    return {kind:'fragment',complete,
+      icon:complete?'i-treasure':'i-fragment',
+      cls:'fragment'+(complete?' done':''),
+      label:complete?'Сокровище найдено полностью':'Найден фрагмент сокровища',
+      extra:name?(complete?name:'фрагмент: '+name):'',
+      color:complete?'var(--gold)':'var(--amber)'};
+  }
+  if(s.result==='perk'){
+    return {kind:'find',complete:false,icon:'i-find',cls:'find',
+      label:'Неожиданная находка',extra:findLabel(s.perkLabel),color:'var(--violet)'};
+  }
+  return {kind:'empty',complete:false,icon:'i-empty',cls:'empty',label:'Пустой сектор',extra:'Следов сокровища нет',color:'var(--sea)'};
+}
+
+function boardHTML(g){
+  const n=g.size||8,shots=g.shots||[];
+  let h='<table class="brd"><tr><th></th>';
+  for(let c=0;c<n;c++)h+='<th>'+col(c)+'</th>';
+  h+='</tr>';
+  for(let r=0;r<n;r++){
+    h+='<tr><th>'+(r+1)+'</th>';
+    for(let c=0;c<n;c++){
+      const s=shots.find(x=>x.r===r&&x.c===c);
+      if(!s){h+='<td class="cell"></td>';continue}
+      const info=resultInfo(s,g);
+      let res=info.label;if(info.extra)res+=' · '+info.extra;
+      h+='<td tabindex="0" class="cell '+info.cls+'" data-name="'+esc(s.manager)+'" data-result="'+esc(res)+'" data-time="'+esc(dt(s.ts))+'">'+
+         '<span class="mark">'+icon(info.icon)+'</span><span class="who">'+esc(shortName(s.manager))+'</span></td>';
+    }
+    h+='</tr>';
+  }
+  return h+'</table>';
+}
+
+function card(label,row,key,unit,finalText){
+  return '<div class="card '+(finalText?'trophy':'')+'"><div class="card-label">'+esc(label)+'</div>'+
+    '<div class="card-big">'+esc(row?row.name:'—')+'</div>'+
+    '<div class="card-num">'+(row?esc(row[key]+' '+unit):'нет данных')+'</div>'+
+    (finalText?'<div class="fin '+(finalText.indexOf('Секретная')===0?'secret':'')+'">'+esc(finalText)+'</div>':'')+'</div>';
+}
 function currentGame(state){const list=stateGames(state);return list[0]||null}
 function cachedGame(id){try{return JSON.parse(localStorage.getItem(PUBLIC_CACHE_PREFIX+id)||'null')}catch(e){return null}}
 function cacheGame(id,state,updatedAt){try{localStorage.setItem(PUBLIC_CACHE_PREFIX+id,JSON.stringify({state,updatedAt}))}catch(e){}}
-function chooseGameId(){let id=selectedGameId;try{id=id||localStorage.getItem(PUBLIC_GAME_KEY)||''}catch(e){}if(!catalog.some(x=>x.game_id===id))id=catalog[0]?.game_id||'';selectedGameId=id;if(id){try{localStorage.setItem(PUBLIC_GAME_KEY,id)}catch(e){}}return id}
-function renderPicker(){const select=document.getElementById('gameSelect');select.innerHTML=catalog.map(x=>'<option value="'+esc(x.game_id)+'">'+esc(x.title||'Игра')+'</option>').join('');select.value=selectedGameId||'';select.disabled=catalog.length<2;select.parentElement.style.display=catalog.length?'flex':'none';select.onchange=()=>{selectedGameId=select.value;try{localStorage.setItem(PUBLIC_GAME_KEY,selectedGameId)}catch(e){}history.replaceState({},'',selectedGameId?'?game='+encodeURIComponent(selectedGameId):location.pathname);loadSelectedGame(true)}}
-function render(state,dbTime){lastState=state;lastDbTime=dbTime;const games=stateGames(state);if(!games.length){document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Игры ещё не опубликованы</h2><p>Owner или администратор должен активировать хотя бы одну игру.</p></div>';document.getElementById('gameSelect').parentElement.style.display='none';setLive('','Ожидаем данные');return}const g=currentGame(state);renderPicker();const defs=metrics(g),rows=aggregate(g),last=(g.shots||[]).at(-1),afloat=(g.ships||[]).filter(s=>!s.sunk).length;let lastHtml='';if(last){const res=last.result==='hit'?(last.finalBlow?'Потопление!':'Попадание'):last.result==='perk'?'Плюшка':'Мимо',icon=last.result==='hit'?(last.finalBlow?'🏆':'💥'):last.result==='perk'?'🎁':'🌊',color=last.result==='hit'?'var(--red)':last.result==='perk'?'var(--purple)':'var(--miss)';const meta=defs.map(m=>{const v=shotMetricValue(last,m.id);return v===null?null:m.label+': '+fmtMetric(m,v)}).filter(Boolean);if(last.passedGate===true)meta.push('допуск ✓');else if(last.passedGate===false)meta.push('ниже порога ✗');meta.push(dt(last.ts));lastHtml='<div class="last glass"><div class="last-icon">'+icon+'</div><div><div class="last-name">'+esc(last.manager)+' → '+col(last.c)+(last.r+1)+'</div><div class="last-meta">Неделя '+esc(last.week)+' · '+meta.map(esc).join(' · ')+'</div></div><div class="result" style="background:'+color+'">'+res+'</div></div>'}const lS=leader(rows,'sunk'),lSh=leader(rows,'shots'),lH=leader(rows,'hits'),finS=g.secretsRevealed&&g.finalPrizeSunk?'🏆 '+g.finalPrizeSunk:'🔒 Секретный приз',finSh=g.secretsRevealed&&g.finalPrizeShots?'🏆 '+g.finalPrizeShots:'🔒 Секретный приз';const cards=card('Больше всего потоплений',lS,'sunk','потоплений',finS)+card('Больше всего выстрелов',lSh,'shots','выстрелов',finSh)+card('Больше всего попаданий',lH,'hits','попаданий','');let table='<div class="data-wrap"><table class="data"><tr><th>Менеджер</th><th class="c">Выстрелы</th><th class="c">Попадания</th><th class="c">Потопления</th><th class="c">Плюшки</th>'+defs.map(m=>'<th class="c">Σ '+esc(m.label)+(m.unit?' · '+esc(m.unit):'')+'</th>').join('')+'</tr>';rows.sort((a,b)=>b.sunk-a.sunk||b.hits-a.hits||b.shots-a.shots).forEach(r=>table+='<tr><td><b>'+esc(r.name)+'</b></td><td class="c">'+r.shots+'</td><td class="c">'+r.hits+'</td><td class="c">'+r.sunk+'</td><td class="c">'+r.perks+'</td>'+defs.map(m=>'<td class="c">'+esc(fmtMetric(m,r.metricTotals[m.id]||0))+'</td>').join('')+'</tr>');if(!rows.length)table+='<tr><td colspan="'+(5+defs.length)+'">Пока нет данных</td></tr>';table+='</table></div>';const fleet=(g.ships||[]).map(s=>'<div class="ship '+(s.sunk?'sunk':'')+'"><div class="ship-top"><span>'+esc(s.name)+' · '+'●'.repeat(s.size)+'</span><span>'+(s.sunk?'🏆':'🌊')+'</span></div><div class="ship-prize">'+(s.prize?esc(s.prize):'🔒 приз скрыт')+'</div><div class="hp"><span style="width:'+Math.round((s.hits/s.size)*100)+'%"></span></div><div class="ship-status">'+(s.sunk?'Потоплен · '+esc(s.by||'—'):s.hits+' / '+s.size+' попаданий')+'</div></div>').join('');const gates=defs.filter(m=>m.thresholdEnabled).map(m=>'≥'+fmtMetric(m,m.threshold)+' '+m.label);const gate=gates.length?'<br><strong>Допуск: '+esc(gates.join(' · '))+'</strong>':'';const gameCounter=catalog.length>1?'<span class="game-count">'+catalog.length+' игр</span>':'';document.getElementById('content').innerHTML='<section class="banner"><div class="eyebrow">Объявление '+gameCounter+'</div><div class="btext">'+esc(g.banner||g.name)+'</div><div class="bmeta">'+(g.sealed?'Идёт неделя '+esc(g.week)+' · игра: '+esc(g.name):'Игра «'+esc(g.name)+'» готовится к старту')+gate+'</div></section>'+lastHtml+'<section class="panel glass"><h2>Акватория</h2><div class="hint">Открыто только то, куда уже стреляли. Расположение кораблей скрыто до финала.</div><div class="board-grid"><div><div class="board-scroll">'+boardHTML(g)+'</div><div class="legend"><span><i style="background:var(--red)"></i>Попадание</span><span><i style="background:var(--miss)"></i>Мимо</span><span><i style="background:var(--purple)"></i>Плюшка</span><span><i style="background:var(--yellow)"></i>Потоплен</span></div><div class="uxhint">Наведи или нажми на клетку с выстрелом — увидишь полное имя, результат, дату и время.</div></div><aside><div class="card"><div class="card-label">Кораблей на плаву</div><div class="card-big">'+afloat+' / '+(g.ships||[]).length+'</div></div></aside></div></section><section class="panel glass"><h2>Лидеры игры</h2><div class="cards">'+cards+'</div></section><section class="panel glass"><h2>Таблица участников</h2>'+table+'</section><section class="panel glass"><h2>Флот и призы</h2><div class="fleet">'+fleet+'</div></section>'+(g.hash?'<section class="panel glass"><h2>Отпечаток честности</h2><div class="hint">Расстановка зафиксирована на старте. Совпадение отпечатка подтверждает, что корабли не перемещали.</div><div class="hash">'+esc(g.hash)+'</div></section>':'');bindCells();const stamp=state.updatedAt||dbTime||new Date().toISOString();document.getElementById('footer').textContent='Обновлено: '+dt(stamp)+' · Ivideon · Морской бой';setLive('ok','Обновляется онлайн')}
-function showTip(cell){const t=document.getElementById('tooltip');activeCell=cell;t.querySelector('.tt-name').textContent=cell.dataset.name;t.querySelector('.tt-res').textContent=cell.dataset.result;t.querySelector('.tt-time').textContent='Выстрел: '+cell.dataset.time;t.classList.remove('hidden');const r=cell.getBoundingClientRect(),tr=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;let left=Math.max(12,Math.min(r.left+r.width/2-tr.width/2,vw-tr.width-12));let top=r.top-tr.height-14,below=false;if(top<12){top=r.bottom+14;below=true}if(top+tr.height>vh-12)top=Math.max(12,vh-tr.height-12);t.style.left=left+'px';t.style.top=top+'px';t.classList.toggle('below',below);t.querySelector('.arrow').style.left=Math.max(18,Math.min(r.left+r.width/2-left,tr.width-18))+'px'}
+function chooseGameId(){
+  let id=selectedGameId;
+  try{id=id||localStorage.getItem(PUBLIC_GAME_KEY)||''}catch(e){}
+  if(!catalog.some(x=>x.game_id===id))id=catalog[0]?.game_id||'';
+  selectedGameId=id;
+  if(id){try{localStorage.setItem(PUBLIC_GAME_KEY,id)}catch(e){}}
+  return id;
+}
+function renderPicker(){
+  const select=document.getElementById('gameSelect');
+  select.innerHTML=catalog.map(x=>'<option value="'+esc(x.game_id)+'">'+esc(x.title||'Игра')+'</option>').join('');
+  select.value=selectedGameId||'';
+  select.disabled=catalog.length<2;
+  select.parentElement.style.display=catalog.length?'flex':'none';
+  select.onchange=()=>{
+    selectedGameId=select.value;
+    try{localStorage.setItem(PUBLIC_GAME_KEY,selectedGameId)}catch(e){}
+    history.replaceState({},'',selectedGameId?'?game='+encodeURIComponent(selectedGameId):location.pathname);
+    loadSelectedGame(true);
+  };
+}
+
+function render(state,dbTime){
+  const games=stateGames(state);
+  if(!games.length){
+    document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Карты ещё не опубликованы</h2><p>Owner или администратор должен активировать хотя бы одну игру.</p></div>';
+    document.getElementById('gameSelect').parentElement.style.display='none';
+    setLive('','Ожидаем данные');return;
+  }
+  const g=currentGame(state);
+  renderPicker();
+  const defs=metrics(g),rows=aggregate(g),last=(g.shots||[]).at(-1);
+  const treasures=g.ships||[];
+  const notFound=treasures.filter(s=>!s.sunk).length;
+
+  let lastHtml='';
+  if(last){
+    const info=resultInfo(last,g);
+    const meta=defs.map(m=>{const v=openingMetricValue(last,m.id);return v===null?null:m.label+': '+fmtMetric(m,v)}).filter(Boolean);
+    if(last.passedGate===true)meta.push('допуск ✓');else if(last.passedGate===false)meta.push('ниже порога ✗');
+    if(last.scenarioName)meta.unshift('сценарий: '+last.scenarioName);
+    meta.push(dt(last.ts));
+    lastHtml='<div class="last glass"><div class="last-icon">'+icon(info.icon)+'</div>'+
+      '<div><div class="last-name">'+esc(last.manager)+' → '+col(last.c)+(last.r+1)+'</div>'+
+      '<div class="last-meta">'+(info.extra?esc(info.extra)+' · ':'')+meta.map(esc).join(' · ')+'</div></div>'+
+      '<div class="result" style="background:'+info.color+'">'+esc(info.label)+'</div></div>';
+  }
+
+  const lFound=leader(rows,'found'),lOpen=leader(rows,'openings'),lFrag=leader(rows,'fragments');
+  const finFound=g.secretsRevealed&&g.finalPrizeSunk?'🏆 '+g.finalPrizeSunk:'Секретная награда';
+  const finOpen=g.secretsRevealed&&g.finalPrizeShots?'🏆 '+g.finalPrizeShots:'Секретная награда';
+  const cards=card('Больше всего найденных сокровищ',lFound,'found','сокровищ',finFound)+
+              card('Больше всего открытий',lOpen,'openings','открытий',finOpen)+
+              card('Больше всего фрагментов',lFrag,'fragments','фрагментов','');
+
+  let table='<div class="data-wrap"><table class="data"><tr><th>Участник</th><th class="c">Открытия</th><th class="c">Фрагменты</th><th class="c">Сокровища</th><th class="c">Находки</th>'+
+    defs.map(m=>'<th class="c">Σ '+esc(m.label)+(m.unit?' · '+esc(m.unit):'')+'</th>').join('')+'</tr>';
+  rows.sort((a,b)=>b.found-a.found||b.fragments-a.fragments||b.openings-a.openings).forEach(r=>{
+    table+='<tr><td><b>'+esc(r.name)+'</b></td><td class="c">'+r.openings+'</td><td class="c">'+r.fragments+'</td><td class="c">'+r.found+'</td><td class="c">'+r.finds+'</td>'+
+      defs.map(m=>'<td class="c">'+esc(fmtMetric(m,r.metricTotals[m.id]||0))+'</td>').join('')+'</tr>';
+  });
+  if(!rows.length)table+='<tr><td colspan="'+(5+defs.length)+'">Пока нет данных</td></tr>';
+  table+='</table></div>';
+
+  const collection=treasures.map(s=>{
+    const size=Number(s.size||1),hits=Number(s.hits||0);
+    let dots='';for(let i=0;i<size;i++)dots+='<i class="'+(i<hits?'on':'')+'"></i>';
+    return '<div class="treasure '+(s.sunk?'done':'')+'">'+
+      '<div class="tr-top"><span class="tr-name">'+esc(treasureName(s))+'</span><span class="tr-badge">'+icon(s.sunk?'i-treasure':'i-fragment')+'</span></div>'+
+      '<div class="tr-size">'+dots+'</div>'+
+      '<div class="tr-prize">'+(s.prize?esc(s.prize):'Награда откроется, когда сокровище найдут полностью')+'</div>'+
+      '<div class="hp"><span style="width:'+Math.round((hits/size)*100)+'%"></span></div>'+
+      '<div class="tr-status">'+(s.sunk?'Найдено полностью · '+esc(s.by||'—'):hits+' / '+size+' фрагментов')+'</div></div>';
+  }).join('');
+
+  const gates=defs.filter(m=>m.thresholdEnabled).map(m=>'≥'+fmtMetric(m,m.threshold)+' '+m.label);
+  const gate=gates.length?'<br><strong>Допуск: '+esc(gates.join(' · '))+'</strong>':'';
+  const gameCounter=catalog.length>1?'<span class="game-count">'+catalog.length+' игр</span>':'';
+
+  document.getElementById('content').innerHTML=
+    '<section class="banner"><div class="eyebrow">Объявление '+gameCounter+'</div>'+
+      '<div class="btext">'+esc(g.banner||g.name)+'</div>'+
+      '<div class="bmeta">'+(g.sealed?'Карта запечатана · игра: '+esc(g.name):'Игра «'+esc(g.name)+'» готовится к старту')+gate+'</div></section>'+
+    lastHtml+
+    '<section class="panel glass"><h2>Карта</h2>'+
+      '<div class="hint">Открыты только исследованные секторы. Расположение ненайденных сокровищ скрыто до финала.</div>'+
+      '<div class="board-grid"><div><div class="board-scroll">'+boardHTML(g)+'</div>'+
+      '<div class="legend">'+
+        '<span><i style="background:linear-gradient(150deg,#f0b93f,#d1881c)"></i>Фрагмент сокровища</span>'+
+        '<span><i style="background:linear-gradient(150deg,rgba(120,92,48,.5),rgba(120,92,48,.3))"></i>Пустой сектор</span>'+
+        '<span><i style="background:linear-gradient(150deg,#7169dd,#4f47b4)"></i>Неожиданная находка</span>'+
+        '<span><i style="background:var(--gold)"></i>Сокровище найдено</span></div>'+
+      '<div class="uxhint">Наведи или нажми на исследованный сектор — увидишь имя участника, результат, дату и время.</div></div>'+
+      '<aside><div class="card"><div class="card-label">Сокровищ ещё не найдено</div><div class="card-big">'+notFound+' / '+treasures.length+'</div></div></aside></div></section>'+
+    '<section class="panel glass"><h2>Лидеры игры</h2><div class="cards">'+cards+'</div></section>'+
+    '<section class="panel glass"><h2>Таблица участников</h2>'+table+'</section>'+
+    '<section class="panel glass"><h2>Коллекция сокровищ</h2><div class="collection">'+(collection||'<div class="hint" style="margin:0">Сокровища ещё не размещены</div>')+'</div></section>'+
+    (g.hash?'<section class="panel glass"><h2>Отпечаток честности</h2><div class="hint">Карта зафиксирована на старте. Совпадение отпечатка подтверждает, что сокровища не перемещали.</div><div class="hash">'+esc(g.hash)+'</div></section>':'');
+
+  bindCells();
+  const stamp=state.updatedAt||dbTime||new Date().toISOString();
+  document.getElementById('footer').textContent='Обновлено: '+dt(stamp)+' · Ivideon · Карта сокровищ';
+  setLive('ok','Обновляется онлайн');
+}
+
+function showTip(cell){
+  const t=document.getElementById('tooltip');activeCell=cell;
+  t.querySelector('.tt-name').textContent=cell.dataset.name;
+  t.querySelector('.tt-res').textContent=cell.dataset.result;
+  t.querySelector('.tt-time').textContent='Открыт: '+cell.dataset.time;
+  t.classList.remove('hidden');
+  const r=cell.getBoundingClientRect(),tr=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;
+  let left=Math.max(12,Math.min(r.left+r.width/2-tr.width/2,vw-tr.width-12));
+  let top=r.top-tr.height-14,below=false;
+  if(top<12){top=r.bottom+14;below=true}
+  if(top+tr.height>vh-12)top=Math.max(12,vh-tr.height-12);
+  t.style.left=left+'px';t.style.top=top+'px';
+  t.classList.toggle('below',below);
+  t.querySelector('.arrow').style.left=Math.max(18,Math.min(r.left+r.width/2-left,tr.width-18))+'px';
+}
 function hideTip(){document.getElementById('tooltip').classList.add('hidden');activeCell=null}
-function bindCells(){document.querySelectorAll('.cell[data-name]').forEach(c=>{c.onmouseenter=()=>showTip(c);c.onmouseleave=hideTip;c.onfocus=()=>showTip(c);c.onblur=hideTip;c.onclick=e=>{e.stopPropagation();activeCell===c?hideTip():showTip(c)}})}
-document.addEventListener('click',e=>{if(activeCell&&!e.target.closest('.cell[data-name]'))hideTip()});addEventListener('resize',()=>{if(activeCell)showTip(activeCell)});addEventListener('scroll',()=>{if(activeCell)showTip(activeCell)},true);
+function bindCells(){
+  document.querySelectorAll('.cell[data-name]').forEach(c=>{
+    c.onmouseenter=()=>showTip(c);c.onmouseleave=hideTip;c.onfocus=()=>showTip(c);c.onblur=hideTip;
+    c.onclick=e=>{e.stopPropagation();activeCell===c?hideTip():showTip(c)};
+  });
+}
+document.addEventListener('click',e=>{if(activeCell&&!e.target.closest('.cell[data-name]'))hideTip()});
+addEventListener('resize',()=>{if(activeCell)showTip(activeCell)});
+addEventListener('scroll',()=>{if(activeCell)showTip(activeCell)},true);
+
 let reloadTimer=null;
-async function loadCatalog(){if(!sb){setLive('err','Ошибка config.js');document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Не удалось подключиться</h2><p>Проверь config.js.</p></div>';return false}const{data,error}=await sb.from('public_games').select('game_id,title,updated_at').order('updated_at',{ascending:false});if(error){setLive('err','Ошибка соединения');document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Ошибка загрузки</h2><p>'+esc(error.message)+'</p></div>';return false}catalog=data||[];if(!catalog.length){render({v:3,games:[]},new Date().toISOString());return false}chooseGameId();renderPicker();return true}
-async function loadSelectedGame(force=false){if(!selectedGameId)return;const cached=cachedGame(selectedGameId);if(cached&&!force){render({v:3,games:[cached.state],updatedAt:cached.updatedAt},cached.updatedAt);setLive('','Обновляем данные…')}else setLive('','Загружаем игру…');const{data,error}=await sb.from('public_games').select('public_state,updated_at').eq('game_id',selectedGameId).maybeSingle();if(error){setLive('err','Ошибка соединения');if(!cached)document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Ошибка загрузки</h2><p>'+esc(error.message)+'</p></div>';return}if(!data){const ok=await loadCatalog();if(ok)await loadSelectedGame(true);return}cacheGame(selectedGameId,data.public_state,data.updated_at);render({v:3,games:[data.public_state],updatedAt:data.updated_at},data.updated_at)}
+async function loadCatalog(){
+  if(!sb){setLive('err','Ошибка config.js');document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Не удалось подключиться</h2><p>Проверь config.js.</p></div>';return false}
+  const{data,error}=await sb.from('public_games').select('game_id,title,updated_at').order('updated_at',{ascending:false});
+  if(error){setLive('err','Ошибка соединения');document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Ошибка загрузки</h2><p>'+esc(error.message)+'</p></div>';return false}
+  catalog=data||[];
+  if(!catalog.length){render({v:4,games:[]},new Date().toISOString());return false}
+  chooseGameId();renderPicker();return true;
+}
+async function loadSelectedGame(force=false){
+  if(!selectedGameId)return;
+  const cached=cachedGame(selectedGameId);
+  if(cached&&!force){render({v:4,games:[cached.state],updatedAt:cached.updatedAt},cached.updatedAt);setLive('','Обновляем данные…')}
+  else setLive('','Загружаем карту…');
+  const{data,error}=await sb.from('public_games').select('public_state,updated_at').eq('game_id',selectedGameId).maybeSingle();
+  if(error){setLive('err','Ошибка соединения');if(!cached)document.getElementById('content').innerHTML='<div class="panel glass empty-state"><h2>Ошибка загрузки</h2><p>'+esc(error.message)+'</p></div>';return}
+  if(!data){const ok=await loadCatalog();if(ok)await loadSelectedGame(true);return}
+  cacheGame(selectedGameId,data.public_state,data.updated_at);
+  render({v:4,games:[data.public_state],updatedAt:data.updated_at},data.updated_at);
+}
 async function loadAll(){setLive('','Загружаем активные игры…');const ok=await loadCatalog();if(ok)await loadSelectedGame(false)}
-async function start(){await loadAll();if(!sb)return;sb.channel('ivideon-seabattle-public-v4').on('postgres_changes',{event:'*',schema:'public',table:'public_games'},payload=>{clearTimeout(reloadTimer);reloadTimer=setTimeout(async()=>{const changedId=payload.new?.game_id||payload.old?.game_id;await loadCatalog();if(!selectedGameId||changedId===selectedGameId)await loadSelectedGame(true)},180)}).subscribe(status=>{if(status==='SUBSCRIBED')setLive('ok','Обновляется онлайн')});setInterval(()=>loadSelectedGame(true),30000)}
+async function start(){
+  await loadAll();
+  if(!sb)return;
+  sb.channel('ivideon-treasure-public-v4').on('postgres_changes',{event:'*',schema:'public',table:'public_games'},payload=>{
+    clearTimeout(reloadTimer);
+    reloadTimer=setTimeout(async()=>{
+      const changedId=payload.new?.game_id||payload.old?.game_id;
+      await loadCatalog();
+      if(!selectedGameId||changedId===selectedGameId)await loadSelectedGame(true);
+    },180);
+  }).subscribe(status=>{if(status==='SUBSCRIBED')setLive('ok','Обновляется онлайн')});
+  setInterval(()=>loadSelectedGame(true),30000);
+}
 start();
 </script>
 </body>

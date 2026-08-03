@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Панель управления · Морской бой · Ivideon</title>
+<title>Панель управления · Карта сокровищ · Ivideon</title>
 <style>
 :root{
   --blue:#0095ff;--blue-dark:#0078d4;--navy:#001d32;--navy-2:#052e49;
@@ -42,8 +42,8 @@
     <div class="dashboard-boot-top">
       <div>
         <div class="dashboard-boot-wordmark">ivideon</div>
-        <div class="dashboard-boot-title">Морской бой</div>
-        <div class="dashboard-boot-sub">Панель управления турнирами</div>
+        <div class="dashboard-boot-title">Карта сокровищ</div>
+        <div class="dashboard-boot-sub">Панель управления играми</div>
       </div>
       <div class="dashboard-boot-state"><div class="boot-spinner" aria-hidden="true"></div><span>Восстанавливаем рабочую сессию…</span></div>
     </div>
@@ -63,8 +63,8 @@
   <div class="auth-shell">
     <aside class="auth-brand">
       <div class="auth-wordmark">ivideon</div>
-      <div class="auth-kicker">Универсальная турнирная платформа</div>
-      <h1>Морской<br>бой</h1>
+      <div class="auth-kicker">Корпоративная игра достижений</div>
+      <h1>Карта<br>сокровищ</h1>
       <p>Создавайте игровые соревнования, управляйте доступами и публикуйте результаты для команды.</p>
       <div class="auth-stripes"><span></span><span></span><span></span><span></span><span></span></div>
     </aside>
@@ -102,7 +102,7 @@
 </section>
 <div class="wrap hidden" id="app">
   <header class="top">
-    <div class="brand"><div class="brand-wordmark">ivideon</div><div class="brand-divider"></div><div><div class="title">Морской бой</div><div class="sub">Универсальная турнирная площадка</div></div></div>
+    <div class="brand"><div class="brand-wordmark">ivideon</div><div class="brand-divider"></div><div><div class="title">Карта сокровищ</div><div class="sub">Корпоративная игра достижений и командных открытий</div></div></div>
     <div class="spacer"></div>
     <div class="pill" id="serverPill"><i></i><span id="profilePill">Подключение…</span></div>
     <button class="btn ghost small help-launch" id="helpBtn" type="button">? Инструкция</button>
@@ -121,7 +121,7 @@
       <h2>Создать игру</h2>
       <div class="hint">Новая игра всегда создаётся как черновик и не видна по публичной ссылке, пока её не активируют.</div>
       <div class="row">
-        <div class="field"><label>Название игры</label><input id="newGameName" placeholder="Например: Битва отдела продаж"></div>
+        <div class="field"><label>Название игры</label><input id="newGameName" placeholder="Например: Экспедиция отдела продаж"></div>
         <button class="btn primary" id="createGameBtn">Создать черновик</button>
       </div>
     </div>
@@ -166,7 +166,7 @@
     <div class="help-head">
       <div>
         <div class="help-kicker">Справочник администратора</div>
-        <h2 id="helpTitle">Как работает площадка</h2>
+        <h2 id="helpTitle">Как работает «Карта сокровищ»</h2>
       </div>
       <button class="help-close" id="helpCloseBtn" type="button" aria-label="Закрыть инструкцию">×</button>
     </div>
@@ -174,23 +174,23 @@
       <section class="help-hero">
         <div class="help-hero-copy">
           <span class="help-badge">Ivideon · геймификация</span>
-          <h3>Превращает рабочие результаты в понятный командный турнир</h3>
-          <p>Администратор задаёт показатели, участников, правила допуска, призы и скрыто расставляет флот. Лучшие сотрудники получают выстрелы, а команда следит за ходом игры на публичном табло.</p>
+          <h3>Превращает рабочие результаты в общее командное открытие</h3>
+          <p>Администратор задаёт показатели, сценарии, участников, награды и скрыто размещает сокровища. Победители периодов получают право открыть сектор карты, а команда следит за находками на публичном табло.</p>
         </div>
-        <div class="help-hero-mark">⚓</div>
+        <div class="help-hero-mark" style="font-size:38px">☉</div>
       </section>
 
       <div class="help-callout">
-        <strong>Главная идея:</strong> площадка не заменяет CRM, отчётность или систему KPI. Она берёт уже определённые результаты команды и превращает их в прозрачную, азартную и управляемую механику признания.
+        <b>Главная идея:</b> победа в рабочем периоде даёт право открыть один сектор карты. В секторе может ничего не оказаться, может найтись фрагмент сокровища или неожиданная находка. Основная награда открывается только после полного обнаружения сокровища — поэтому одной победы недостаточно, и желание снова стать лидером сохраняется до конца игры.
       </div>
 
       <details class="help-section" open>
         <summary>Что это и зачем</summary>
         <div class="help-content">
-          <p><b>«Морской бой»</b> — универсальная внутренняя площадка геймификации. Она помогает поддерживать регулярную активность, делать результаты заметными, добавлять игровой азарт и публично отмечать достижения без сложных презентаций и ручного пересчёта рейтинга.</p>
+          <p><b>«Карта сокровищ»</b> — внутренняя площадка геймификации. Она помогает поддерживать регулярную активность, делать результаты заметными, добавлять азарт и публично отмечать достижения без сложных презентаций и ручного пересчёта рейтинга.</p>
           <div class="help-grid two">
-            <div class="help-card"><b>Для руководителя</b><span>Единые правила, понятный прогресс, история действий и быстрый способ поддерживать внимание команды.</span></div>
-            <div class="help-card"><b>Для участников</b><span>Наглядное табло, шанс получить выстрел или приз и понятная связь между результатом и игровым действием.</span></div>
+            <div class="help-card"><b>Для руководителя</b><span>Единые правила, понятный прогресс, история действий и простой способ удерживать внимание команды.</span></div>
+            <div class="help-card"><b>Для участников</b><span>Наглядное табло, шанс открыть сектор и найти награду, понятная связь между результатом и игровым действием.</span></div>
           </div>
         </div>
       </details>
@@ -202,11 +202,11 @@
             <div class="help-card"><b>Продажи</b><span>Звонки, встречи, выручка, оплаты, новые клиенты, конверсия.</span></div>
             <div class="help-card"><b>Аккаунт-менеджмент</b><span>Продления, апсейл, удержание, встречи, качество ведения клиентов.</span></div>
             <div class="help-card"><b>Поддержка и сервис</b><span>Закрытые обращения, SLA, CSAT/NPS, скорость ответа, отсутствие просрочек.</span></div>
-            <div class="help-card"><b>Маркетинг</b><span>Лиды, MQL/SQL, публикации, кампании, встречи, вклад в выручку.</span></div>
+            <div class="help-card"><b>Маркетинг</b><span>Лиды, MQL/SQL, публикации, кампании, вклад в выручку.</span></div>
             <div class="help-card"><b>HR и рекрутинг</b><span>Интервью, закрытые вакансии, скорость найма, выходы, качество воронки.</span></div>
-            <div class="help-card"><b>Проекты и операции</b><span>Завершённые задачи, этапы, внедрения, сроки, качество и командные достижения.</span></div>
+            <div class="help-card"><b>Разработка, проекты и операции</b><span>Завершённые задачи, релизы, этапы, внедрения, сроки и качество.</span></div>
           </div>
-          <p class="help-note">Показатели должны быть числовыми. Название, единицу измерения и минимальный порог администратор задаёт сам.</p>
+          <p class="help-note">Показатели должны быть числовыми. Название, единицу измерения и порог администратор задаёт сам.</p>
         </div>
       </details>
 
@@ -214,10 +214,31 @@
         <summary>Что автоматизировано, а что вносится вручную</summary>
         <div class="help-content">
           <div class="help-grid two">
-            <div class="help-card success"><b>Площадка делает автоматически</b><ul><li>авторизацию и разграничение прав;</li><li>сохранение игры в облаке;</li><li>публикацию только активных игр;</li><li>расчёт выстрелов, попаданий, потоплений и рейтинга;</li><li>обновление публичного табло;</li><li>историю версий, отмену и восстановление;</li><li>журнал действий Owner;</li><li>скрытие расположения живых кораблей.</li></ul></div>
-            <div class="help-card manual"><b>Администратор задаёт вручную</b><ul><li>название и объявление игры;</li><li>участников;</li><li>показатели и пороги допуска;</li><li>призы и плюшки;</li><li>расстановку флота;</li><li>победителя периода и его результаты;</li><li>клетку для выстрела;</li><li>момент активации, паузы и завершения игры.</li></ul></div>
+            <div class="help-card success"><b>Площадка делает автоматически</b><ul>
+              <li>авторизацию и разграничение прав;</li>
+              <li>сохранение игры в облаке;</li>
+              <li>публикацию только активных игр;</li>
+              <li>расчёт открытий, фрагментов, найденных сокровищ и рейтинга;</li>
+              <li>расчёт предлагаемого периода оценки по сценарию;</li>
+              <li>проверку обязательных показателей и порогов допуска;</li>
+              <li>определение результата сектора и завершения сокровища;</li>
+              <li>учёт находок, эффектов и оставшихся использований;</li>
+              <li>обновление публичного табло;</li>
+              <li>историю версий, отмену и восстановление;</li>
+              <li>журнал действий Owner;</li>
+              <li>скрытие расположения ненайденных сокровищ.</li></ul></div>
+            <div class="help-card manual"><b>Администратор задаёт вручную</b><ul>
+              <li>название и объявление игры;</li>
+              <li>участников;</li>
+              <li>показатели, пороги и их роли в сценариях;</li>
+              <li>сценарии открытия и периоды оценки;</li>
+              <li>сокровища, их названия и награды;</li>
+              <li>неожиданные находки и их эффекты;</li>
+              <li>подтверждение победителя периода и его результатов;</li>
+              <li>момент проведения открытия и сам сектор;</li>
+              <li>активацию, паузу и завершение игры.</li></ul></div>
           </div>
-          <p class="help-note"><b>Важно:</b> сейчас данные не подтягиваются автоматически из Bitrix24, CRM, телефонии или других систем. Перед выстрелом администратор вводит подтверждённые показатели вручную.</p>
+          <p class="help-note"><b>Важно:</b> автоматических фоновых задач нет. Данные не подтягиваются из CRM, телефонии или других систем — интеграции на площадке не реализованы. Перед открытием сектора администратор вводит подтверждённые показатели вручную, а сценарий подсказывает период и критерии.</p>
         </div>
       </details>
 
@@ -226,71 +247,129 @@
         <div class="help-content">
           <ol class="help-steps">
             <li><b>Создай черновик.</b><span>В панели укажи название. Черновик не виден участникам.</span></li>
-            <li><b>Открой игру.</b><span>Редактор всегда стартует со «Статистики», чтобы случайно не показать корабли.</span></li>
-            <li><b>Настрой показатели.</b><span>Добавь нужные метрики, обязательность и минимальные пороги.</span></li>
-            <li><b>Добавь участников.</b><span>Внеси имена тех, кто сможет получать выстрелы.</span></li>
-            <li><b>Расставь флот и призы.</b><span>Размести корабли и плюшки, затем запечатай поле.</span></li>
-            <li><b>Активируй игру.</b><span>Во вкладке «Управление» переведи черновик в статус «Активна».</span></li>
-            <li><b>Проводи выстрелы.</b><span>Выбирай победителя, вводи показатели и открывай названную клетку.</span></li>
+            <li><b>Открой игру.</b><span>Редактор всегда стартует со «Статистики», чтобы случайно не показать размещение сокровищ.</span></li>
+            <li><b>Настрой показатели.</b><span>Раздел «Расписание и критерии»: добавь метрики, обязательность и пороги.</span></li>
+            <li><b>Создай сценарии.</b><span>Там же: свой сценарий или готовый шаблон Пн / Ср / Пт, который можно менять как угодно.</span></li>
+            <li><b>Добавь участников.</b><span>Раздел «Карта и сокровища».</span></li>
+            <li><b>Размести сокровища и находки.</b><span>Задай названия и награды, затем запечатай карту.</span></li>
+            <li><b>Активируй игру.</b><span>Раздел «Управление игрой» — статус «Активна».</span></li>
+            <li><b>Проводи открытия.</b><span>Выбирай сценарий, подтверждай победителя, вводи показатели и открывай названный сектор.</span></li>
             <li><b>Подведи итог.</b><span>Заверши игру, раскрой карту и при необходимости архивируй её.</span></li>
           </ol>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Как проходит выстрел</summary>
+        <summary>Сценарии, периоды, показатели и победитель</summary>
         <div class="help-content">
-          <p>Во вкладке <b>«Выстрел недели»</b> администратор выбирает участника и вводит фактические результаты за период. Обязательные показатели должны быть заполнены, а показатели с порогом — соответствовать условиям допуска.</p>
-          <div class="help-callout"><strong>Почему выстрел делает администратор:</strong> это предусмотрено намеренно. Выстрел — кульминация игрового периода, а не незаметное действие в личном кабинете. Соберите команду на общей встрече или созвоне, объявите победителя, попросите его вслух назвать координату и откройте клетку при всех. Такой ритуал усиливает ожидание и азарт, вовлекает команду и превращает результат победителя в заметное публичное признание.</div>
+          <p>Сценарий — это правило «когда и за что даётся открытие сектора». Их может быть сколько угодно, и они независимы друг от друга.</p>
+          <p><b>Когда проводится:</b> каждый день, выбранные дни недели, только понедельник, Пн/Ср/Пт, раз в неделю, раз в месяц, конкретная дата или ручное событие.</p>
+          <p><b>Период оценки настраивается отдельно от дня проведения:</b> предыдущий календарный день, предыдущий рабочий день, предыдущие N дней, выбранные дни недели текущей недели, предыдущая неделя, текущая неделя до события, предыдущий месяц, фиксированный или ручной диапазон.</p>
+          <p>При открытии сектора система показывает рассчитанный диапазон. Его можно скорректировать, и сохраняется тот период, который реально использовали.</p>
+          <div class="term-list">
+            <div><b>Роль «Допуск»</b><span>Показатель работает как порог: участник допускается к открытию, только если условие выполнено.</span></div>
+            <div><b>Роль «Основной критерий»</b><span>Среди допущенных побеждает участник с лучшим значением этого показателя.</span></div>
+            <div><b>Роль «При равенстве»</b><span>Используется, если основной критерий совпал у нескольких участников.</span></div>
+            <div><b>Роль «Только статистика»</b><span>Значение фиксируется в истории, но на победу не влияет.</span></div>
+          </div>
+          <p class="help-note">Пример: для допуска нужно не менее 100 успешных звонков; среди выполнивших порог побеждает сотрудник с максимальной выручкой; при равенстве учитываются оплаты. Победителя в любом случае подтверждает администратор вручную.</p>
+          <p><b>Обычная победа периода даёт одно открытие сектора.</b> Дополнительное открытие возможно только как эффект неожиданной находки.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Как проходит открытие сектора</summary>
+        <div class="help-content">
+          <div class="help-callout"><b>Почему открывает администратор:</b> это сделано намеренно. Открытие сектора — кульминация игрового периода, а не незаметное действие в личном кабинете. Публичный формат усиливает ожидание, азарт, вовлечённость и признание результата победителя.</div>
           <ol class="help-steps compact">
-            <li><b>Выбери участника.</b><span>Это победитель недели или другого установленного периода.</span></li>
-            <li><b>Внеси результаты.</b><span>Например: 42 звонка, 5 встреч, 18 млн выручки.</span></li>
-            <li><b>Получи координату.</b><span>Участник называет клетку, например B4.</span></li>
-            <li><b>Нажми клетку.</b><span>Система сама определит: мимо, попадание, потопление или плюшка.</span></li>
+            <li><b>Команда собирается.</b><span>Общая встреча или созвон.</span></li>
+            <li><b>Администратор объявляет результаты.</b><span>Показатели за период по сценарию.</span></li>
+            <li><b>Объявляется победитель.</b><span>Администратор подтверждает его в списке участников.</span></li>
+            <li><b>Победитель вслух называет сектор.</b><span>Например D4.</span></li>
+            <li><b>Администратор открывает сектор.</b><span>Система определяет результат.</span></li>
+            <li><b>Результат появляется на публичном табло.</b><span>Обновление приходит всем онлайн.</span></li>
           </ol>
-          <p class="help-note">Последний выстрел можно отменить. Более раннее состояние восстанавливается через раздел «История».</p>
+          <p class="help-note">Последнее открытие можно отменить. Более раннее состояние восстанавливается снимком в разделе «История исследований».</p>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Для чего нужно публичное табло</summary>
+        <summary>Фрагменты, сокровища и награды</summary>
         <div class="help-content">
-          <p>Публичное табло — экран для участников и зрителей. Авторизация не требуется. На нём можно выбрать любую игру, которую администратор перевёл в статус <b>«Активна»</b>.</p>
-          <ul class="help-list"><li>показывает открытые клетки и результат выстрелов;</li><li>показывает лидеров, статистику, призы и оставшийся флот;</li><li>обновляется после сохранения изменений;</li><li>не раскрывает расположение непотопленных кораблей;</li><li>не показывает черновики, архив и корзину.</li></ul>
-          <p class="help-note">Для каждой активной игры есть отдельная прямая ссылка. Её удобно отправлять в командный чат или открывать на общем экране.</p>
+          <p>Сокровище занимает от одного до пяти секторов. Каждое удачное открытие раскрывает <b>фрагмент</b>. Когда открыты все секторы сокровища, оно считается <b>найденным полностью</b> — и только тогда команда видит награду за него.</p>
+          <div class="term-list">
+            <div><b>Пустой сектор</b><span>Следов сокровища нет. Ход зафиксирован в истории.</span></div>
+            <div><b>Найден фрагмент сокровища</b><span>Часть сокровища открыта, но награда ещё скрыта.</span></div>
+            <div><b>Сокровище найдено полностью</b><span>Все секторы открыты, награда раскрывается на табло.</span></div>
+          </div>
+          <p class="help-note">Названия сокровищ и награды редактируются в разделе «Карта и сокровища». По умолчанию: Драгоценный камень, Старинный сундук, Коллекция артефактов, Королевская сокровищница, Затерянный клад.</p>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Роли и права</summary>
+        <summary>Неожиданные находки и лопата</summary>
+        <div class="help-content">
+          <p>Находка — отдельный бонус, спрятанный в секторе. Она может быть в пустом секторе, в секторе с фрагментом или в секторе, завершающем сокровище. Находка <b>не заменяет</b> основное сокровище: сектор может дать и фрагмент, и находку одновременно.</p>
+          <div class="help-grid">
+            <div class="help-card"><b>Лопата</b><span>Даёт одно дополнительное открытие сектора. Можно использовать сразу или сохранить на потом.</span></div>
+            <div class="help-card"><b>Компас</b><span>Ограниченная подсказка: сколько соседних секторов содержат фрагменты.</span></div>
+            <div class="help-card"><b>Фрагмент карты</b><span>Подсказка по строке или столбцу: сколько там скрытых фрагментов.</span></div>
+            <div class="help-card"><b>Фонарь</b><span>Проверка одного сектора без его открытия. Сектор остаётся закрытым.</span></div>
+            <div class="help-card"><b>Старинный ключ</b><span>Мгновенная награда, которую администратор вручает сразу.</span></div>
+            <div class="help-card"><b>Счастливая монета</b><span>Эффект, который администратор подтверждает и выполняет вручную.</span></div>
+            <div class="help-card"><b>Тайник путешественника</b><span>Небольшой мгновенный приз.</span></div>
+          </div>
+          <p><b>Лопата выдаётся один раз</b>, хранит владельца, поддерживает немедленное и отложенное использование, имеет счётчик оставшихся использований, списывается при применении и фиксируется в журнале находок. Повторно применить её нельзя.</p>
+          <p class="help-note">Для неоднозначных эффектов используется тип «ручной эффект»: площадка не имитирует автоматизацию, а фиксирует действие в журнале.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Публичное табло</summary>
+        <div class="help-content">
+          <p>Публичное табло — экран для участников и зрителей. Авторизация не требуется. На нём можно выбрать любую игру со статусом <b>«Активна»</b>.</p>
+          <ul class="help-list">
+            <li>показывает исследованные секторы и результат открытий;</li>
+            <li>показывает лидеров, статистику, найденные сокровища и раскрытые награды;</li>
+            <li>обновляется онлайн после сохранения изменений;</li>
+            <li>не раскрывает расположение ненайденных сокровищ и скрытые находки;</li>
+            <li>не показывает черновики, архив и корзину.</li>
+          </ul>
+          <p class="help-note">У каждой активной игры есть отдельная прямая ссылка. Её удобно отправлять в командный чат или открывать на общем экране.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Роли, права и статусы</summary>
         <div class="help-content">
           <div class="help-grid two">
-            <div class="help-card"><b>Owner</b><span>Создаёт и блокирует администраторов, управляет их правами, видит все игры, может редактировать чужие игры, передавать владельца, восстанавливать и окончательно удалять данные, просматривать общий журнал.</span></div>
+            <div class="help-card"><b>Owner</b><span>Создаёт и блокирует администраторов, управляет правами, видит все игры, может редактировать чужую игру, передавать владельца, восстанавливать и окончательно удалять данные, просматривать общий журнал.</span></div>
             <div class="help-card"><b>Администратор</b><span>По умолчанию видит и редактирует только свои игры. Доступные действия зависят от прав, выданных Owner.</span></div>
           </div>
-          <p class="help-note">Интерфейс скрывает недоступные действия, а база дополнительно проверяет права на сервере.</p>
-        </div>
-      </details>
-
-      <details class="help-section">
-        <summary>Статусы игры</summary>
-        <div class="help-content">
           <div class="term-list">
             <div><b>Черновик</b><span>Настраивается администратором и не виден на публичном табло.</span></div>
             <div><b>Активна</b><span>Доступна участникам по публичной ссылке.</span></div>
             <div><b>Приостановлена</b><span>Временно скрыта, данные сохраняются.</span></div>
-            <div><b>Завершена</b><span>Турнир окончен; состояние и история остаются.</span></div>
+            <div><b>Завершена</b><span>Игра окончена; состояние и история остаются.</span></div>
             <div><b>Архив</b><span>Убрана из основного рабочего списка, но не удалена.</span></div>
-            <div><b>Корзина</b><span>Мягко удалена и может быть восстановлена.</span></div>
+            <div><b>Корзина</b><span>Мягко удалена и может быть восстановлена. Окончательное удаление подтверждается отдельно.</span></div>
           </div>
+          <p class="help-note">Интерфейс скрывает недоступные действия, а сервер дополнительно проверяет права.</p>
         </div>
       </details>
 
       <details class="help-section">
         <summary>Отмена, история и восстановление</summary>
         <div class="help-content">
-          <p>Перед сохранением площадка создаёт снимок предыдущего состояния. Это позволяет вернуть ошибочное изменение, отменить последний выстрел или восстановить игру целиком.</p>
-          <ul class="help-list"><li><b>«Отменить»</b> — быстро возвращает последнее действие;</li><li><b>«История»</b> — показывает сохранённые снимки игры;</li><li><b>«Восстановить»</b> — создаёт новое текущее состояние на основе выбранного снимка;</li><li><b>«Корзина»</b> — позволяет вернуть удалённую игру;</li><li><b>Журнал Owner</b> — фиксирует ключевые действия пользователей.</li></ul>
+          <p>Перед сохранением площадка создаёт снимок предыдущего состояния. Это позволяет вернуть ошибочное изменение, отменить последнее открытие или восстановить игру целиком.</p>
+          <ul class="help-list">
+            <li><b>«Отменить»</b> — быстро возвращает последнее сохранённое действие;</li>
+            <li><b>Снимки</b> — сохранённые состояния игры в разделе «История исследований»;</li>
+            <li><b>«Восстановить»</b> — создаёт новое текущее состояние на основе выбранного снимка;</li>
+            <li><b>«Корзина»</b> — позволяет вернуть удалённую игру;</li>
+            <li><b>Журнал Owner</b> — фиксирует ключевые действия пользователей.</li>
+          </ul>
+          <p class="help-note">Если игру одновременно правят в двух вкладках, площадка не даст затереть чужие изменения: она предупредит и загрузит актуальную версию.</p>
         </div>
       </details>
 
@@ -298,13 +377,20 @@
         <summary>Термины простыми словами</summary>
         <div class="help-content">
           <div class="term-list">
-            <div><b>Показатель</b><span>Числовой результат, за который участник получает право на выстрел.</span></div>
-            <div><b>Порог</b><span>Минимальное значение показателя для допуска к выстрелу.</span></div>
-            <div><b>Плюшка</b><span>Отдельная клетка с небольшим бонусом или призом.</span></div>
-            <div><b>Запечатать поле</b><span>Зафиксировать расстановку и получить цифровой отпечаток честности.</span></div>
-            <div><b>Отпечаток</b><span>Контрольная строка, подтверждающая, что расстановку не меняли незаметно.</span></div>
+            <div><b>Карта</b><span>Игровое поле из секторов, где спрятаны сокровища и находки.</span></div>
+            <div><b>Сектор</b><span>Одна клетка карты. Победитель называет её координату.</span></div>
+            <div><b>Открытие сектора</b><span>Игровое действие, которое даёт победа в периоде.</span></div>
+            <div><b>Сокровище</b><span>Объект из 1–5 секторов с наградой.</span></div>
+            <div><b>Фрагмент</b><span>Один открытый сектор сокровища.</span></div>
+            <div><b>Коллекция сокровищ</b><span>Все сокровища игры и их состояние.</span></div>
+            <div><b>Неожиданная находка</b><span>Отдельный бонус в секторе: приз, подсказка или дополнительное открытие.</span></div>
+            <div><b>Сценарий</b><span>Правило: когда проводится открытие и по каким критериям выбирается победитель.</span></div>
+            <div><b>Период оценки</b><span>Диапазон дат, за который считаются показатели.</span></div>
+            <div><b>Порог</b><span>Минимальное значение показателя для допуска.</span></div>
+            <div><b>Запечатать карту</b><span>Зафиксировать размещение и получить отпечаток честности.</span></div>
+            <div><b>Отпечаток</b><span>Контрольная строка, подтверждающая, что размещение не меняли незаметно.</span></div>
             <div><b>Снимок</b><span>Предыдущее сохранённое состояние игры для отката.</span></div>
-            <div><b>Публичная ссылка</b><span>Ссылка для участников на безопасное табло без скрытой расстановки.</span></div>
+            <div><b>Публичная ссылка</b><span>Ссылка для участников на безопасное табло без скрытого размещения.</span></div>
           </div>
         </div>
       </details>
@@ -316,6 +402,7 @@
     </div>
   </aside>
 </div>
+
 <div class="ui-tip hidden" id="uiTip" role="tooltip"></div>
 
 <div id="modalRoot"></div>
@@ -323,7 +410,7 @@
 const CFG=window.IVIDEON_SEABATTLE_CONFIG||{};
 const sb=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const STATUS_LABELS={draft:'Черновик',active:'Активна',paused:'Приостановлена',completed:'Завершена',archived:'Архив',trashed:'Корзина'};
-const PERMISSION_LABELS={create_games:'Создание новых игр',publish_games:'Публикация игр',trash_games:'Удаление в корзину',restore_games:'Восстановление из корзины',restore_versions:'Откат версий',edit_shots:'Создание и изменение выстрелов',unseal_board:'Изменение запечатанного поля'};
+const PERMISSION_LABELS={create_games:'Создание новых игр',publish_games:'Публикация игр',trash_games:'Удаление в корзину',restore_games:'Восстановление из корзины',restore_versions:'Откат версий',edit_shots:'Проведение и изменение открытий сектора',unseal_board:'Изменение запечатанной карты'};
 
 let session=null,profile=null,games=[],users=[],serverReady=false;
 let passwordFlow=/(?:[?&#]setup=1)|(?:[?&#]type=(?:invite|recovery))/i.test(location.href);
@@ -331,20 +418,20 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function dt(s){if(!s)return '—';return new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function statusBadge(s){return `<span class="status status-${s}">${STATUS_LABELS[s]||s}</span>`}
 function hasPermission(key){return !!profile&&(profile.role==='owner'||profile.permissions?.[key]===true)}
-async function api(action,body={}){const{data,error}=await sb.functions.invoke('platform-admin',{body:{action,...body}});if(error){let msg=error.message||'Ошибка функции';try{if(error.context&&typeof error.context.json==='function'){const p=await error.context.json();msg=p.error||msg;const e=new Error(msg);e.details=p.details;e.status=error.context.status;throw e}}catch(e){if(e.details!==undefined)throw e}if(/Failed to send|fetch|network/i.test(msg)){setServerState(false,'Edge Function platform-admin не найдена или ещё не развёрнута.');throw new Error('Серверный модуль platform-admin не подключён. Разверните Edge Function в Supabase и повторите проверку.')}setServerState(false,msg);throw new Error(msg)}if(!data||data.ok===false){const e=new Error(data?.error||'Ошибка операции');e.details=data?.details;throw e}serverReady=true;return data}
+async function api(action,body={}){const{data,error}=await sb.functions.invoke('platform-admin',{body:{action,...body}});if(error){let msg=error.message||'Ошибка функции',status=error.context&&error.context.status,details;try{if(error.context&&typeof error.context.json==='function'){const p=await error.context.json();if(p){msg=p.error||msg;details=p.details}}}catch(parseErr){}if(status){const e=new Error(msg);e.status=status;e.details=details;setServerState(false,msg);throw e}if(/Failed to send|fetch|network/i.test(msg)){setServerState(false,'Edge Function platform-admin не найдена или ещё не развёрнута.');throw new Error('Серверный модуль platform-admin не подключён. Разверните Edge Function в Supabase и повторите проверку.')}setServerState(false,msg);throw new Error(msg)}if(!data||data.ok===false){const e=new Error(data?.error||'Ошибка операции');e.details=data?.details;throw e}serverReady=true;return data}
 function setServerState(ok,message=''){serverReady=ok;const pill=document.getElementById('serverPill'),banner=document.getElementById('serverBanner'),text=document.getElementById('serverBannerText');if(!pill)return;pill.classList.remove('ok','warn','bad');pill.classList.add(ok?'ok':'warn');if(profile)pill.querySelector('span').textContent=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);else pill.querySelector('span').textContent=ok?'Онлайн':'Ограниченный режим';if(banner){banner.classList.toggle('hidden',ok);if(text&&message)text.textContent=message}}
 async function checkServer(){try{await api('bootstrap');setServerState(true);return true}catch(e){setServerState(false,e.message);return false}}
 function showModal(content){document.getElementById('modalRoot').innerHTML=`<div class="modal-back"><div class="modal">${content}</div></div>`}
 function closeModal(){document.getElementById('modalRoot').innerHTML=''}
 function confirmModal(title,text,onYes){showModal(`<h3>${esc(title)}</h3><div class="hint">${text}</div><div class="modal-actions"><button class="btn ghost" id="mCancel">Отмена</button><button class="btn danger" id="mYes">Подтвердить</button></div>`);document.getElementById('mCancel').onclick=closeModal;document.getElementById('mYes').onclick=onYes}
-function blankGame(name){return{id:'pending',name,banner:'Морской бой · '+name,size:8,managers:[],cells:{},ships:[],shots:[],week:1,sealed:false,salt:null,hash:null,finalPrizeSunk:'Главный приз',finalPrizeShots:'Приз за активность',secretsRevealed:false,metrics:[{id:'calls',label:'Звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:250,thresholdNote:'минимум для допуска'},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}]}}
+function blankGame(name){return{id:'pending',schemaVersion:4,name,banner:'Карта сокровищ · '+name,size:8,managers:[],cells:{},ships:[],shots:[],week:1,sealed:false,salt:null,hash:null,finalPrizeSunk:'Главная награда',finalPrizeShots:'Награда за активность',secretsRevealed:false,scenarios:[],bonusGrants:[],findLog:[],metrics:[{id:'calls',label:'Успешные звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:100,thresholdNote:'минимум для допуска'},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}]}}
 async function loadProfile(){const{data,error}=await sb.from('platform_users').select('*').eq('id',session.user.id).maybeSingle();if(error)throw error;if(!data)throw new Error('Учётная запись не добавлена в платформу.');if(data.status!=='active')throw new Error('Доступ приостановлен.');profile=data;document.getElementById('profilePill').textContent=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);document.querySelectorAll('.owner-only').forEach(x=>x.classList.toggle('hidden',profile.role!=='owner'))}
 async function loadGames(){const{data,error}=await sb.from('games').select('*').order('updated_at',{ascending:false});if(error)throw error;games=data||[];renderGames()}
 function gameOwnerName(g){const u=users.find(x=>x.id===g.owner_id);return u?(u.display_name||u.email):(g.owner_id===profile.id?(profile.display_name||profile.email):'Другой администратор')}
 function publicLink(id){return location.origin+location.pathname.replace(/admin\.html$/,'')+'?game='+encodeURIComponent(id)}
 function filteredGames(){const f=document.getElementById('gameFilter').value;if(f==='all')return games;if(f==='main')return games.filter(g=>!['archived','trashed'].includes(g.status));return games.filter(g=>g.status===f)}
-function renderGames(){const box=document.getElementById('gameCards'),list=filteredGames();box.innerHTML='';const createBtn=document.getElementById('createGameBtn');if(createBtn)createBtn.disabled=!hasPermission('create_games');if(!list.length){box.innerHTML='<div class="empty">По выбранному фильтру игр нет.</div>';return}list.forEach(g=>{const el=document.createElement('div');el.className='game '+g.status;const state=g.state||{};el.innerHTML=`<div class="game-head"><div><div class="game-title">${esc(g.title)}</div><div class="meta">${profile.role==='owner'?'Владелец: '+esc(gameOwnerName(g))+' · ':''}обновлено ${dt(g.updated_at)}<br>участников: ${(state.managers||[]).length} · выстрелов: ${(state.shots||[]).length}</div></div>${statusBadge(g.status)}</div><div class="actions"></div>`;const a=el.querySelector('.actions');const open=document.createElement('a');open.className='btn dark small';open.textContent='Открыть';open.href='editor.html?game='+encodeURIComponent(g.id);a.appendChild(open);if(g.status==='active'){const pub=document.createElement('a');pub.className='btn ghost small';pub.textContent='Публичная ссылка';pub.href=publicLink(g.id);pub.target='_blank';a.appendChild(pub)}if(g.status==='trashed'){if(hasPermission('restore_games')){const restore=document.createElement('button');restore.className='btn primary small';restore.textContent='Восстановить';restore.onclick=()=>restoreGame(g);a.appendChild(restore)}if(profile.role==='owner'){const hard=document.createElement('button');hard.className='btn danger small';hard.textContent='Удалить окончательно';hard.onclick=()=>hardDeleteGame(g);a.appendChild(hard)}}else{if(hasPermission('trash_games')){const trash=document.createElement('button');trash.className='btn danger small';trash.textContent='В корзину';trash.onclick=()=>trashGame(g);a.appendChild(trash)}}if(profile.role==='owner'&&users.length&&g.status!=='trashed'){const transfer=document.createElement('button');transfer.className='btn ghost small';transfer.textContent='Передать';transfer.onclick=()=>transferGame(g);a.appendChild(transfer)}box.appendChild(el)})}
-async function createGame(){if(!hasPermission('create_games')){alert('Owner запретил создание новых игр для этой учётной записи.');return}const input=document.getElementById('newGameName'),name=input.value.trim()||'Новый турнир',btn=document.getElementById('createGameBtn');btn.disabled=true;try{const data=await api('create_game',{name,state:blankGame(name)});input.value='';await loadGames();location.href='editor.html?game='+encodeURIComponent(data.game.id)}catch(e){alert(e.message)}finally{btn.disabled=false}}
+function renderGames(){const box=document.getElementById('gameCards'),list=filteredGames();box.innerHTML='';const createBtn=document.getElementById('createGameBtn');if(createBtn)createBtn.disabled=!hasPermission('create_games');if(!list.length){box.innerHTML='<div class="empty">По выбранному фильтру игр нет.</div>';return}list.forEach(g=>{const el=document.createElement('div');el.className='game '+g.status;const state=g.state||{};el.innerHTML=`<div class="game-head"><div><div class="game-title">${esc(g.title)}</div><div class="meta">${profile.role==='owner'?'Владелец: '+esc(gameOwnerName(g))+' · ':''}обновлено ${dt(g.updated_at)}<br>участников: ${(state.managers||[]).length} · открытий: ${(state.shots||[]).length}</div></div>${statusBadge(g.status)}</div><div class="actions"></div>`;const a=el.querySelector('.actions');const open=document.createElement('a');open.className='btn dark small';open.textContent='Открыть';open.href='editor.html?game='+encodeURIComponent(g.id);a.appendChild(open);if(g.status==='active'){const pub=document.createElement('a');pub.className='btn ghost small';pub.textContent='Публичная ссылка';pub.href=publicLink(g.id);pub.target='_blank';a.appendChild(pub)}if(g.status==='trashed'){if(hasPermission('restore_games')){const restore=document.createElement('button');restore.className='btn primary small';restore.textContent='Восстановить';restore.onclick=()=>restoreGame(g);a.appendChild(restore)}if(profile.role==='owner'){const hard=document.createElement('button');hard.className='btn danger small';hard.textContent='Удалить окончательно';hard.onclick=()=>hardDeleteGame(g);a.appendChild(hard)}}else{if(hasPermission('trash_games')){const trash=document.createElement('button');trash.className='btn danger small';trash.textContent='В корзину';trash.onclick=()=>trashGame(g);a.appendChild(trash)}}if(profile.role==='owner'&&users.length&&g.status!=='trashed'){const transfer=document.createElement('button');transfer.className='btn ghost small';transfer.textContent='Передать';transfer.onclick=()=>transferGame(g);a.appendChild(transfer)}box.appendChild(el)})}
+async function createGame(){if(!hasPermission('create_games')){alert('Owner запретил создание новых игр для этой учётной записи.');return}const input=document.getElementById('newGameName'),name=input.value.trim()||'Новая экспедиция',btn=document.getElementById('createGameBtn');btn.disabled=true;try{const data=await api('create_game',{name,state:blankGame(name)});input.value='';await loadGames();location.href='editor.html?game='+encodeURIComponent(data.game.id)}catch(e){alert(e.message)}finally{btn.disabled=false}}
 async function trashGame(g){if(!hasPermission('trash_games')){alert('Owner запретил удаление игр.');return}confirmModal('Переместить игру в корзину?',`«${esc(g.title)}» исчезнет с публичного табло, но её можно восстановить.`,async()=>{try{await api('trash_game',{gameId:g.id});closeModal();await loadGames()}catch(e){alert(e.message)}})}
 async function restoreGame(g){if(!hasPermission('restore_games')){alert('Owner запретил восстановление игр.');return}try{await api('restore_game',{gameId:g.id});await loadGames()}catch(e){alert(e.message)}}
 async function hardDeleteGame(g){confirmModal('Удалить окончательно?',`Игра «${esc(g.title)}» и вся история версий будут удалены без возможности восстановления.`,async()=>{try{await api('hard_delete_game',{gameId:g.id});closeModal();await loadGames()}catch(e){alert(e.message)}})}
