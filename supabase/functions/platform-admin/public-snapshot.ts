@@ -62,7 +62,7 @@ const num = (v: unknown): number | null => {
  * сектор открыт (в snapshot попадают только открытые секторы) и у находки
  * проставлен consumedAt/foundAt. Скрытые находки не раскрываются никогда.
  */
-function revealedFind(cell: Json | undefined, shot: Json): Json | null {
+export function buildPublicFind(cell: Json | undefined, shot: Json): Json | null {
   const find = cell && typeof cell === "object"
     ? (cell.find && typeof cell.find === "object" ? cell.find : null)
     : null;
@@ -131,7 +131,7 @@ export function buildPublicState(rawState: unknown): Json {
     const key = `${s?.r},${s?.c}`;
     const sh = s?.result === "hit" ? shipById.get(s?.shipId) : undefined;
     const complete = isShipFound(sh);
-    const find = revealedFind(cells[key], s);
+    const find = buildPublicFind(cells[key], s);
 
     const metricValues: Json = {};
     const src = (s?.metricValues && typeof s.metricValues === "object") ? s.metricValues : {};

@@ -60,20 +60,31 @@ where table_schema = 'public' and table_name = 'public_games';
 3. В `index.ts` добавьте импорт:
 
    ```ts
-   import { buildPublicState } from "./public-snapshot.ts";
+   import { buildPublicFind } from "./public-snapshot.ts";
    ```
 
-4. Найдите место, где сейчас формируется объект для `public_games.public_state`
-   (обычно внутри `save_game` / `set_game_status` / общей функции публикации —
-   ищите по строке `public_state`). Замените построение объекта на вызов:
+4. Найдите существующий `map` по открытым секторам внутри функции, которая
+   формирует `public_games.public_state`. В начале callback получите клетку и
+   безопасную проекцию находки:
 
    ```ts
-   const publicState = buildPublicState(state);
+   const key = `${shot.r},${shot.c}`;
+   const publicFind = buildPublicFind(state.cells?.[key], shot);
    ```
 
-   и дальше используйте `publicState` там, где раньше использовался
-   собранный вручную объект. Остальная логика функции — авторизация, права,
-   версии, optimistic locking — **не трогается**.
+   Затем добавьте в уже существующий публичный объект сектора только поля:
+
+   ```ts
+   findLabel: publicFind?.findLabel ?? null,
+   findDesc: publicFind?.findDesc ?? null,
+   findIcon: publicFind?.findIcon ?? null,
+   findEffectPublic: publicFind?.findEffectPublic ?? null,
+   findPrize: publicFind?.findPrize ?? null,
+   ```
+
+   Не заменяйте существующий builder целиком: его прежние поля и семантика
+   (`id`, метрики, timestamps и другие совместимые данные) должны сохраниться.
+   Авторизация, права, версии и optimistic locking также не меняются.
 
 5. Задеплойте:
 
