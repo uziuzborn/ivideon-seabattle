@@ -8,23 +8,23 @@
 <style>
 :root{
   /* Ivideon core */
-  --iv-blue:#0095ff;--iv-blue-dark:#0073f5;--iv-blue-soft:#e8f4ff;--iv-navy:#001d32;--iv-navy-2:#052e49;
+  --iv-blue:#2568db;--iv-blue-dark:#1d4ed8;--iv-blue-soft:#eff6ff;--iv-navy:#0f172a;--iv-navy-2:#172554;
   /* Neutral UI */
-  --white:#fff;--page-bg:#f7f9fc;--surface:#fff;--surface-soft:#f2f6fa;--line:#d8e1ea;
-  --text:#001d32;--muted:#607487;--disabled:#9aa9b6;
+  --white:#fff;--page-bg:#f8fafc;--surface:#fff;--surface-soft:#f8fafc;--line:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--disabled:#94a3b8;
   /* Treasure layer */
-  --parchment:#f3e9d2;--parchment-light:#fbf6e9;--parchment-dark:#dfcda9;--sand:#efe2c4;
-  --map-ink:#795936;--map-line:#ba9563;--gold:#d9a800;--gold-light:#f2d46b;--bronze:#a66a32;
+  --parchment:#e9d8a6;--parchment-light:#f9f0e2;--parchment-dark:#d6bd84;--sand:#f1e9d2;
+  --map-ink:#76552e;--map-line:#b38a52;--gold:#d4af37;--gold-light:#c9b06a;--bronze:#9a622f;
   /* System */
-  --success:#2cc84d;--success-soft:#e9f9ed;--warning:#ffb000;--warning-soft:#fff5dc;
-  --danger:#e4002b;--danger-soft:#fff0f3;--purple:#4d49be;--purple-soft:#f0efff;
+  --success:#22c55e;--success-soft:#ecfdf3;--warning:#f59e0b;--warning-soft:#fffbeb;
+  --danger:#ef4444;--danger-soft:#fef2f2;--purple:#8b5cf6;--purple-soft:#f5f3ff;
   /* Shadows */
-  --shadow-sm:0 6px 18px rgba(0,29,50,.06);--shadow-md:0 14px 36px rgba(0,29,50,.10);--shadow-lg:0 24px 64px rgba(0,29,50,.16);
+  --shadow-sm:0 3px 12px rgba(15,23,42,.05);--shadow-md:0 12px 30px rgba(15,23,42,.10);--shadow-lg:0 24px 64px rgba(15,23,42,.16);
   /* Type */
   --font-xs:11px;--font-sm:12px;--font-body:14px;--font-body-lg:16px;--font-h3:18px;--font-h2:22px;--font-h1:clamp(28px,4vw,42px);
-  --font-ui:"Avenir Next",Avenir,"Segoe UI",Arial,sans-serif;
+  --font-ui:Manrope,"Avenir Next",Avenir,"Segoe UI",Arial,sans-serif;
   /* Metrics */
-  --content-max:1240px;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:22px;
+  --content-max:1280px;--radius-sm:7px;--radius-md:9px;--radius-lg:12px;--radius-xl:14px;
 }
 body[data-theme="dark"]{
   --white:#062a44;--page-bg:#071421;--surface:#062a44;--surface-soft:#07243a;--line:#164b6d;
@@ -52,8 +52,8 @@ button{cursor:pointer}
   background-repeat:no-repeat,no-repeat,repeat;
   mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 62%)}
 /* ---- buttons ---- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 16px;
-  border:1px solid transparent;border-radius:var(--radius-md);font-size:13.5px;font-weight:800;line-height:1.2;
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 14px;
+  border:1px solid transparent;border-radius:var(--radius-md);font-size:13px;font-weight:700;line-height:1.2;
   transition:background .16s,border-color .16s,color .16s,transform .16s,box-shadow .16s}
 .btn:hover:not(:disabled){transform:translateY(-1px)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -67,7 +67,7 @@ button{cursor:pointer}
 .btn-gold{background:var(--gold);color:#2a1f00}
 .btn-danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(228,0,43,.25)}
 .btn-danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
-.btn-sm{min-height:38px;padding:9px 13px;font-size:12.5px}
+.btn-sm{min-height:34px;padding:7px 11px;font-size:12px}
 .btn-icon{min-height:44px;width:44px;padding:0;border-radius:var(--radius-md);background:var(--surface);border-color:var(--line);color:var(--muted)}
 .btn-icon:hover{color:var(--iv-blue);border-color:var(--iv-blue)}
 /* ---- surfaces ---- */
@@ -147,48 +147,98 @@ a{color:inherit;text-decoration:none}
 @keyframes bootsheen{0%{background-position:100% 0}100%{background-position:-100% 0}}
 /* ===================== app shell: appbar + sidebar (spec 10/11) ===================== */
 #app{display:block}
-.appbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:13px;min-height:68px;padding:12px 22px;overflow:hidden;
-  border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 90%,transparent);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding-top:calc(12px + env(safe-area-inset-top))}
-.brand-wordmark{font-size:22px;font-weight:900;letter-spacing:-.045em;color:var(--iv-blue);line-height:1}
-.brand-divider{width:1px;height:30px;background:var(--line);flex:0 0 1px}
-.title{font-size:var(--font-body-lg);font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:11px;min-height:58px;padding:8px 18px;overflow:hidden;
+  border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 96%,transparent);
+  box-shadow:0 2px 10px rgba(15,23,42,.04);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding-top:calc(8px + env(safe-area-inset-top))}
+.appbar .btn{min-height:36px;padding:8px 11px;font-size:12px;border-radius:8px}
+.appbar .appbar-icon{width:36px;padding:0}
+.appbar .appbar-icon svg{width:17px;height:17px}
+.brand-wordmark{font-size:20px;font-weight:800;letter-spacing:-.04em;color:var(--iv-blue);line-height:1}
+.brand-divider{width:1px;height:24px;background:var(--line);flex:0 0 1px}
+.title{font-size:14px;font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .side-profile{display:none;align-items:center;gap:11px;padding:11px 12px;margin-top:4px;border-top:1px solid var(--line);
   color:var(--muted);font-size:12.5px;font-weight:700;overflow:hidden}
 .side-profile svg{width:19px;height:19px;flex:0 0 19px}
 .side-profile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:var(--font-xs);color:var(--muted);margin-top:2px}
+.sub{font-size:10px;color:var(--muted);margin-top:1px}
 .spacer{flex:1}
-.pill{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);
-  background:var(--surface-soft);font-size:var(--font-sm);font-weight:800;color:var(--muted);max-width:280px}
+.pill{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);font-size:11.5px;font-weight:700;color:var(--muted);max-width:250px}
 .pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--disabled)}
 .pill.ok i{background:var(--success)}.pill.warn i{background:var(--warning)}.pill.bad i{background:var(--danger)}
-.shell{display:grid;grid-template-columns:236px minmax(0,1fr);gap:20px;max-width:var(--content-max);margin:0 auto;
-  padding:20px 22px calc(60px + env(safe-area-inset-bottom));align-items:start}
-.sidebar{position:sticky;top:88px;display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);
+.shell{display:grid;grid-template-columns:208px minmax(0,1fr);gap:16px;max-width:var(--content-max);margin:0 auto;
+  padding:16px 18px calc(52px + env(safe-area-inset-bottom));align-items:start}
+.sidebar{position:sticky;top:74px;display:flex;flex-direction:column;gap:3px;padding:9px;border:1px solid var(--line);
   border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-sm)}
-.side-item{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:11px 12px;border:0;border-radius:var(--radius-md);
-  background:transparent;color:var(--muted);font-size:13.5px;font-weight:800;text-align:left;transition:background .15s,color .15s}
-.side-item svg{width:19px;height:19px;flex:0 0 19px}
+.side-item{display:flex;align-items:center;gap:9px;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:var(--radius-md);
+  background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;text-align:left;transition:background .15s,color .15s}
+.side-item svg{width:17px;height:17px;flex:0 0 17px}
 .side-item:hover{background:var(--surface-soft);color:var(--text)}
 .side-item.active{background:var(--iv-blue-soft);color:var(--iv-navy)}
 .side-item.active svg{color:var(--iv-blue)}
 .side-sep{height:1px;background:var(--line);margin:8px 4px}
-.side-art{margin-top:auto;padding:16px 12px 8px;text-align:center;color:var(--bronze);opacity:.75}
-.side-art svg{width:74px;height:74px}
+.side-art{margin-top:auto;padding:13px 10px 7px;text-align:center;color:var(--bronze);opacity:.75}
+.side-art svg{width:58px;height:58px}
 .side-art div{font-size:var(--font-xs);color:var(--muted);margin-top:6px;line-height:1.45}
 .drawer-backdrop{display:none}
 .burger{display:none}
 /* ===================== dashboard content ===================== */
+.panel.overview-panel{padding:0;overflow:hidden}
+.overview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+.overview-kicker{font-size:10px;line-height:1.2;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.overview-title-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.overview-title-line h1{font-size:19px;line-height:1.2;font-weight:700;letter-spacing:-.025em;overflow-wrap:anywhere}
+.overview-period{font-size:11.5px;line-height:1.45;color:var(--muted);margin-top:4px}
+.overview-open{flex:0 0 auto}
+.overview-empty{padding:26px 18px;color:var(--muted);font-size:12.5px;text-align:center}
+.overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:13px 18px 10px}
+.overview-kpi{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;min-height:68px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.overview-kpi-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;color:var(--iv-blue-dark);background:var(--iv-blue-soft)}
+.overview-kpi-icon svg{width:19px;height:19px}
+.overview-kpi-icon.gold{color:#8a6700;background:rgba(217,168,0,.15)}
+.overview-kpi-icon.sand{color:var(--map-ink);background:var(--parchment-light)}
+.overview-kpi-icon.purple{color:var(--purple);background:var(--purple-soft)}
+.overview-kpi-label{font-size:10px;line-height:1.25;color:var(--muted);margin-bottom:3px}
+.overview-kpi-value{font-size:19px;line-height:1.05;font-weight:700;letter-spacing:-.03em}
+.overview-kpi-value small{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0}
+.overview-middle{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:9px;padding:0 18px 10px}
+.overview-block{min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.overview-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700}
+.overview-block-head span{font-size:10px;font-weight:600;color:var(--muted)}
+.overview-list{display:grid}
+.overview-list-empty{padding:17px 11px;color:var(--muted);font-size:11.5px;line-height:1.45}
+.schedule-item,.recent-item{display:grid;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--line)}
+.schedule-item:last-child,.recent-item:last-child{border-bottom:0}
+.schedule-item{grid-template-columns:27px minmax(0,1fr) auto}
+.recent-item{grid-template-columns:64px minmax(0,1fr) auto}
+.overview-row-icon{width:27px;height:27px;display:grid;place-items:center;border-radius:7px;background:var(--surface-soft);color:var(--muted)}
+.overview-row-icon svg{width:15px;height:15px}
+.overview-row-title{font-size:11.5px;line-height:1.25;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.overview-row-meta{font-size:9.5px;line-height:1.35;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.overview-state{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:650;color:#177f33;white-space:nowrap}
+.overview-state:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--success)}
+.overview-state.paused{color:var(--muted)}
+.overview-state.paused:before{background:var(--disabled)}
+.recent-date{font-size:9.5px;line-height:1.35;color:var(--muted);white-space:nowrap}
+.recent-sector{font-size:10px;font-weight:700;color:var(--iv-blue-dark);white-space:nowrap}
+.overview-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:0 18px 16px}
+.overview-action{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;min-height:58px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);transition:border-color .15s,box-shadow .15s,transform .15s}
+.overview-action:hover{border-color:var(--iv-blue);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.overview-action>svg{width:18px;height:18px;color:var(--muted)}
+.overview-action b{display:block;font-size:10.5px;line-height:1.25;font-weight:700}
+.overview-action span{display:block;font-size:9.5px;line-height:1.35;color:var(--muted);margin-top:2px}
+.create-panel{padding:15px 17px}
+.create-panel .hint{margin-bottom:10px}
 .system-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 16px;margin-bottom:18px;
   border:1px solid rgba(255,176,0,.5);border-radius:var(--radius-md);background:var(--warning-soft);font-size:13px;line-height:1.5}
 .system-banner strong{display:block;color:var(--text);margin-bottom:2px}
 .system-banner .btn{flex:0 0 auto}
 body[data-theme="dark"] .system-banner{color:#f0d9a0}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);padding:22px;margin-bottom:18px;box-shadow:var(--shadow-sm)}
-.panel h2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--font-h3);font-weight:900;letter-spacing:-.02em;margin-bottom:7px}
-.hint{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);padding:17px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.panel h2{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:16px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:13px}
 .row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
 .field{flex:1;min-width:200px}
 .field label{display:block;font-size:var(--font-xs);text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:var(--muted);margin-bottom:6px}
@@ -196,15 +246,15 @@ body[data-theme="dark"] .system-banner{color:#f0d9a0}
   padding:11px 12px;color:var(--text);background:var(--surface);outline:none;font-size:var(--font-body-lg)}
 .field textarea{min-height:120px;resize:vertical}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--iv-blue);box-shadow:0 0 0 4px rgba(0,149,255,.14)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
-.game{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);padding:18px;box-shadow:var(--shadow-sm);transition:border-color .15s,transform .15s}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:11px}
+.game{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);padding:15px;box-shadow:none;transition:border-color .15s,transform .15s,box-shadow .15s}
 .game:hover{border-color:var(--iv-blue);transform:translateY(-1px)}
 .game.active{border-color:rgba(44,200,77,.5)}
 .game.trashed{opacity:.8}
 .game-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.game-title{font-size:var(--font-h3);font-weight:900;line-height:1.2;overflow-wrap:anywhere}
-.meta{font-size:var(--font-sm);color:var(--muted);line-height:1.55;margin-top:7px;overflow-wrap:anywhere}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.game-title{font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.meta{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:6px;overflow-wrap:anywhere}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:var(--font-xs);font-weight:800;letter-spacing:.03em;white-space:nowrap}
 .status-draft{background:var(--surface-soft);color:var(--muted)}
 .status-active{background:var(--success-soft);color:#177f33}
@@ -231,7 +281,7 @@ body[data-theme="dark"] .system-banner{color:#f0d9a0}
 .btn.ghost:hover:not(:disabled){border-color:var(--iv-blue);color:var(--iv-blue-dark)}
 .btn.danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(228,0,43,.25)}
 .btn.danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
-.btn.small{min-height:38px;padding:9px 12px;font-size:12.5px}
+.btn.small{min-height:34px;padding:7px 10px;font-size:11.5px}
 /* modal */
 .modal-back{position:fixed;inset:0;z-index:400;background:rgba(0,29,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
   display:flex;align-items:center;justify-content:center;padding:16px}
@@ -240,29 +290,43 @@ body[data-theme="dark"] .system-banner{color:#f0d9a0}
 .modal h3{font-size:var(--font-h2);letter-spacing:-.03em;margin-bottom:10px;overflow-wrap:anywhere}
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .modal-actions .btn{flex:1 1 auto}
-@media(max-width:1040px){.shell{grid-template-columns:1fr}}
-@media(max-width:900px){.auth-shell{grid-template-columns:1fr;min-height:auto}.auth-brand{padding:34px 32px}.auth-brand h1{font-size:46px}.auth-kicker{margin-top:40px}.auth-form{padding:34px 30px}.user-row,.audit-row{grid-template-columns:1fr}.cards{grid-template-columns:1fr}}
-@media(max-width:760px){
-  .appbar{padding:10px 12px;min-height:60px;gap:10px;flex-wrap:nowrap;padding-top:calc(10px + env(safe-area-inset-top))}
+@media(max-width:1100px){.shell{grid-template-columns:196px minmax(0,1fr)}.side-item{font-size:12px;padding-inline:9px}}
+@media(max-width:900px){
+  .auth-shell{grid-template-columns:1fr;min-height:auto}.auth-brand{padding:34px 32px}.auth-brand h1{font-size:46px}.auth-kicker{margin-top:40px}.auth-form{padding:34px 30px}
+  .user-row,.audit-row{grid-template-columns:1fr}
+  .appbar{padding:9px 14px;min-height:60px;gap:9px;flex-wrap:nowrap;padding-top:calc(9px + env(safe-area-inset-top))}
   .brand-divider,.sub{display:none}
   .appbar .pill,.appbar #helpBtn,.appbar #logoutBtn,.appbar a.btn{display:none}
   .side-profile{display:flex}
   .burger{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);
     border-radius:var(--radius-md);background:var(--surface);color:var(--text)}
   .burger svg{width:21px;height:21px}
-  .shell{grid-template-columns:1fr;padding:14px 12px calc(60px + env(safe-area-inset-bottom));gap:0}
+  .shell{grid-template-columns:1fr;padding:14px 14px calc(54px + env(safe-area-inset-bottom));gap:0}
   .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:200;width:min(300px,86vw);border-radius:0;border-width:0 1px 0 0;
     transform:translateX(-102%);transition:transform .22s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top))}
+  .side-item{min-height:44px;font-size:13px}
   .sidebar.open{transform:translateX(0)}
   .drawer-backdrop{display:block;position:fixed;inset:0;z-index:190;background:rgba(0,29,50,.5);opacity:0;pointer-events:none;transition:opacity .2s}
   .drawer-backdrop.open{opacity:1;pointer-events:auto}
+}
+@media(max-width:760px){
+  .shell{padding-inline:12px}
+  .btn,.btn.small,.btn-sm{min-height:44px}
+  .overview-open{width:44px;min-height:44px}
+  .section-help{width:44px;height:44px;min-height:44px;flex-basis:44px}
   .panel{padding:16px;border-radius:var(--radius-lg)}
+  .overview-panel{padding:0}
+  .overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .overview-middle{grid-template-columns:1fr}
+  .overview-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .overview-action span{display:block}
   .modal-back{align-items:flex-end;padding:0}
   .modal{width:100%;max-width:none;max-height:88vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
   .modal-actions{flex-direction:column-reverse}
   .modal-actions .btn{width:100%}
 }
-@media(max-width:520px){.login{padding:0;background:var(--surface)}.auth-shell{min-height:100vh;border-radius:0;box-shadow:none}.auth-brand{min-height:280px;padding:30px 22px}.auth-brand h1{font-size:42px}.auth-form{padding:32px 22px}.auth-form h2{font-size:26px}}
+@media(max-width:620px){.cards{grid-template-columns:1fr}.overview-head{align-items:center}.overview-open{width:44px;padding:0}.overview-open span{display:none}.recent-item{grid-template-columns:57px minmax(0,1fr) auto}}
+@media(max-width:520px){.login{padding:0;background:var(--surface)}.auth-shell{min-height:100vh;border-radius:0;box-shadow:none}.auth-brand{min-height:280px;padding:30px 22px}.auth-brand h1{font-size:42px}.auth-form{padding:32px 22px}.auth-form h2{font-size:26px}.overview-head{padding:14px}.overview-kpis,.overview-middle,.overview-actions{padding-left:14px;padding-right:14px}.overview-actions{padding-bottom:14px}.overview-kpi{grid-template-columns:30px minmax(0,1fr);gap:7px;padding:9px}.overview-kpi-icon{width:30px;height:30px}.overview-kpi-value{font-size:17px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 /* ===================== help drawer + tooltips ===================== */
@@ -320,7 +384,7 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
   background:var(--iv-blue-soft);color:var(--iv-blue-dark);font-size:20px;font-weight:900}
 .help-contact b{display:block;font-size:13.5px;margin-bottom:3px}
 .help-contact span{font-size:12.5px;color:var(--muted)}
-.section-help{width:36px;height:36px;min-height:36px;flex:0 0 36px;border:1px solid var(--line);border-radius:50%;
+.section-help{width:44px;height:44px;min-height:44px;flex:0 0 44px;border:1px solid var(--line);border-radius:50%;
   background:var(--surface-soft);color:var(--muted);font-size:13px;font-weight:900;line-height:1}
 .section-help:hover{border-color:var(--iv-blue);color:var(--iv-blue)}
 .ui-tip{position:fixed;z-index:500;max-width:280px;padding:11px 13px;border-radius:var(--radius-md);background:var(--surface);
@@ -449,12 +513,12 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
   <header class="appbar">
     <span class="brand-wordmark">ivideon</span>
     <span class="brand-divider" aria-hidden="true"></span>
-    <div><div class="title">Карта сокровищ</div><div class="sub">Корпоративная игра достижений и командных открытий</div></div>
+    <div><div class="title">Карта сокровищ</div><div class="sub">Панель управления</div></div>
     <span class="spacer"></span>
     <div class="pill" id="serverPill"><i aria-hidden="true"></i><span id="profilePill">Подключение…</span></div>
-    <button class="btn ghost small help-launch" id="helpBtn" type="button">Инструкция</button>
-    <a class="btn ghost small" href="index.html">Публичное табло</a>
-    <button class="btn ghost small" id="logoutBtn">Выйти</button>
+    <button class="btn btn-icon appbar-icon help-launch" id="helpBtn" type="button" aria-label="Инструкция"><svg aria-hidden="true"><use href="#i-help"/></svg></button>
+    <a class="btn ghost small" href="index.html"><svg aria-hidden="true"><use href="#i-link"/></svg>Публичная ссылка</a>
+    <button class="btn btn-icon appbar-icon" id="logoutBtn" type="button" aria-label="Выйти"><svg aria-hidden="true"><use href="#i-lock"/></svg></button>
     <button class="burger" id="burgerBtn" type="button" aria-label="Меню разделов" aria-expanded="false" aria-controls="sidebar"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
   </header>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
@@ -475,7 +539,18 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
     <main id="mainCol">
       <div class="system-banner hidden" id="serverBanner"><div><strong>Серверный модуль пока не подключён</strong><span id="serverBannerText">Панель открыта, но создание игр и управление пользователями недоступны до развёртывания Edge Function platform-admin.</span></div><button class="btn ghost small" id="retryServerBtn">Проверить снова</button></div>
 <section id="pane-games">
-    <div class="panel">
+    <div class="panel overview-panel" id="gameOverview" aria-labelledby="overviewGameName">
+      <div class="overview-head">
+        <div>
+          <div class="overview-kicker">Обзор игры</div>
+          <div class="overview-title-line"><h1 id="overviewGameName">Загружаем игру…</h1><span id="overviewGameStatus"></span></div>
+          <div class="overview-period" id="overviewGameMeta">Актуальные показатели, расписание и последние открытия</div>
+        </div>
+        <a class="btn primary small overview-open" id="overviewOpenBtn" href="editor.html"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Открыть редактор</span></a>
+      </div>
+      <div id="overviewBody"><div class="overview-empty">Загружаем обзор…</div></div>
+    </div>
+    <div class="panel create-panel">
       <h2>Создать игру</h2>
       <div class="hint">Новая игра всегда создаётся как черновик и не видна по публичной ссылке, пока её не активируют.</div>
       <div class="row">
@@ -811,11 +886,57 @@ document.addEventListener('keydown',e=>{
 },true);
 function confirmModal(title,text,onYes){showModal(`<h3>${esc(title)}</h3><div class="hint">${text}</div><div class="modal-actions"><button class="btn ghost" id="mCancel">Отмена</button><button class="btn danger" id="mYes">Подтвердить</button></div>`);document.getElementById('mCancel').onclick=closeModal;document.getElementById('mYes').onclick=onYes}
 function blankGame(name){return{id:'pending',schemaVersion:4,name,banner:'Карта сокровищ · '+name,size:8,managers:[],cells:{},ships:[],shots:[],week:1,sealed:false,salt:null,hash:null,finalPrizeSunk:'Главная награда',finalPrizeShots:'Награда за активность',secretsRevealed:false,scenarios:[],bonusGrants:[],findLog:[],metrics:[{id:'calls',label:'Успешные звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:100,thresholdNote:'минимум для допуска'},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}]}}
-async function loadProfile(){const{data,error}=await sb.from('platform_users').select('*').eq('id',session.user.id).maybeSingle();if(error)throw error;if(!data)throw new Error('Учётная запись не добавлена в платформу.');if(data.status!=='active')throw new Error('Доступ приостановлен.');profile=data;const who=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);document.getElementById('profilePill').textContent=who;const sp=document.getElementById('sideProfileName');if(sp)sp.textContent=who;document.querySelectorAll('.owner-only').forEach(x=>x.classList.toggle('hidden',profile.role!=='owner'))}
-async function loadGames(){const{data,error}=await sb.from('games').select('*').order('updated_at',{ascending:false});if(error)throw error;games=data||[];renderGames()}
+async function loadProfile(){const{data,error}=await sb.from('platform_users').select('*').eq('id',session.user.id).maybeSingle();if(error)throw error;if(!data)throw new Error('Учётная запись не добавлена в платформу.');if(data.status!=='active')throw new Error('Доступ приостановлен.');profile=data;const who=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);document.getElementById('profilePill').textContent=who;const sp=document.getElementById('sideProfileName');if(sp)sp.textContent=who;document.querySelectorAll('.owner-only').forEach(x=>{const pane=x.id==='pane-users'||x.id==='pane-audit';if(pane){if(profile.role!=='owner')x.classList.add('hidden');return}x.classList.toggle('hidden',profile.role!=='owner')})}
+async function loadGames(){const{data,error}=await sb.from('games').select('*').order('updated_at',{ascending:false});if(error)throw error;games=data||[];renderGames();renderOverview()}
 function gameOwnerName(g){const u=users.find(x=>x.id===g.owner_id);return u?(u.display_name||u.email):(g.owner_id===profile.id?(profile.display_name||profile.email):'Другой администратор')}
 function publicLink(id){return location.origin+location.pathname.replace(/admin\.html$/,'')+'?game='+encodeURIComponent(id)}
 function filteredGames(){const f=document.getElementById('gameFilter').value;if(f==='all')return games;if(f==='main')return games.filter(g=>!['archived','trashed'].includes(g.status));return games.filter(g=>g.status===f)}
+function overviewGame(){const available=games.filter(g=>g.status!=='trashed');return available.find(g=>g.status==='active')||available.find(g=>!['archived','completed'].includes(g.status))||available[0]||games[0]||null}
+function overviewIcon(id,cls=''){return `<span class="overview-kpi-icon ${cls}"><svg aria-hidden="true"><use href="#${id}"/></svg></span>`}
+function overviewScheduleLabel(s){
+  const days=['','Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  if(s.scheduleType==='daily')return 'Каждый день';
+  if(s.scheduleType==='weekdays'){const list=(Array.isArray(s.weekdays)?s.weekdays:[]).map(Number).sort((a,b)=>a-b).map(x=>days[x]).filter(Boolean);return list.length?list.join(' · '):'Дни не выбраны'}
+  if(s.scheduleType==='weekly')return Number(s.recurrence||1)>1?'Раз в '+Number(s.recurrence)+' недели':'Раз в неделю';
+  if(s.scheduleType==='monthly')return Number(s.recurrence||1)>1?'Раз в '+Number(s.recurrence)+' месяца':'Раз в месяц';
+  if(s.scheduleType==='date'&&s.date){const d=new Date(s.date+'T00:00:00');return Number.isNaN(d.getTime())?s.date:d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}
+  return 'Ручное событие';
+}
+function overviewEvalLabel(s){return({prev_day:'Предыдущий календарный день',prev_workday:'Предыдущий рабочий день',prev_n_days:'Предыдущие '+Number(s.evalConfig?.n||7)+' дней',weekdays:'Выбранные дни текущей недели',prev_week:'Предыдущая неделя',current_week_to_date:'Текущая неделя до события',prev_month:'Предыдущий месяц',fixed_range:'Фиксированный период',manual:'Период задаётся вручную'})[s.evalType]||'Период задаётся вручную'}
+function overviewShotDate(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function overviewSector(s){const r=Number(s.r),c=Number(s.c);return Number.isFinite(r)&&Number.isFinite(c)?String.fromCharCode(65+c)+(r+1):'—'}
+function overviewOpeningLabel(s){if(s.result==='hit')return(s.sunk||s.finalBlow||s.inSunkShip)?'Сокровище найдено':'Найден фрагмент';if(s.result==='perk'||s.findLabel||s.findName||s.perkLabel)return'Неожиданная находка';return'Пустой сектор'}
+function overviewAction(href,icon,title,description){return `<a class="overview-action" href="${href}"><svg aria-hidden="true"><use href="#${icon}"/></svg><div><b>${title}</b><span>${description}</span></div></a>`}
+function renderOverview(){
+  const title=document.getElementById('overviewGameName'),status=document.getElementById('overviewGameStatus'),meta=document.getElementById('overviewGameMeta'),body=document.getElementById('overviewBody'),open=document.getElementById('overviewOpenBtn');
+  if(!title||!status||!meta||!body||!open)return;
+  const g=overviewGame();
+  if(!g){title.textContent='Игры пока не созданы';status.innerHTML='';meta.textContent='Создайте черновик, чтобы увидеть обзор.';open.classList.add('hidden');body.innerHTML='<div class="overview-empty">После создания игры здесь появятся показатели, расписание и последние открытия.</div>';return}
+  open.classList.remove('hidden');open.href='editor.html?game='+encodeURIComponent(g.id)+'&view=admin&tab=stats';title.textContent=g.title||g.state?.name||'Без названия';status.innerHTML=statusBadge(g.status);meta.textContent='Обновлено '+dt(g.updated_at)+' · обзор активной рабочей игры';
+  const state=g.state||{},shots=Array.isArray(state.shots)?state.shots:[],treasures=Array.isArray(state.ships)?state.ships:[],managers=Array.isArray(state.managers)?state.managers:[],size=Math.max(1,Number(state.size||8));
+  const completed=new Set(shots.filter(s=>s.result==='hit'&&(s.sunk||s.finalBlow||s.inSunkShip)).map(s=>s.shipId||s.shipName).filter(Boolean));
+  const found=treasures.filter(t=>t.sunk||completed.has(t.id)||completed.has(t.name)).length;
+  const findCount=shots.filter(s=>s.result==='perk'||s.findLabel||s.findName||s.perkLabel).length;
+  const scenarioList=(Array.isArray(state.scenarios)?state.scenarios:[]).filter(s=>!s.deletedAt).slice().sort((a,b)=>Number(a.sortOrder||0)-Number(b.sortOrder||0)).slice(0,3);
+  const schedule=scenarioList.length?scenarioList.map(s=>{const paused=s.enabled===false||!!(s.pausedUntil&&new Date(s.pausedUntil).getTime()>=Date.now());return `<div class="schedule-item"><span class="overview-row-icon"><svg aria-hidden="true"><use href="#i-calendar"/></svg></span><div><div class="overview-row-title">${esc(s.name||overviewScheduleLabel(s))}</div><div class="overview-row-meta">${esc(overviewScheduleLabel(s))} · ${esc(overviewEvalLabel(s))}</div></div><span class="overview-state ${paused?'paused':''}">${paused?'Пауза':'Активно'}</span></div>`}).join(''):'<div class="overview-list-empty">Сценарии открытий ещё не настроены.</div>';
+  const recent=shots.slice(-3).reverse();
+  const recentHtml=recent.length?recent.map(s=>`<div class="recent-item"><span class="recent-date">${overviewShotDate(s.ts)}</span><div><div class="overview-row-title">${esc(s.manager||'Без участника')}</div><div class="overview-row-meta">${esc(overviewOpeningLabel(s))}</div></div><span class="recent-sector">${overviewSector(s)}</span></div>`).join(''):'<div class="overview-list-empty">Открытий пока не было.</div>';
+  const href='editor.html?game='+encodeURIComponent(g.id)+'&view=admin&tab=';
+  body.innerHTML=`<div class="overview-kpis">
+    <article class="overview-kpi">${overviewIcon('i-users')}<div><div class="overview-kpi-label">Участников</div><div class="overview-kpi-value">${managers.length}</div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-grid','sand')}<div><div class="overview-kpi-label">Открыто секторов</div><div class="overview-kpi-value">${shots.length} <small>/ ${size*size}</small></div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-chest','gold')}<div><div class="overview-kpi-label">Найдено сокровищ</div><div class="overview-kpi-value">${found} <small>/ ${treasures.length}</small></div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-compass','purple')}<div><div class="overview-kpi-label">Неожиданные находки</div><div class="overview-kpi-value">${findCount}</div></div></article>
+  </div><div class="overview-middle">
+    <section class="overview-block"><div class="overview-block-head">Расписание открытий <span>${scenarioList.length?'Ближайшие сценарии':'Не настроено'}</span></div><div class="overview-list">${schedule}</div></section>
+    <section class="overview-block"><div class="overview-block-head">Последние открытия <span>${shots.length?'Всего '+shots.length:'Нет данных'}</span></div><div class="overview-list">${recentHtml}</div></section>
+  </div><nav class="overview-actions" aria-label="Быстрые действия с игрой">
+    ${overviewAction(href+'schedule','i-settings','Настройки игры','Показатели, роли и доступ')}
+    ${overviewAction(href+'map','i-map','Карта и сокровища','Размещение и запечатывание')}
+    ${overviewAction(href+'map','i-compass','Неожиданные находки','Эффекты и награды')}
+    ${overviewAction(href+'manage','i-lock','Управление игрой','Статус, архив и удаление')}
+  </nav>`;
+}
 function renderGames(){const box=document.getElementById('gameCards'),list=filteredGames();box.innerHTML='';const createBtn=document.getElementById('createGameBtn');if(createBtn)createBtn.disabled=!hasPermission('create_games');if(!list.length){box.innerHTML='<div class="empty">По выбранному фильтру игр нет.</div>';return}list.forEach(g=>{const el=document.createElement('div');el.className='game '+g.status;const state=g.state||{};el.innerHTML=`<div class="game-head"><div><div class="game-title">${esc(g.title)}</div><div class="meta">${profile.role==='owner'?'Владелец: '+esc(gameOwnerName(g))+' · ':''}обновлено ${dt(g.updated_at)}<br>участников: ${(state.managers||[]).length} · открытий: ${(state.shots||[]).length}</div></div>${statusBadge(g.status)}</div><div class="actions"></div>`;const a=el.querySelector('.actions');const open=document.createElement('a');open.className='btn dark small';open.textContent='Открыть';open.href='editor.html?game='+encodeURIComponent(g.id);a.appendChild(open);if(g.status==='active'){const pub=document.createElement('a');pub.className='btn ghost small';pub.textContent='Публичная ссылка';pub.href=publicLink(g.id);pub.target='_blank';a.appendChild(pub)}if(g.status==='trashed'){if(hasPermission('restore_games')){const restore=document.createElement('button');restore.className='btn primary small';restore.textContent='Восстановить';restore.onclick=()=>restoreGame(g);a.appendChild(restore)}if(profile.role==='owner'){const hard=document.createElement('button');hard.className='btn danger small';hard.textContent='Удалить окончательно';hard.onclick=()=>hardDeleteGame(g);a.appendChild(hard)}}else{if(hasPermission('trash_games')){const trash=document.createElement('button');trash.className='btn danger small';trash.textContent='В корзину';trash.onclick=()=>trashGame(g);a.appendChild(trash)}}if(profile.role==='owner'&&users.length&&g.status!=='trashed'){const transfer=document.createElement('button');transfer.className='btn ghost small';transfer.textContent='Передать';transfer.onclick=()=>transferGame(g);a.appendChild(transfer)}box.appendChild(el)})}
 async function createGame(){if(!hasPermission('create_games')){alert('Owner запретил создание новых игр для этой учётной записи.');return}const input=document.getElementById('newGameName'),name=input.value.trim()||'Новая экспедиция',btn=document.getElementById('createGameBtn');btn.disabled=true;try{const data=await api('create_game',{name,state:blankGame(name)});input.value='';await loadGames();location.href='editor.html?game='+encodeURIComponent(data.game.id)}catch(e){alert(e.message)}finally{btn.disabled=false}}
 async function trashGame(g){if(!hasPermission('trash_games')){alert('Owner запретил удаление игр.');return}confirmModal('Переместить игру в корзину?',`«${esc(g.title)}» исчезнет с публичного табло, но её можно восстановить.`,async()=>{try{await api('trash_game',{gameId:g.id});closeModal();await loadGames()}catch(e){alert(e.message)}})}
