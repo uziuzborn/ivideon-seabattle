@@ -129,9 +129,16 @@ export function buildPublicState(rawState: unknown): Json {
 
   const publicShots = shots.map((s) => {
     const key = `${s?.r},${s?.c}`;
+    const cell = cells[key] && typeof cells[key] === "object" ? cells[key] : null;
+    const hasStructuredFind = !!(cell?.find && typeof cell.find === "object");
     const sh = s?.result === "hit" ? shipById.get(s?.shipId) : undefined;
     const complete = isShipFound(sh);
-    const find = buildPublicFind(cells[key], s);
+    const find = buildPublicFind(cell ?? undefined, s);
+    const publicResult = s?.result === "hit"
+      ? "hit"
+      : s?.result === "perk" && (!hasStructuredFind || !!find)
+        ? "perk"
+        : "miss";
 
     const metricValues: Json = {};
     const src = (s?.metricValues && typeof s.metricValues === "object") ? s.metricValues : {};
@@ -144,12 +151,14 @@ export function buildPublicState(rawState: unknown): Json {
       r: num(s?.r), c: num(s?.c),
       week: num(s?.week),
       manager: str(s?.manager, 200),
-      result: s?.result === "hit" || s?.result === "perk" ? s.result : "miss",
+      result: publicResult,
       finalBlow: !!s?.sunk,
       inSunkShip: s?.result === "hit" && complete,
       shipName: sh ? (str(sh.name, 160) ?? null) : null,
       prize: complete && sh ? str(sh.prize, 200) : null,
-      perkLabel: s?.result === "perk" ? (find?.findLabel ?? str(s?.perkLabel, 200)) : null,
+      // Для структурированной находки fallback на старый perkLabel запрещён:
+      // выключенная/просроченная находка не должна снова стать публичной.
+      perkLabel: publicResult === "perk" ? (find?.findLabel ?? str(s?.perkLabel, 200)) : null,
       calls: num(s?.calls),
       revenue: num(s?.revenue),
       passedGate: typeof s?.passedGate === "boolean" ? s.passedGate : null,

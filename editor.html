@@ -1271,6 +1271,7 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
    изменений схемы. Меняется только то, что видит пользователь.
    ========================================================================= */
 const SCHEMA_VERSION=4;
+const HASH_VERSION=2;
 const THEME_KEY='ivideon_seabattle_theme';
 
 const TREASURE_NAMES={1:'Драгоценный камень',2:'Старинный сундук',3:'Коллекция артефактов',4:'Королевская сокровищница',5:'Затерянный клад'};
@@ -1303,11 +1304,18 @@ const EVAL_LABELS={
 const ROLE_LABELS={threshold:'Допуск',ranking:'Основной критерий',tiebreaker:'При равенстве',informational:'Только статистика'};
 const OPERATORS={'>=':'не меньше','<=':'не больше','>':'больше','<':'меньше','=':'равно'};
 const STATUS_LABELS={draft:'Черновик',active:'Активна',paused:'Приостановлена',completed:'Завершена',archived:'Архив',trashed:'Корзина'};
+const ICON_IDS=new Set([
+  'i-account','i-archive','i-arrow-left','i-bell','i-cache','i-calendar','i-chart','i-check','i-chest','i-clock',
+  'i-close','i-coin','i-compass','i-empty','i-filter','i-find','i-flag','i-fragment','i-gem','i-grid','i-help',
+  'i-home','i-journal','i-key','i-lantern','i-link','i-lock','i-map','i-mapfrag','i-marker','i-menu','i-moon',
+  'i-restore','i-scroll','i-search','i-settings','i-shovel','i-sun','i-trail','i-trash','i-treasure','i-trophy','i-users','i-warn'
+]);
 
 /* ================= helpers ================= */
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const escapeAttr=s=>String(s??'').replace(/"/g,'&quot;');
-const icon=id=>'<svg aria-hidden="true"><use href="#'+id+'"/></svg>';
+const safeIconId=id=>ICON_IDS.has(String(id||''))?String(id):'i-find';
+const icon=id=>'<svg aria-hidden="true"><use href="#'+safeIconId(id)+'"/></svg>';
 const colLetter=i=>String.fromCharCode(65+i);
 const initials=n=>(n||'').trim().split(/\s+/)[0].slice(0,6);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1369,13 +1377,13 @@ function guessEffect(label){
 }
 function normalizeFind(f,fallbackLabel){
   const src=f&&typeof f==='object'?f:{};
-  const name=(src.findName||src.perkLabel||fallbackLabel||'Неожиданная находка').trim()||'Неожиданная находка';
+  const name=modernFindLabel(src.findName||src.perkLabel||fallbackLabel||'Неожиданная находка');
   const effectType=EFFECT_LABELS[src.effectType]?src.effectType:guessEffect(name);
   return {
     findId:src.findId||uid(),
     findName:name,
     findDesc:src.findDesc||'',
-    findIcon:src.findIcon||'i-find',
+    findIcon:safeIconId(src.findIcon),
     template:src.template||'custom',
     effectType,
     effectConfig:src.effectConfig&&typeof src.effectConfig==='object'?src.effectConfig:{uses:1},
@@ -1398,14 +1406,21 @@ function cellFind(cell){
 function newGameObj(name,ownerEmail){
   return{id:'pending',schemaVersion:SCHEMA_VERSION,name:name||'Новая игра',ownerEmail:(ownerEmail||'').toLowerCase(),
     banner:'Карта сокровищ · '+(name||'Новая игра'),size:8,managers:[],cells:{},ships:[],shots:[],week:1,
-    sealed:false,salt:null,hash:null,finalPrizeSunk:'Главная награда',finalPrizeShots:'Награда за активность',
+    sealed:false,salt:null,hash:null,hashVersion:null,finalPrizeSunk:'Главная награда',finalPrizeShots:'Награда за активность',
     secretsRevealed:false,threshold:100,thresholdNote:'минимум для допуска',metrics:defaultMetrics(),
     scenarios:[],bonusGrants:[],findLog:[]};
 }
+function modernFindLabel(value){
+  const raw=String(value||'').trim();
+  if(!raw||raw==='Плюшка'||raw==='Кофе с Али')return 'Неожиданная находка';
+  if(raw==='Повторный выстрел')return 'Дополнительное открытие сектора';
+  return raw;
+}
 function cleanupLegacyDefaults(g){
   (g.ships||[]).forEach(s=>{if(s.prize==='Книга от Али')s.prize=''});
-  Object.values(g.cells||{}).forEach(c=>{if(c&&c.type==='perk'&&c.perkLabel==='Кофе с Али')c.perkLabel='Неожиданная находка'});
-  (g.shots||[]).forEach(s=>{if(s.perkLabel==='Кофе с Али')s.perkLabel='Неожиданная находка'});
+  // Значение perkLabel в клетке входит в старый отпечаток карты. Его нельзя
+  // переписывать при чтении: отображаем новое название через find.findName.
+  (g.shots||[]).forEach(s=>{if(s.perkLabel)s.perkLabel=modernFindLabel(s.perkLabel)});
   return g;
 }
 /* Идемпотентная миграция состояния к схеме v4.
@@ -1439,10 +1454,11 @@ function normalizeGame(g){
   Object.keys(g.cells).forEach(key=>{
     const c=g.cells[key];if(!c||typeof c!=='object')return;
     if(c.type==='perk'){
-      if(c.perkLabel==='Плюшка'||!c.perkLabel)c.perkLabel='Неожиданная находка';
-      if(c.perkLabel==='Повторный выстрел')c.perkLabel='Дополнительное открытие сектора';
-      c.find=normalizeFind(c.find,c.perkLabel);
-      c.perkLabel=c.find.findName;               // держим ключ совместимости в синхроне
+      const legacyCommitment=c.perkLabel;
+      c.find=normalizeFind(c.find,modernFindLabel(legacyCommitment));
+      // Для новой клетки ключ совместимости заполняется сразу. Для старой
+      // сохраняется исходная строка, иначе перестанет сходиться прежний hash.
+      if(!legacyCommitment&&(!g.sealed||Number(g.hashVersion||1)>=HASH_VERSION))c.perkLabel=c.find.findName;
     }else if(c.find){
       c.find=normalizeFind(c.find,c.find.findName);
     }
@@ -1454,7 +1470,9 @@ function normalizeGame(g){
     if(s.perkLabel==='Плюшка')s.perkLabel='Неожиданная находка';
     if(s.perkLabel==='Повторный выстрел')s.perkLabel='Дополнительное открытие сектора';
     const cell=g.cells[s.r+','+s.c],f=cellFind(cell);
-    if(f&&!f.consumedAt){f.consumedAt=s.ts||Date.now();f.foundAt=f.foundAt||s.ts||Date.now();f.foundBy=f.foundBy||s.manager||null}
+    if(f&&!f.consumedAt&&(s.result==='perk'||s.findLabel)){
+      f.consumedAt=s.ts||Date.now();f.foundAt=f.foundAt||s.ts||Date.now();f.foundBy=f.foundBy||s.manager||null;
+    }
   });
 
   g.bonusGrants.forEach(b=>{
@@ -1652,12 +1670,54 @@ function sha256(ascii){
   return result;
 }
 function utf8(s){return unescape(encodeURIComponent(s))}
-/* Формат канонической строки не меняется: отпечатки, выданные до перехода
-   на «Карту сокровищ», продолжают проверяться. */
-function canonical(g){
+/* Версия 1 оставлена байт-в-байт: старые запечатанные карты продолжают
+   проверяться по исходному perkLabel, который миграция больше не переписывает. */
+function canonicalLegacy(g){
   const rows=[];
   Object.keys(g.cells).sort().forEach(key=>{const c=g.cells[key];rows.push(key+':'+c.type+':'+(c.shipId||'')+':'+(c.perkLabel||''))});
   return utf8('size='+g.size+'|'+rows.join('|')+'|salt='+g.salt);
+}
+function stableValue(value){
+  if(Array.isArray(value))return value.map(stableValue);
+  if(value&&typeof value==='object')return Object.keys(value).sort().reduce((out,key)=>{out[key]=stableValue(value[key]);return out},Object.create(null));
+  return value===undefined?null:value;
+}
+function findCommitment(find){
+  if(!find||typeof find!=='object')return null;
+  return stableValue({
+    findName:String(find.findName||''),findDesc:String(find.findDesc||''),findIcon:safeIconId(find.findIcon),
+    template:String(find.template||''),effectType:String(find.effectType||'none'),effectConfig:find.effectConfig||{},
+    prize:String(find.prize||''),enabled:find.enabled!==false,expiresAt:find.expiresAt||null,immediate:find.immediate!==false
+  });
+}
+/* Версия 2 фиксирует не только геометрию сокровищ, но и находки поверх
+   сокровищ, их эффекты и заявленные награды. Поля игрового прогресса
+   (foundAt/consumedAt/shots) намеренно не входят в отпечаток. */
+function canonicalV2(g){
+  const cells=Object.keys(g.cells||{}).sort().map(key=>{
+    const c=g.cells[key]||{};
+    return{key,type:String(c.type||''),shipId:c.shipId??null,perkLabel:String(c.perkLabel||''),find:findCommitment(c.find)};
+  });
+  const ships=(g.ships||[]).map(s=>({id:s.id??null,size:Number(s.size||0),name:String(s.name||''),prize:String(s.prize||''),cells:(s.cells||[]).slice().sort()}))
+    .sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+  return utf8(JSON.stringify(stableValue({version:HASH_VERSION,size:Number(g.size||0),cells,ships,salt:String(g.salt||'')})));
+}
+function canonical(g){
+  const version=Number(g.hashVersion||1);
+  if(version===1)return canonicalLegacy(g);
+  if(version===HASH_VERSION)return canonicalV2(g);
+  throw new Error('Неподдерживаемая версия отпечатка: '+version);
+}
+function sealGameState(g,saltValue){
+  // Сначала применяем идемпотентную миграцию. Иначе известные старые
+  // системные подписи могли бы измениться при следующей загрузке уже после
+  // вычисления отпечатка и дать ложное предупреждение о подмене карты.
+  normalizeGame(g);
+  g.salt=saltValue||Math.random().toString(36).slice(2)+Date.now().toString(36);
+  g.hashVersion=HASH_VERSION;
+  g.hash=sha256(canonical(g));
+  g.sealed=true;
+  return g.hash;
 }
 
 /* ================= view + tabs ================= */
@@ -1737,13 +1797,34 @@ function scenarios(g,includeDeleted){
   return (includeDeleted?list:list.filter(s=>!s.deletedAt)).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
 }
 function scenarioById(g,id){return scenarios(g,true).find(s=>s.id===id)||null}
-function scenarioIsPaused(s){return !!(s.pausedUntil&&parseISO(s.pausedUntil)&&parseISO(s.pausedUntil)>=new Date(toISO(new Date())))}
+function scenarioIsPaused(s,todayIso=toISO(new Date())){
+  return !!(s.pausedUntil&&/^\d{4}-\d{2}-\d{2}$/.test(String(s.pausedUntil))&&String(s.pausedUntil)>=todayIso);
+}
 function writeScenario(g,scenario){
   const list=Array.isArray(g.scenarios)?g.scenarios:[];
   const i=list.findIndex(x=>x.id===scenario.id);
   if(i<0)list.push(scenario);else list[i]=scenario;
   g.scenarios=list;
 }
+function openingEventDate(shot){
+  if(shot&&/^\d{4}-\d{2}-\d{2}$/.test(String(shot.eventDate||'')))return shot.eventDate;
+  return shot&&shot.ts?toISO(new Date(shot.ts)):null;
+}
+function scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd){
+  const total=Math.max(1,Number(scenario&&scenario.defaultOpenings||1));
+  if(!scenario)return{used:0,total,remaining:total};
+  const used=(g.shots||[]).filter(s=>
+    s.scenarioId===scenario.id&&s.openingSource!=='bonus'&&openingEventDate(s)===eventDate&&
+    (s.periodStart||null)===(periodStart||null)&&(s.periodEnd||null)===(periodEnd||null)
+  ).length;
+  return{used,total,remaining:Math.max(0,total-used)};
+}
+function scenarioIsCompleted(g,scenario){
+  if(!scenario||!scenario.oneTime)return false;
+  const total=Math.max(1,Number(scenario.defaultOpenings||1));
+  return (g.shots||[]).filter(s=>s.scenarioId===scenario.id&&s.openingSource!=='bonus').length>=total;
+}
+function completeOneTimeScenario(g,scenario){return scenarioIsCompleted(g,scenario)}
 
 /* --- расчёт периода оценки --- */
 function computePeriod(scenario,ref){
@@ -1924,14 +2005,14 @@ function scenarioCard(g,s){
   const el=document.createElement('div');
   el.className='scenario'+(s.enabled?'':' off');
   const period=computePeriod(s);
-  const paused=scenarioIsPaused(s);
+  const paused=scenarioIsPaused(s),completed=scenarioIsCompleted(g,s);
   const editable=canEditCurrent();
   el.innerHTML=
     '<div class="scenario-head">'+
       '<div style="flex:1;min-width:180px"><div class="scenario-name">'+esc(s.name)+'</div>'+
       '<div class="scenario-sub">'+esc(scheduleSummary(s))+' · период: '+esc(EVAL_LABELS[s.evalType]||s.evalType)+'</div>'+
       '<div class="scenario-badges">'+
-        '<span class="tag '+(s.enabled&&!paused?'tag-done':'tag-empty')+'">'+(paused?'на паузе до '+esc(fmtDate(s.pausedUntil)):(s.enabled?'активен':'выключен'))+'</span>'+
+        '<span class="tag '+(s.enabled&&!paused&&!completed?'tag-done':'tag-empty')+'">'+(completed?'завершён':paused?'на паузе до '+esc(fmtDate(s.pausedUntil)):(s.enabled?'активен':'выключен'))+'</span>'+
         '<span class="tag tag-empty">'+(s.oneTime?'разовый':'повторяющийся')+'</span>'+
         '<span class="tag tag-fragment">открытий: '+Number(s.defaultOpenings||1)+'</span>'+
       '</div></div>'+
@@ -2056,7 +2137,9 @@ function renderMapTab(){
   document.getElementById('finFound').value=g.finalPrizeSunk||'';
   document.getElementById('finOpenings').value=g.finalPrizeShots||'';
   document.getElementById('sizeSel').value=g.size;
-  document.getElementById('sizeSel').disabled=g.sealed;
+  const placementLocked=g.sealed||!canEditCurrent();
+  ['sizeSel','orientSel','eraserBtn','clearBtn','randomFindBtn'].forEach(id=>{document.getElementById(id).disabled=placementLocked});
+  document.querySelectorAll('#palette .ptool').forEach(el=>{el.disabled=placementLocked});
   buildFindTemplateSelect();
   buildSetBoard();
   renderManagers();
@@ -2129,6 +2212,7 @@ document.getElementById('clearBtn').onclick=()=>{
 };
 document.getElementById('randomFindBtn').onclick=()=>{
   const g=G();if(g.sealed){alert('Карта запечатана.');return}
+  if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
   const free=[];
   for(let r=0;r<g.size;r++)for(let c=0;c<g.size;c++){const cell=g.cells[r+','+c];if(!cell||(cell.type==='ship'&&!cell.find))free.push([r,c])}
   if(!free.length){alert('Свободных секторов не осталось.');return}
@@ -2198,6 +2282,8 @@ function preview(r,c){
 function clearPreview(){setBoard.querySelectorAll('.preview').forEach(t=>t.classList.remove('preview'))}
 function placeFind(r,c){
   const g=G(),key=r+','+c,cell=g.cells[key];
+  if(g.sealed){alert('Карта запечатана.');return}
+  if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
   const draft=currentFindDraft();
   if(cell&&cell.type==='perk'){alert('В этом секторе уже есть находка.');return}
   if(cell&&cell.type==='ship'){
@@ -2240,12 +2326,12 @@ function renderTreasureList(){
     const row=document.createElement('div');row.className='list-row treasure-row';
     row.innerHTML='<div class="tr-icon">'+icon(TREASURE_ICONS[sz])+'</div>'+
       '<div><label class="fld">Название · '+sz+' сект.</label><input class="t-name" value="'+escapeAttr(t?t.name:TREASURE_NAMES[sz])+'" '+(editable?'':'disabled')+'></div>'+
-      '<div><label class="fld">Награда за найденное сокровище</label><input class="t-prize" placeholder="Например: сертификат" value="'+escapeAttr(t?t.prize:DEFAULT_PRIZES[sz])+'" '+(canEditCurrent()?'':'disabled')+'></div>'+
+      '<div><label class="fld">Награда за найденное сокровище</label><input class="t-prize" placeholder="Например: сертификат" value="'+escapeAttr(t?t.prize:DEFAULT_PRIZES[sz])+'" '+(editable?'':'disabled')+'></div>'+
       '<span class="st '+(t?'st-placed':'st-wait')+'">'+(t?'на карте':'не размещено')+'</span>'+
       '<span class="tag '+(t&&isFound(g,t)?'tag-done':'tag-empty')+'">'+(t?(isFound(g,t)?'найдено':foundFragments(g,t)+' / '+sz):'—')+'</span>';
     const nameInput=row.querySelector('.t-name'),prizeInput=row.querySelector('.t-prize');
-    nameInput.onchange=()=>{const cur=g.ships.find(x=>x.size===sz);if(cur){cur.name=nameInput.value.trim()||TREASURE_NAMES[sz];save('Изменено название сокровища')}};
-    prizeInput.onchange=()=>{const cur=g.ships.find(x=>x.size===sz);if(cur){cur.prize=prizeInput.value;save('Изменена награда за сокровище')}else DEFAULT_PRIZES[sz]=prizeInput.value};
+    nameInput.onchange=()=>{if(g.sealed||!canEditCurrent())return;const cur=g.ships.find(x=>x.size===sz);if(cur){cur.name=nameInput.value.trim()||TREASURE_NAMES[sz];save('Изменено название сокровища')}};
+    prizeInput.onchange=()=>{if(g.sealed||!canEditCurrent())return;const cur=g.ships.find(x=>x.size===sz);if(cur){cur.prize=prizeInput.value;save('Изменена награда за сокровище')}else DEFAULT_PRIZES[sz]=prizeInput.value};
     box.appendChild(row);
   });
 }
@@ -2280,10 +2366,11 @@ function renderFindList(){
         '<button class="btn btn-danger btn-sm f-del">Удалить</button>'+
       '</div>';
     const editable=canEditCurrent();
-    el.querySelector('.f-edit').disabled=!editable;
+    el.querySelector('.f-edit').disabled=!editable||g.sealed;
     el.querySelector('.f-del').disabled=!editable||g.sealed;
-    el.querySelector('.f-edit').onclick=()=>editFindModal(entry);
+    el.querySelector('.f-edit').onclick=()=>{if(g.sealed||!canEditCurrent())return;editFindModal(entry)};
     el.querySelector('.f-del').onclick=()=>{
+      if(g.sealed||!canEditCurrent())return;
       if(!confirm('Удалить находку «'+f.findName+'»?'))return;
       if(entry.cell.type==='perk')delete g.cells[entry.key];else delete entry.cell.find;
       save('Удалена находка');paintSetup();renderFindList();
@@ -2294,6 +2381,7 @@ function renderFindList(){
 }
 function editFindModal(entry){
   const g=G(),f=entry.find;
+  if(g.sealed||!canEditCurrent())return;
   showModalHTML('<div class="modal wide"><h3>Настройка находки</h3>'+
     '<div class="grid2">'+
       '<div><label class="fld">Название</label><input id="fdName" value="'+escapeAttr(f.findName)+'"></div>'+
@@ -2312,7 +2400,7 @@ function editFindModal(entry){
     '</div>'+
     '<div class="row" style="margin-top:12px">'+
       '<label class="check"><input type="checkbox" id="fdEnabled"'+(f.enabled?' checked':'')+'> Активна</label>'+
-      '<label class="check"><input type="checkbox" id="fdImmediate"'+(f.immediate?' checked':'')+'> Использовать сразу при находке</label>'+
+      '<label class="check"><input type="checkbox" id="fdImmediate"'+(f.immediate?' checked':'')+'> Применить автоматически, если эффект не требует выбора сектора</label>'+
     '</div>'+
     '<div class="actions"><button class="btn btn-ghost" id="fdCancel">Отмена</button><button class="btn btn-primary" id="fdSave">Сохранить</button></div></div>');
   document.getElementById('fdCancel').onclick=closeModal;
@@ -2342,10 +2430,9 @@ document.getElementById('sealBtn').onclick=()=>{
   if(g.sealed){alert('Карта уже запечатана.');return}
   if(g.ships.length<5){alert('Размести все пять сокровищ перед запечатыванием.');return}
   if(g.managers.length<1&&!confirm('Список участников пуст. Запечатать карту всё равно?'))return;
-  g.salt=Math.random().toString(36).slice(2)+Date.now().toString(36);
-  g.hash=sha256(canonical(g));g.sealed=true;
+  sealGameState(g);
   save('Карта запечатана');
-  lockSetup();paintSetup();
+  renderMapTab();
   document.getElementById('sealMsg').innerHTML='<span class="verify-ok">Запечатано. Отпечаток — в разделе «История исследований».</span>';
 };
 
@@ -2355,10 +2442,11 @@ document.getElementById('sealBtn').onclick=()=>{
 const playBoard=document.getElementById('playBoard');
 function scenarioMetricsFor(g,scenario){
   const act=activeMetrics(g);
-  if(!scenario||!scenario.metrics.length)return act.map(m=>({metric:m,role:'informational',required:m.required,operator:'>=',value:m.thresholdEnabled?Number(m.threshold||0):null,priority:0}));
+  const fallback=m=>({metric:m,role:m.thresholdEnabled?'threshold':'informational',required:m.required,operator:'>=',value:m.thresholdEnabled?Number(m.threshold||0):null,priority:0});
+  if(!scenario||!scenario.metrics.length)return act.map(fallback);
   return act.map(m=>{
     const cfg=scenario.metrics.find(x=>x.metricId===m.id);
-    if(!cfg)return{metric:m,role:'informational',required:m.required,operator:'>=',value:m.thresholdEnabled?Number(m.threshold||0):null,priority:0};
+    if(!cfg)return fallback(m);
     return{metric:m,role:cfg.role,
       required:cfg.requiredOverride===null?m.required:cfg.requiredOverride,
       operator:cfg.operatorOverride||'>=',
@@ -2376,13 +2464,15 @@ function renderOpeningTab(){
   document.getElementById('openingPanels').classList.toggle('hidden',!g.sealed);
   if(!g.sealed)return;
   const scSel=document.getElementById('scenarioSel');
-  const list=scenarios(g,false).filter(s=>s.enabled&&!scenarioIsPaused(s));
+  const list=scenarios(g,false).filter(s=>s.enabled&&!scenarioIsPaused(s)&&!scenarioIsCompleted(g,s));
   const prev=scSel.value;
   scSel.innerHTML='<option value="">Ручное событие (без сценария)</option>'+list.map(s=>'<option value="'+escapeAttr(s.id)+'">'+esc(s.name)+' · '+esc(scheduleSummary(s))+'</option>').join('');
   scSel.value=list.some(s=>s.id===prev)?prev:'';
   scSel.onchange=()=>{applyScenarioPeriod();renderMetricInputs();renderBonusBox()};
   const wSel=document.getElementById('winnerSel');
+  const previousWinner=wSel.value;
   wSel.innerHTML=g.managers.length?g.managers.map(m=>'<option>'+esc(m)+'</option>').join(''):'<option value="">— добавь участников —</option>';
+  if(g.managers.includes(previousWinner))wSel.value=previousWinner;
   wSel.onchange=renderBonusBox;
   applyScenarioPeriod();renderMetricInputs();renderBonusBox();
   buildPlayBoard();
@@ -2483,6 +2573,41 @@ function logFind(g,entry){
 }
 function countFragmentsIn(g,cells){
   return cells.filter(([r,c])=>{const cell=g.cells[r+','+c];return cell&&cell.type==='ship'}).length;
+}
+function classifySectorForOpening(g,r,c,todayIso=toISO(new Date())){
+  const cell=g.cells[r+','+c],rawFind=cellFind(cell);
+  const find=rawFind&&rawFind.enabled!==false&&!rawFind.consumedAt&&(!rawFind.expiresAt||rawFind.expiresAt>=todayIso)?rawFind:null;
+  if(cell&&cell.type==='ship')return{cell,find,result:'hit',shipId:cell.shipId,perkLabel:null};
+  if(cell&&cell.type==='perk'&&(find||!rawFind))return{cell,find,result:'perk',shipId:null,perkLabel:find?find.findName:modernFindLabel(cell.perkLabel)};
+  return{cell,find:null,result:'miss',shipId:null,perkLabel:null};
+}
+function consumeImmediateGrant(g,grant,detail){
+  grant.remainingUses=Math.max(0,Number(grant.remainingUses||0)-1);
+  if(grant.remainingUses<=0)grant.consumedAt=Date.now();
+  logFind(g,{participant:grant.participant,effectType:grant.effectType,findName:grant.findName,detail});
+  return detail;
+}
+function applyImmediateGrant(g,grant,r,c){
+  if(!grant.immediate)return null;
+  const label=colLetter(c)+(r+1);
+  if(grant.effectType==='instant_prize')
+    return consumeImmediateGrant(g,grant,'Мгновенно выдана награда: '+(grant.prize||'определяет администратор'));
+  if(grant.effectType==='adjacent_hint'){
+    const around=[];
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+      if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;
+      if(rr>=0&&cc>=0&&rr<g.size&&cc<g.size)around.push([rr,cc]);
+    }
+    return consumeImmediateGrant(g,grant,'Подсказка о соседях '+label+': '+countFragmentsIn(g,around)+' из '+around.length);
+  }
+  if(grant.effectType==='row_hint'||grant.effectType==='column_hint'){
+    const cells=[];for(let i=0;i<g.size;i++)cells.push(grant.effectType==='row_hint'?[r,i]:[i,c]);
+    const what=grant.effectType==='row_hint'?('строке '+(r+1)):('столбце '+colLetter(c));
+    return consumeImmediateGrant(g,grant,'Подсказка по '+what+': '+countFragmentsIn(g,cells)+' из '+g.size);
+  }
+  // Дополнительное открытие и фонарь требуют следующей выбранной координаты,
+  // а ручной эффект — отдельного подтверждения администратора.
+  return null;
 }
 function applyGrant(grant){
   const g=G();
@@ -2614,21 +2739,23 @@ function openSector(r,c){
     if(!usedGrant){alert('Доступной находки с дополнительным открытием у участника нет.');return}
   }
 
-  const key=r+','+c,cell=g.cells[key];
-  let result='miss',shipId=null,perkLabel=null;
-  const find=cellFind(cell);
-  if(cell&&cell.type==='ship'){result='hit';shipId=cell.shipId}
-  else if(cell&&cell.type==='perk'){result='perk';perkLabel=find?find.findName:cell.perkLabel}
-
   const periodStart=document.getElementById('periodStart').value||null;
   const periodEnd=document.getElementById('periodEnd').value||null;
+  const now=Date.now(),eventDate=toISO(new Date(now));
+  const quota=scenario?scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd):null;
+  if(scenario&&!usedGrant&&quota.remaining<=0){
+    alert('Для сценария «'+scenario.name+'» уже проведено '+quota.total+' обычных открытий за это событие. Дополнительное открытие возможно только по находке.');return;
+  }
+  const key=r+','+c,sector=classifySectorForOpening(g,r,c,eventDate);
+  const{cell,find,result,shipId,perkLabel}=sector;
   const opening={
     week:g.week,manager:winner,metricValues,gateResults,
     calls:metricValues.calls??null,revenue:metricValues.revenue??null,
-    gateThreshold:g.threshold||0,passedGate,r,c,result,shipId,perkLabel,ts:Date.now(),
+    gateThreshold:g.threshold||0,passedGate,r,c,result,shipId,perkLabel,ts:now,eventDate,
     scenarioId:scenario?scenario.id:null,scenarioName:scenario?scenario.name:'Ручное событие',
     periodStart,periodEnd,
-    openingSource:usedGrant?'bonus':'scenario',bonusGrantId:usedGrant?usedGrant.id:null
+    openingSource:usedGrant?'bonus':(scenario?'scenario':'manual'),bonusGrantId:usedGrant?usedGrant.id:null,
+    scenarioOpeningNumber:scenario&&!usedGrant?quota.used+1:null,scenarioOpeningTotal:scenario&&!usedGrant?quota.total:null
   };
   let foundTreasure=null;
   if(result==='hit'){
@@ -2638,22 +2765,19 @@ function openSector(r,c){
   }else g.shots.push(opening);
 
   // находка в этом секторе (в т.ч. поверх фрагмента сокровища)
-  let grantedFind=null;
-  if(find&&find.enabled&&!find.consumedAt){
-    const today=toISO(new Date());
-    if(find.expiresAt&&find.expiresAt<today){
-      logFind(g,{participant:winner,effectType:find.effectType,findName:find.findName,detail:'находка просрочена и не выдана'});
-    }else{
-      find.consumedAt=Date.now();find.foundAt=Date.now();find.foundBy=winner;
-      opening.findLabel=find.findName;opening.findEffect=find.effectType;
-      grantedFind=find;
-      if(find.effectType!=='none'){
-        const grant={id:uid(),participant:winner,findKey:key,findName:find.findName,effectType:find.effectType,
-          prize:find.prize||'',remainingUses:Math.max(1,Number((find.effectConfig&&find.effectConfig.uses)||1)),
-          grantedAt:Date.now(),consumedAt:null,expiresAt:find.expiresAt||null};
-        g.bonusGrants.push(grant);
-        logFind(g,{participant:winner,effectType:find.effectType,findName:find.findName,detail:'находка выдана в секторе '+colLetter(c)+(r+1)});
-      }
+  let grantedFind=null,immediateFindDetail=null;
+  if(find){
+    find.consumedAt=now;find.foundAt=now;find.foundBy=winner;
+    opening.findLabel=find.findName;opening.findEffect=find.effectType;
+    grantedFind=find;
+    if(find.effectType!=='none'){
+      const grant={id:uid(),participant:winner,findKey:key,findName:find.findName,description:find.findDesc||'',effectType:find.effectType,
+        prize:find.prize||'',remainingUses:Math.max(1,Number((find.effectConfig&&find.effectConfig.uses)||1)),
+        grantedAt:now,consumedAt:null,expiresAt:find.expiresAt||null,immediate:find.immediate!==false};
+      g.bonusGrants.push(grant);
+      immediateFindDetail=applyImmediateGrant(g,grant,r,c);
+      opening.findImmediate=!!immediateFindDetail;
+      if(!immediateFindDetail)logFind(g,{participant:winner,effectType:find.effectType,findName:find.findName,detail:'находка выдана в секторе '+colLetter(c)+(r+1)});
     }
   }
   if(usedGrant){
@@ -2661,13 +2785,12 @@ function openSector(r,c){
     if(usedGrant.remainingUses<=0)usedGrant.consumedAt=Date.now();
     logFind(g,{participant:winner,effectType:'extra_opening',findName:usedGrant.findName,detail:'использовано дополнительное открытие сектора '+colLetter(c)+(r+1)});
   }
+  const scenarioCompleted=!!(scenario&&!usedGrant&&completeOneTimeScenario(g,scenario));
+  if(scenarioCompleted)opening.completedScenario=true;
 
   g.week++;
   save('Открыт сектор '+colLetter(c)+(r+1)+' · '+winner);
-  buildPlayBoard();
-  document.getElementById('remainingCount').textContent=g.ships.filter(t=>!isFound(g,t)).length+' / '+g.ships.length;
-  defs.forEach(def=>{const input=document.getElementById('mi_'+def.metric.id);if(input)input.value=''});
-  updateGateFlag();renderBonusBox();renderGrantList();
+  renderOpeningTab();
 
   const label=colLetter(c)+(r+1);
   let extra='';
@@ -2675,7 +2798,12 @@ function openSector(r,c){
     extra='<div class="prize find"><b>Неожиданная находка:</b> '+esc(grantedFind.findName)+
       (grantedFind.findDesc?'<br><span style="font-weight:400">'+esc(grantedFind.findDesc)+'</span>':'')+
       '<br><span style="font-weight:400">Эффект: '+esc(EFFECT_LABELS[grantedFind.effectType]||grantedFind.effectType)+
-      (grantedFind.prize?' · награда: '+esc(grantedFind.prize):'')+'</span></div>';
+      (grantedFind.prize?' · награда: '+esc(grantedFind.prize):'')+'</span>'+
+      (immediateFindDetail?'<br><span style="font-weight:400">'+esc(immediateFindDetail)+'</span>':'')+'</div>';
+  }
+  if(scenario&&!usedGrant){
+    const left=Math.max(0,quota.total-(quota.used+1));
+    extra+=(scenarioCompleted?'<p><b>Разовый сценарий завершён и больше не предлагается.</b></p>':left?'<p>Обычных открытий по этому событию осталось: <b>'+left+'</b>.</p>':'');
   }
   if(foundTreasure)showModal('i-treasure','Сокровище найдено полностью!',
     '<p><b>'+esc(winner)+'</b> открыл последний фрагмент сокровища <b>'+esc(treasureName(foundTreasure))+'</b> в секторе <b>'+esc(label)+'</b>.</p>'+
@@ -2832,9 +2960,13 @@ function renderResearch(){
 document.getElementById('verifyBtn').onclick=()=>{
   const g=G(),msg=document.getElementById('verifyMsg');
   if(!g.sealed){msg.innerHTML='<span class="verify-bad">Карта не запечатана.</span>';return}
-  msg.innerHTML=sha256(canonical(g))===g.hash
-    ? '<span class="verify-ok">Целостность подтверждена — размещение не менялось.</span>'
-    : '<span class="verify-bad">Отпечаток не совпадает! Размещение изменено.</span>';
+  try{
+    msg.innerHTML=sha256(canonical(g))===g.hash
+      ? '<span class="verify-ok">Целостность подтверждена — размещение не менялось.</span>'
+      : '<span class="verify-bad">Отпечаток не совпадает! Размещение изменено.</span>';
+  }catch(e){
+    msg.innerHTML='<span class="verify-bad">Эта версия отпечатка пока не поддерживается. Обнови приложение перед проверкой.</span>';
+  }
 };
 document.getElementById('copyHashBtn').onclick=()=>{
   const g=G();if(!g.hash){alert('Сначала запечатай карту.');return}
@@ -2965,7 +3097,7 @@ document.getElementById('resetGameBtn').onclick=()=>{
   const g=G();
   if(g.sealed&&!hasPermission('unseal_board')){alert('Owner запретил изменение запечатанной карты.');return}
   showConfirmWord('Сбросить карту и открытия?','Будет создан снимок для восстановления. Участники, название, показатели и сценарии останутся.',()=>{
-    g.cells={};g.ships=[];g.shots=[];g.week=1;g.sealed=false;g.salt=null;g.hash=null;g.secretsRevealed=false;
+    g.cells={};g.ships=[];g.shots=[];g.week=1;g.sealed=false;g.salt=null;g.hash=null;g.hashVersion=null;g.secretsRevealed=false;
     g.bonusGrants=[];g.findLog=[];
     closeModal();save('Сброшены карта и открытия');renderAdminAll();activateTab('map');
   });
