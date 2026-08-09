@@ -4,46 +4,455 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Панель управления · Морской бой · Ivideon</title>
+<title>Панель управления · Карта сокровищ · Ivideon</title>
 <style>
 :root{
-  --blue:#0095ff;--blue-dark:#0078d4;--navy:#001d32;--navy-2:#052e49;
-  --white:#fff;--grey:#edf1f6;--grey-2:#f7f9fc;--line:#d8e1ea;
-  --text:#001d32;--muted:#607487;--yellow:#ffc600;--red:#e4002b;
-  --green:#2cc84d;--purple:#4d49be;--shadow:0 18px 52px rgba(0,29,50,.12);
+  /* Ivideon core */
+  --iv-blue:#2568db;--iv-blue-dark:#1d4ed8;--iv-blue-soft:#eff6ff;--iv-navy:#0f172a;--iv-navy-2:#172554;
+  /* Neutral UI */
+  --white:#fff;--page-bg:#f8fafc;--surface:#fff;--surface-soft:#f8fafc;--line:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--disabled:#94a3b8;
+  /* Treasure layer */
+  --parchment:#e9d8a6;--parchment-light:#f9f0e2;--parchment-dark:#d6bd84;--sand:#f1e9d2;
+  --map-ink:#76552e;--map-line:#b38a52;--gold:#d4af37;--gold-light:#c9b06a;--bronze:#9a622f;
+  /* System */
+  --success:#22c55e;--success-soft:#ecfdf3;--warning:#f59e0b;--warning-soft:#fffbeb;
+  --danger:#ef4444;--danger-soft:#fef2f2;--purple:#8b5cf6;--purple-soft:#f5f3ff;
+  /* Shadows */
+  --shadow-sm:0 3px 12px rgba(15,23,42,.05);--shadow-md:0 12px 30px rgba(15,23,42,.10);--shadow-lg:0 24px 64px rgba(15,23,42,.16);
+  /* Type */
+  --font-xs:11px;--font-sm:12px;--font-body:14px;--font-body-lg:16px;--font-h3:18px;--font-h2:22px;--font-h1:clamp(28px,4vw,42px);
+  --font-ui:Manrope,"Avenir Next",Avenir,"Segoe UI",Arial,sans-serif;
+  /* Metrics */
+  --content-max:1280px;--radius-sm:7px;--radius-md:9px;--radius-lg:12px;--radius-xl:14px;
 }
-*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:"Avenir Next",Avenir,"Segoe UI",Arial,sans-serif;background:var(--grey-2);color:var(--text);-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}.hidden{display:none!important}a{color:inherit;text-decoration:none}
+body[data-theme="dark"]{
+  --white:#062a44;--page-bg:#071421;--surface:#062a44;--surface-soft:#07243a;--line:#164b6d;
+  --text:#edf1f6;--muted:#afc3d1;--disabled:#5f7d95;--iv-blue-soft:#0b3a5c;
+  --parchment:#2f2818;--parchment-light:#392f1c;--parchment-dark:#241e12;--sand:#332b1a;
+  --map-ink:#e6d4ac;--map-line:#8a6c42;--purple-soft:#211f42;--success-soft:#10301a;--warning-soft:#2c2413;--danger-soft:#3a1119;
+  --shadow-sm:0 6px 18px rgba(0,0,0,.32);--shadow-md:0 14px 36px rgba(0,0,0,.4);--shadow-lg:0 24px 64px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;font-family:var(--font-ui);font-size:var(--font-body);color:var(--text);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(circle at 100% 0%,rgba(0,149,255,.08),transparent 38%),var(--page-bg);
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+button,input,select,textarea{font-family:inherit;font-size:var(--font-body-lg);color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+:focus-visible{outline:2px solid var(--iv-blue);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* ---- decorative cartographic edge pattern (very light, non-interactive) ---- */
+.map-pattern{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+  background-image:
+    radial-gradient(circle at 8% 18%,transparent 38px,var(--map-line) 39px,transparent 40px),
+    radial-gradient(circle at 92% 78%,transparent 54px,var(--map-line) 55px,transparent 56px),
+    repeating-linear-gradient(58deg,transparent 0 78px,var(--map-line) 78px 79px);
+  background-repeat:no-repeat,no-repeat,repeat;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),transparent 62%)}
+/* ---- buttons ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 14px;
+  border:1px solid transparent;border-radius:var(--radius-md);font-size:13px;font-weight:700;line-height:1.2;
+  transition:background .16s,border-color .16s,color .16s,transform .16s,box-shadow .16s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn svg{width:18px;height:18px;flex:0 0 18px}
+.btn-primary{background:var(--iv-blue);color:#fff;box-shadow:0 8px 18px rgba(0,149,255,.20)}
+.btn-primary:hover:not(:disabled){background:var(--iv-blue-dark)}
+.btn-secondary,.btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line)}
+.btn-secondary:hover:not(:disabled),.btn-ghost:hover:not(:disabled){border-color:var(--iv-blue);color:var(--iv-blue-dark)}
+.btn-dark,.btn-blue{background:var(--iv-navy);color:#fff}
+.btn-dark:hover:not(:disabled),.btn-blue:hover:not(:disabled){background:var(--iv-navy-2)}
+.btn-gold{background:var(--gold);color:#2a1f00}
+.btn-danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(228,0,43,.25)}
+.btn-danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-sm{min-height:34px;padding:7px 11px;font-size:12px}
+.btn-icon{min-height:44px;width:44px;padding:0;border-radius:var(--radius-md);background:var(--surface);border-color:var(--line);color:var(--muted)}
+.btn-icon:hover{color:var(--iv-blue);border-color:var(--iv-blue)}
+/* ---- surfaces ---- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);padding:22px;box-shadow:var(--shadow-sm)}
+.panel-title{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:var(--font-h3);font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+.panel-sub{font-size:13px;line-height:1.55;color:var(--muted);margin-bottom:16px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:var(--font-xs);font-weight:800;letter-spacing:.02em}
+.badge svg{width:13px;height:13px}
+.badge-active{background:var(--success-soft);color:#177f33}
+.badge-gold{background:rgba(217,168,0,.16);color:#7d6100}
+.badge-blue{background:var(--iv-blue-soft);color:var(--iv-blue-dark)}
+.badge-muted{background:var(--surface-soft);color:var(--muted)}
+.badge-purple{background:var(--purple-soft);color:#3d36a0}
+body[data-theme="dark"] .badge-gold{color:var(--gold-light)}
+body[data-theme="dark"] .badge-active{color:#7ee29a}
+body[data-theme="dark"] .badge-purple{color:#b0a9f2}
 
-/* Авторизация — композиция на основе первых страниц брендбука Ivideon */
-.login{min-height:100vh;display:grid;place-items:center;padding:28px;background:var(--blue);position:relative;overflow:hidden}.login:before{content:"";position:absolute;width:680px;height:680px;border:92px solid rgba(255,255,255,.08);border-radius:50%;right:-330px;top:-420px}.login:after{content:"";position:absolute;width:520px;height:170px;border-radius:50%;background:rgba(0,29,50,.09);left:-160px;bottom:-100px;transform:rotate(-9deg)}
-.auth-shell{position:relative;z-index:1;width:min(1040px,100%);min-height:610px;display:grid;grid-template-columns:1.08fr .92fr;background:var(--white);border-radius:32px;overflow:hidden;box-shadow:0 34px 100px rgba(0,29,50,.28)}
-.auth-brand{position:relative;overflow:hidden;background:var(--blue);color:#fff;padding:56px 58px;display:flex;flex-direction:column}.auth-brand:before{content:"";position:absolute;width:410px;height:410px;border:64px solid rgba(255,255,255,.085);border-radius:50%;right:-235px;bottom:-235px}.auth-wordmark{font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1}.auth-kicker{margin-top:auto;font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.78)}.auth-brand h1{font-size:clamp(48px,6vw,76px);line-height:.94;letter-spacing:-.055em;margin:18px 0 22px;max-width:540px}.auth-brand p{max-width:440px;margin:0;font-size:17px;line-height:1.55;color:rgba(255,255,255,.84)}.auth-stripes{display:flex;gap:7px;margin-top:38px}.auth-stripes span{display:block;height:8px;border-radius:99px}.auth-stripes span:nth-child(1){width:74px;background:var(--white)}.auth-stripes span:nth-child(2){width:35px;background:var(--yellow)}.auth-stripes span:nth-child(3){width:16px;background:var(--red)}.auth-stripes span:nth-child(4){width:16px;background:var(--purple)}.auth-stripes span:nth-child(5){width:16px;background:var(--green)}
-.auth-form{padding:58px 54px;display:flex;flex-direction:column;justify-content:center;background:#fff}.auth-form-top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:50px;color:var(--blue);font-size:13px;font-weight:800}.auth-secure{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em}.auth-secure:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}.auth-form h2{font-size:32px;line-height:1.08;letter-spacing:-.04em;margin:0 0 12px}.auth-form p{color:var(--muted);font-size:14px;line-height:1.55;margin:0 0 24px}.auth-field{margin-top:14px}.auth-field label{display:block;margin-bottom:7px;color:var(--navy);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.auth-field input{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 15px;color:var(--text);outline:none;transition:.18s}.auth-field input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,149,255,.12)}.auth-submit{width:100%;margin-top:20px}.auth-foot{margin-top:22px;padding-top:19px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.55;color:var(--muted)}.err{min-height:18px;color:var(--red);font-size:12.5px;line-height:1.45;margin-top:12px}.boot-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px}.boot-copy h2{margin:0;font-size:32px;letter-spacing:-.04em}.boot-copy p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}.boot-spinner{width:36px;height:36px;border:4px solid var(--grey);border-top-color:var(--blue);border-radius:50%;animation:bootspin .8s linear infinite}@keyframes bootspin{to{transform:rotate(360deg)}}
-.dashboard-boot{min-height:100vh;padding:20px;background:linear-gradient(180deg,#f8fbfe 0%,#edf1f6 100%);color:var(--navy)}.dashboard-boot-inner{width:min(1180px,100%);margin:0 auto}.dashboard-boot-top{height:76px;display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid rgba(0,29,50,.08);border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(0,29,50,.05)}.dashboard-boot-wordmark{font-size:23px;font-weight:850;letter-spacing:-.05em;color:var(--blue)}.dashboard-boot-title{font-size:16px;font-weight:900}.dashboard-boot-sub{font-size:11.5px;color:var(--muted);margin-top:3px}.dashboard-boot-state{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;font-weight:800}.dashboard-boot-state .boot-spinner{width:24px;height:24px;border-width:3px}.dashboard-boot-tabs{height:54px;margin:18px 0;display:flex;align-items:center;gap:9px;padding:7px;border-radius:14px;background:#fff;border:1px solid rgba(0,29,50,.08);box-shadow:0 8px 24px rgba(0,29,50,.04)}.dashboard-boot-tabs i{display:block;width:94px;height:34px;border-radius:9px;background:linear-gradient(90deg,#edf1f6,#f7f9fc,#edf1f6);background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite}.dashboard-boot-tabs i:first-child{background:var(--navy)}.dashboard-boot-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.42fr);gap:18px}.dashboard-boot-card{min-height:190px;border-radius:18px;background:#fff;border:1px solid rgba(0,29,50,.08);box-shadow:0 9px 26px rgba(0,29,50,.05);padding:24px}.dashboard-boot-line{height:14px;border-radius:999px;margin-bottom:13px;background:linear-gradient(90deg,#edf1f6,#f8fafc,#edf1f6);background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite}.dashboard-boot-line.w1{width:38%;height:22px}.dashboard-boot-line.w2{width:72%}.dashboard-boot-line.w3{width:55%}.dashboard-boot-boxes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:24px}.dashboard-boot-box{height:92px;border-radius:14px;background:linear-gradient(110deg,#f4f7fa,#fff,#f4f7fa);background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite;border:1px solid #edf1f6}@keyframes bootsheen{0%{background-position:100% 0}100%{background-position:-100% 0}}@media(max-width:720px){.dashboard-boot{padding:10px}.dashboard-boot-top{height:auto;min-height:68px}.dashboard-boot-state span{display:none}.dashboard-boot-tabs i{width:72px}.dashboard-boot-grid{grid-template-columns:1fr}.dashboard-boot-card:last-child{display:none}.dashboard-boot-boxes{grid-template-columns:1fr}}
+a{color:inherit;text-decoration:none}
+/* ===================== auth (kept, restyled) ===================== */
+.login{min-height:100vh;display:grid;place-items:center;padding:28px;background:var(--iv-blue);position:relative;overflow:hidden}
+.login:before{content:"";position:absolute;width:680px;height:680px;border:92px solid rgba(255,255,255,.08);border-radius:50%;right:-330px;top:-420px}
+.login:after{content:"";position:absolute;width:520px;height:170px;border-radius:50%;background:rgba(0,29,50,.09);left:-160px;bottom:-100px;transform:rotate(-9deg)}
+.auth-shell{position:relative;z-index:1;width:min(1040px,100%);min-height:600px;display:grid;grid-template-columns:1.08fr .92fr;
+  background:var(--surface);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg)}
+.auth-brand{position:relative;overflow:hidden;background:var(--iv-blue);color:#fff;padding:52px 54px;display:flex;flex-direction:column}
+.auth-brand:before{content:"";position:absolute;width:410px;height:410px;border:64px solid rgba(255,255,255,.085);border-radius:50%;right:-235px;bottom:-235px}
+.auth-wordmark{font-size:30px;font-weight:900;letter-spacing:-.045em;line-height:1}
+.auth-kicker{margin-top:auto;font-size:var(--font-xs);font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.78)}
+.auth-brand h1{font-size:clamp(44px,6vw,70px);line-height:.96;letter-spacing:-.05em;margin:18px 0 20px;max-width:540px}
+.auth-brand p{max-width:440px;font-size:16px;line-height:1.55;color:rgba(255,255,255,.85)}
+.auth-stripes{display:flex;gap:7px;margin-top:34px}
+.auth-stripes span{display:block;height:8px;border-radius:99px}
+.auth-stripes span:nth-child(1){width:74px;background:#fff}
+.auth-stripes span:nth-child(2){width:35px;background:var(--gold)}
+.auth-stripes span:nth-child(3){width:16px;background:var(--danger)}
+.auth-stripes span:nth-child(4){width:16px;background:var(--purple)}
+.auth-stripes span:nth-child(5){width:16px;background:var(--success)}
+.auth-form{padding:54px 50px;display:flex;flex-direction:column;justify-content:center;background:var(--surface)}
+.auth-form-top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:44px;color:var(--iv-blue);font-size:13px;font-weight:800}
+.auth-secure{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:var(--font-xs);text-transform:uppercase;letter-spacing:.07em}
+.auth-secure:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
+.auth-form h2{font-size:30px;line-height:1.1;letter-spacing:-.04em;margin-bottom:12px}
+.auth-form p{color:var(--muted);font-size:var(--font-body);line-height:1.55;margin-bottom:22px}
+.auth-field{margin-top:14px}
+.auth-field label{display:block;margin-bottom:7px;color:var(--text);font-size:var(--font-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.auth-field input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface);padding:13px 14px;outline:none;transition:.18s}
+.auth-field input:focus{border-color:var(--iv-blue);box-shadow:0 0 0 4px rgba(0,149,255,.14)}
+.auth-submit{width:100%;margin-top:20px}
+.auth-foot{margin-top:22px;padding-top:19px;border-top:1px solid var(--line);font-size:var(--font-sm);line-height:1.55;color:var(--muted)}
+.err{min-height:18px;color:var(--danger);font-size:12.5px;line-height:1.45;margin-top:12px}
+.boot-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px}
+.boot-copy h2{font-size:30px;letter-spacing:-.04em}
+.boot-copy p{color:var(--muted);font-size:var(--font-body);line-height:1.55}
+.boot-spinner{width:36px;height:36px;border:4px solid var(--surface-soft);border-top-color:var(--iv-blue);border-radius:50%;animation:bootspin .8s linear infinite}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+/* skeleton boot */
+.dashboard-boot{min-height:100vh;padding:20px;background:radial-gradient(circle at 100% 0%,rgba(0,149,255,.08),transparent 38%),var(--page-bg);color:var(--text)}
+.dashboard-boot-inner{width:min(1180px,100%);margin:0 auto}
+.dashboard-boot-top{height:74px;display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid var(--line);
+  border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-sm)}
+.dashboard-boot-wordmark{font-size:22px;font-weight:900;letter-spacing:-.05em;color:var(--iv-blue)}
+.dashboard-boot-title{font-size:15px;font-weight:800}
+.dashboard-boot-sub{font-size:var(--font-xs);color:var(--muted);margin-top:3px}
+.dashboard-boot-state{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;font-weight:800}
+.dashboard-boot-state .boot-spinner{width:24px;height:24px;border-width:3px}
+.dashboard-boot-tabs{height:54px;margin:18px 0;display:flex;align-items:center;gap:9px;padding:7px;border-radius:var(--radius-lg);
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.dashboard-boot-tabs i{display:block;width:94px;height:34px;border-radius:9px;
+  background:linear-gradient(90deg,var(--surface-soft),var(--page-bg),var(--surface-soft));background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite}
+.dashboard-boot-tabs i:first-child{background:var(--iv-navy)}
+.dashboard-boot-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.42fr);gap:18px}
+.dashboard-boot-card{min-height:190px;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);padding:24px}
+.dashboard-boot-line{height:14px;border-radius:999px;margin-bottom:13px;background:linear-gradient(90deg,var(--surface-soft),var(--page-bg),var(--surface-soft));background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite}
+.dashboard-boot-line.w1{width:38%;height:22px}.dashboard-boot-line.w2{width:72%}.dashboard-boot-line.w3{width:55%}
+.dashboard-boot-boxes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:24px}
+.dashboard-boot-box{height:92px;border-radius:var(--radius-md);background:linear-gradient(110deg,var(--surface-soft),var(--surface),var(--surface-soft));background-size:220% 100%;animation:bootsheen 1.25s ease-in-out infinite;border:1px solid var(--line)}
+@keyframes bootsheen{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* ===================== app shell: appbar + sidebar (spec 10/11) ===================== */
+#app{display:block}
+.appbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:11px;min-height:58px;padding:8px 18px;overflow:hidden;
+  border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 96%,transparent);
+  box-shadow:0 2px 10px rgba(15,23,42,.04);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding-top:calc(8px + env(safe-area-inset-top))}
+.appbar .btn{min-height:36px;padding:8px 11px;font-size:12px;border-radius:8px}
+.appbar .appbar-icon{width:36px;padding:0}
+.appbar .appbar-icon svg{width:17px;height:17px}
+.brand-wordmark{font-size:20px;font-weight:800;letter-spacing:-.04em;color:var(--iv-blue);line-height:1}
+.brand-divider{width:1px;height:24px;background:var(--line);flex:0 0 1px}
+.title{font-size:14px;font-weight:700;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-profile{display:none;align-items:center;gap:11px;padding:11px 12px;margin-top:4px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12.5px;font-weight:700;overflow:hidden}
+.side-profile svg{width:19px;height:19px;flex:0 0 19px}
+.side-profile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:10px;color:var(--muted);margin-top:1px}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);font-size:11.5px;font-weight:700;color:var(--muted);max-width:250px}
+.pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--disabled)}
+.pill.ok i{background:var(--success)}.pill.warn i{background:var(--warning)}.pill.bad i{background:var(--danger)}
+.shell{display:grid;grid-template-columns:208px minmax(0,1fr);gap:16px;max-width:var(--content-max);margin:0 auto;
+  padding:16px 18px calc(52px + env(safe-area-inset-bottom));align-items:start}
+.sidebar{position:sticky;top:74px;display:flex;flex-direction:column;gap:3px;padding:9px;border:1px solid var(--line);
+  border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-sm)}
+.side-item{display:flex;align-items:center;gap:9px;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:var(--radius-md);
+  background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;text-align:left;transition:background .15s,color .15s}
+.side-item svg{width:17px;height:17px;flex:0 0 17px}
+.side-item:hover{background:var(--surface-soft);color:var(--text)}
+.side-item.active{background:var(--iv-blue-soft);color:var(--iv-navy)}
+.side-item.active svg{color:var(--iv-blue)}
+.side-sep{height:1px;background:var(--line);margin:8px 4px}
+.side-art{margin-top:auto;padding:13px 10px 7px;text-align:center;color:var(--bronze);opacity:.75}
+.side-art svg{width:58px;height:58px}
+.side-art div{font-size:var(--font-xs);color:var(--muted);margin-top:6px;line-height:1.45}
+.drawer-backdrop{display:none}
+.burger{display:none}
+/* ===================== dashboard content ===================== */
+.panel.overview-panel{padding:0;overflow:hidden}
+.overview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+.overview-kicker{font-size:10px;line-height:1.2;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.overview-title-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.overview-title-line h1{font-size:19px;line-height:1.2;font-weight:700;letter-spacing:-.025em;overflow-wrap:anywhere}
+.overview-period{font-size:11.5px;line-height:1.45;color:var(--muted);margin-top:4px}
+.overview-open{flex:0 0 auto}
+.overview-empty{padding:26px 18px;color:var(--muted);font-size:12.5px;text-align:center}
+.overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:13px 18px 10px}
+.overview-kpi{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;min-height:68px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.overview-kpi-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;color:var(--iv-blue-dark);background:var(--iv-blue-soft)}
+.overview-kpi-icon svg{width:19px;height:19px}
+.overview-kpi-icon.gold{color:#8a6700;background:rgba(217,168,0,.15)}
+.overview-kpi-icon.sand{color:var(--map-ink);background:var(--parchment-light)}
+.overview-kpi-icon.purple{color:var(--purple);background:var(--purple-soft)}
+.overview-kpi-label{font-size:10px;line-height:1.25;color:var(--muted);margin-bottom:3px}
+.overview-kpi-value{font-size:19px;line-height:1.05;font-weight:700;letter-spacing:-.03em}
+.overview-kpi-value small{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0}
+.overview-middle{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:9px;padding:0 18px 10px}
+.overview-block{min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.overview-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700}
+.overview-block-head span{font-size:10px;font-weight:600;color:var(--muted)}
+.overview-list{display:grid}
+.overview-list-empty{padding:17px 11px;color:var(--muted);font-size:11.5px;line-height:1.45}
+.schedule-item,.recent-item{display:grid;align-items:center;gap:9px;min-width:0;padding:9px 11px;border-bottom:1px solid var(--line)}
+.schedule-item:last-child,.recent-item:last-child{border-bottom:0}
+.schedule-item{grid-template-columns:27px minmax(0,1fr) auto}
+.recent-item{grid-template-columns:64px minmax(0,1fr) auto}
+.overview-row-icon{width:27px;height:27px;display:grid;place-items:center;border-radius:7px;background:var(--surface-soft);color:var(--muted)}
+.overview-row-icon svg{width:15px;height:15px}
+.overview-row-title{font-size:11.5px;line-height:1.25;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.overview-row-meta{font-size:9.5px;line-height:1.35;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.overview-state{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:650;color:#177f33;white-space:nowrap}
+.overview-state:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--success)}
+.overview-state.paused{color:var(--muted)}
+.overview-state.paused:before{background:var(--disabled)}
+.recent-date{font-size:9.5px;line-height:1.35;color:var(--muted);white-space:nowrap}
+.recent-sector{font-size:10px;font-weight:700;color:var(--iv-blue-dark);white-space:nowrap}
+.overview-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:0 18px 16px}
+.overview-action{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;min-height:58px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);transition:border-color .15s,box-shadow .15s,transform .15s}
+.overview-action:hover{border-color:var(--iv-blue);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.overview-action>svg{width:18px;height:18px;color:var(--muted)}
+.overview-action b{display:block;font-size:10.5px;line-height:1.25;font-weight:700}
+.overview-action span{display:block;font-size:9.5px;line-height:1.35;color:var(--muted);margin-top:2px}
+.create-panel{padding:15px 17px}
+.create-panel .hint{margin-bottom:10px}
+.system-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 16px;margin-bottom:18px;
+  border:1px solid rgba(255,176,0,.5);border-radius:var(--radius-md);background:var(--warning-soft);font-size:13px;line-height:1.5}
+.system-banner strong{display:block;color:var(--text);margin-bottom:2px}
+.system-banner .btn{flex:0 0 auto}
+body[data-theme="dark"] .system-banner{color:#f0d9a0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);padding:17px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.panel h2{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:16px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:13px}
+.row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.field{flex:1;min-width:200px}
+.field label{display:block;font-size:var(--font-xs);text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;min-height:44px;border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:11px 12px;color:var(--text);background:var(--surface);outline:none;font-size:var(--font-body-lg)}
+.field textarea{min-height:120px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--iv-blue);box-shadow:0 0 0 4px rgba(0,149,255,.14)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:11px}
+.game{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);padding:15px;box-shadow:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+.game:hover{border-color:var(--iv-blue);transform:translateY(-1px)}
+.game.active{border-color:rgba(44,200,77,.5)}
+.game.trashed{opacity:.8}
+.game-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.game-title{font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.meta{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:6px;overflow-wrap:anywhere}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:var(--font-xs);font-weight:800;letter-spacing:.03em;white-space:nowrap}
+.status-draft{background:var(--surface-soft);color:var(--muted)}
+.status-active{background:var(--success-soft);color:#177f33}
+.status-paused{background:var(--warning-soft);color:#8a6100}
+.status-completed{background:var(--iv-blue-soft);color:var(--iv-blue-dark)}
+.status-archived{background:var(--surface-soft);color:var(--muted)}
+.status-trashed{background:var(--danger-soft);color:var(--danger)}
+.empty{padding:26px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:var(--radius-lg);background:var(--surface-soft)}
+.user-row,.audit-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto minmax(0,1.2fr);gap:14px;align-items:center;
+  padding:14px;margin-bottom:10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface)}
+.audit-row{grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.7fr) minmax(0,.8fr)}
+.u-name{font-size:14px;font-weight:800;overflow-wrap:anywhere}
+.u-email{font-size:var(--font-sm);color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.smalltext{font-size:var(--font-sm);color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.checkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px;margin:14px 0}
+.check{display:inline-flex;align-items:center;gap:9px;min-height:42px;padding:8px 11px;border:1px solid var(--line);
+  border-radius:var(--radius-md);background:var(--surface-soft);font-size:13px;font-weight:700;cursor:pointer}
+.check input{width:20px;height:20px;min-height:0;flex:0 0 20px;accent-color:var(--iv-blue)}
+/* buttons legacy aliases used by admin JS */
+.btn.primary{background:var(--iv-blue);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(0,149,255,.2)}
+.btn.primary:hover:not(:disabled){background:var(--iv-blue-dark)}
+.btn.dark{background:var(--iv-navy);color:#fff;border-color:transparent}
+.btn.ghost{background:var(--surface);color:var(--text);border-color:var(--line)}
+.btn.ghost:hover:not(:disabled){border-color:var(--iv-blue);color:var(--iv-blue-dark)}
+.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(228,0,43,.25)}
+.btn.danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn.small{min-height:34px;padding:7px 10px;font-size:11.5px}
+/* modal */
+.modal-back{position:fixed;inset:0;z-index:400;background:rgba(0,29,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{width:min(560px,100%);max-height:calc(100vh - 32px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px;
+  border:1px solid var(--line);border-radius:var(--radius-xl);background:var(--surface);box-shadow:var(--shadow-lg)}
+.modal h3{font-size:var(--font-h2);letter-spacing:-.03em;margin-bottom:10px;overflow-wrap:anywhere}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.modal-actions .btn{flex:1 1 auto}
+@media(max-width:1100px){.shell{grid-template-columns:196px minmax(0,1fr)}.side-item{font-size:12px;padding-inline:9px}}
+@media(max-width:900px){
+  .auth-shell{grid-template-columns:1fr;min-height:auto}.auth-brand{padding:34px 32px}.auth-brand h1{font-size:46px}.auth-kicker{margin-top:40px}.auth-form{padding:34px 30px}
+  .user-row,.audit-row{grid-template-columns:1fr}
+  .appbar{padding:9px 14px;min-height:60px;gap:9px;flex-wrap:nowrap;padding-top:calc(9px + env(safe-area-inset-top))}
+  .brand-divider,.sub{display:none}
+  .appbar .pill,.appbar #helpBtn,.appbar #logoutBtn,.appbar a.btn{display:none}
+  .side-profile{display:flex}
+  .burger{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);
+    border-radius:var(--radius-md);background:var(--surface);color:var(--text)}
+  .burger svg{width:21px;height:21px}
+  .shell{grid-template-columns:1fr;padding:14px 14px calc(54px + env(safe-area-inset-bottom));gap:0}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:200;width:min(300px,86vw);border-radius:0;border-width:0 1px 0 0;
+    transform:translateX(-102%);transition:transform .22s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top))}
+  .side-item{min-height:44px;font-size:13px}
+  .sidebar.open{transform:translateX(0)}
+  .drawer-backdrop{display:block;position:fixed;inset:0;z-index:190;background:rgba(0,29,50,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+  .drawer-backdrop.open{opacity:1;pointer-events:auto}
+}
+@media(max-width:760px){
+  .shell{padding-inline:12px}
+  .btn,.btn.small,.btn-sm{min-height:44px}
+  .overview-open{width:44px;min-height:44px}
+  .section-help{width:44px;height:44px;min-height:44px;flex-basis:44px}
+  .panel{padding:16px;border-radius:var(--radius-lg)}
+  .overview-panel{padding:0}
+  .overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .overview-middle{grid-template-columns:1fr}
+  .overview-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .overview-action span{display:block}
+  .modal-back{align-items:flex-end;padding:0}
+  .modal{width:100%;max-width:none;max-height:88vh;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
+  .modal-actions{flex-direction:column-reverse}
+  .modal-actions .btn{width:100%}
+}
+@media(max-width:620px){.cards{grid-template-columns:1fr}.overview-head{align-items:center}.overview-open{width:44px;padding:0}.overview-open span{display:none}.recent-item{grid-template-columns:57px minmax(0,1fr) auto}}
+@media(max-width:520px){.login{padding:0;background:var(--surface)}.auth-shell{min-height:100vh;border-radius:0;box-shadow:none}.auth-brand{min-height:280px;padding:30px 22px}.auth-brand h1{font-size:42px}.auth-form{padding:32px 22px}.auth-form h2{font-size:26px}.overview-head{padding:14px}.overview-kpis,.overview-middle,.overview-actions{padding-left:14px;padding-right:14px}.overview-actions{padding-bottom:14px}.overview-kpi{grid-template-columns:30px minmax(0,1fr);gap:7px;padding:9px}.overview-kpi-icon{width:30px;height:30px}.overview-kpi-value{font-size:17px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
-/* Основная панель */
-.wrap{max-width:1240px;margin:auto;padding:18px 22px 80px}.top{position:sticky;top:12px;z-index:30;display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:14px 18px;border:1px solid rgba(0,29,50,.08);background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border-radius:18px;box-shadow:0 12px 34px rgba(0,29,50,.08);margin-bottom:16px}.brand{display:flex;align-items:center;gap:16px}.brand-wordmark{font-size:24px;font-weight:800;letter-spacing:-.045em;color:var(--blue)}.brand-divider{width:1px;height:36px;background:var(--line)}.title{font-size:19px;font-weight:900;letter-spacing:-.035em}.sub{font-size:11.5px;color:var(--muted);margin-top:3px}.spacer{flex:1}.pill{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--grey);font-size:12px;font-weight:800;color:var(--muted)}.pill i{width:8px;height:8px;border-radius:50%;background:#8a96a4}.pill.ok i{background:var(--green)}.pill.warn i{background:var(--yellow)}.pill.bad i{background:var(--red)}
-.system-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:14px 16px;margin-bottom:16px;border:1px solid rgba(255,198,0,.5);border-radius:14px;background:#fff9df;color:#5b4900;font-size:13px;line-height:1.5}.system-banner strong{display:block;color:var(--navy);margin-bottom:2px}.system-banner .btn{flex:0 0 auto}
-.btn{cursor:pointer;border:1px solid transparent;border-radius:11px;padding:10px 15px;font-size:13px;font-weight:800;transition:.16s}.btn:hover:not(:disabled){transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.primary{background:var(--blue);color:#fff;box-shadow:0 8px 18px rgba(0,149,255,.18)}.dark{background:var(--navy);color:#fff}.ghost{background:#fff;color:var(--navy);border-color:var(--line)}.danger{background:#fff2f5;color:var(--red);border-color:rgba(228,0,43,.22)}.small{padding:8px 11px;font-size:12px}.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:14px;border:1px solid rgba(0,29,50,.08);background:#fff;box-shadow:0 8px 24px rgba(0,29,50,.05);margin-bottom:18px}.tab{border:0;background:transparent;color:var(--muted);padding:10px 14px;border-radius:9px;font-weight:800;cursor:pointer}.tab.active{background:var(--navy);color:#fff}.panel{background:#fff;border:1px solid rgba(0,29,50,.08);border-radius:18px;padding:24px;box-shadow:0 9px 26px rgba(0,29,50,.06);margin-bottom:18px}.panel h2{margin:0 0 7px;font-size:21px;letter-spacing:-.03em}.hint{font-size:13.5px;color:var(--muted);line-height:1.55;margin-bottom:17px}.row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.field{flex:1;min-width:200px}.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.045em;font-weight:900;color:var(--muted);margin-bottom:6px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--text);background:#fff;outline:none}.field textarea{min-height:130px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,149,255,.11)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}.game{border:1px solid var(--line);border-radius:16px;background:#fff;padding:18px;box-shadow:0 7px 20px rgba(0,29,50,.045)}.game.active{border-color:rgba(44,200,77,.45)}.game.trashed{opacity:.83}.game-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.game-title{font-size:18px;font-weight:900;line-height:1.2}.meta{font-size:12px;color:var(--muted);line-height:1.55;margin-top:7px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.status-draft{background:var(--grey);color:var(--muted)}.status-active{background:rgba(44,200,77,.14);color:#168035}.status-paused{background:rgba(255,198,0,.18);color:#7d6300}.status-completed{background:rgba(0,149,255,.12);color:#006dbb}.status-archived,.status-trashed{background:rgba(228,0,43,.09);color:#a40020}.empty{text-align:center;padding:46px 18px;color:var(--muted)}.user-row,.audit-row{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(160px,.8fr) minmax(150px,.7fr) auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.user-row:last-child,.audit-row:last-child{border-bottom:0}.u-name{font-weight:900}.u-email,.smalltext{font-size:12px;color:var(--muted);margin-top:3px}.checkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:12px}.check{display:flex;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:var(--grey-2);font-size:12px}.modal-back{position:fixed;inset:0;background:rgba(0,29,50,.58);display:grid;place-items:center;padding:18px;z-index:1000}.modal{width:min(660px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,29,50,.34)}.modal h3{margin:0 0 8px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.notice{padding:12px 14px;border-radius:13px;background:#fff9df;border:1px solid rgba(255,198,0,.45);font-size:12.5px;color:#5b4900;line-height:1.5}.owner-only.hidden{display:none!important}
-@media(max-width:850px){.auth-shell{grid-template-columns:1fr;min-height:auto}.auth-brand{padding:36px 34px}.auth-brand h1{font-size:50px}.auth-brand p{font-size:15px}.auth-kicker{margin-top:55px}.auth-form{padding:38px 34px}.auth-form-top{margin-bottom:30px}.user-row,.audit-row{grid-template-columns:1fr}.wrap{padding:12px 12px 70px}.top{top:6px}.cards{grid-template-columns:1fr}}
-@media(max-width:520px){.login{padding:0;background:#fff}.auth-shell{min-height:100vh;border-radius:0;box-shadow:none}.auth-brand{min-height:305px;padding:32px 24px}.auth-brand h1{font-size:46px}.auth-kicker{margin-top:42px}.auth-form{padding:34px 24px}.auth-form h2{font-size:28px}.brand-divider{display:none}.brand{gap:10px}.brand-wordmark{font-size:21px}}
-
-
-/* ===== Context help and administrator guide ===== */
-.help-launch{white-space:nowrap}.help-overlay{position:fixed;inset:0;z-index:3000;background:rgba(0,29,50,.58);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);display:flex;justify-content:flex-end}.help-drawer{width:min(760px,96vw);height:100%;background:#f7f9fc;color:#001d32;box-shadow:-28px 0 80px rgba(0,29,50,.28);display:flex;flex-direction:column;animation:helpSlide .22s ease-out}.help-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:23px 26px;background:#fff;border-bottom:1px solid #d8e1ea}.help-head h2{font-size:25px;letter-spacing:-.035em;margin:2px 0 0}.help-kicker{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.11em;color:#0095ff}.help-close{width:42px;height:42px;border:1px solid #d8e1ea;border-radius:13px;background:#fff;color:#001d32;font-size:25px;cursor:pointer;line-height:1}.help-close:hover{border-color:#0095ff;color:#0095ff}.help-scroll{padding:22px 24px 38px;overflow:auto}.help-hero{position:relative;overflow:hidden;display:flex;gap:22px;align-items:center;padding:25px 26px;border-radius:22px;color:#fff;background:linear-gradient(125deg,#0078d4,#0095ff 58%,#22a8ff);box-shadow:0 18px 38px rgba(0,149,255,.2);margin-bottom:15px}.help-hero:after{content:"";position:absolute;width:240px;height:240px;border:38px solid rgba(255,255,255,.11);border-radius:50%;right:-130px;top:-150px}.help-hero-copy{position:relative;z-index:1;flex:1}.help-hero h3{font-size:26px;line-height:1.12;letter-spacing:-.035em;margin:10px 0}.help-hero p{font-size:14px;line-height:1.6;color:rgba(255,255,255,.88);margin:0}.help-badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.16);font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}.help-hero-mark{position:relative;z-index:1;width:86px;height:86px;flex:0 0 86px;border-radius:26px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:40px}.help-callout{padding:14px 16px;border-radius:14px;background:#fff9df;border:1px solid rgba(255,198,0,.5);font-size:13px;line-height:1.55;color:#5b4900;margin-bottom:13px}.help-section{border:1px solid #d8e1ea;border-radius:15px;background:#fff;margin-bottom:10px;overflow:hidden}.help-section summary{list-style:none;cursor:pointer;padding:16px 18px;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:12px}.help-section summary::-webkit-details-marker{display:none}.help-section summary:after{content:"+";width:24px;height:24px;border-radius:8px;background:#edf1f6;display:grid;place-items:center;color:#607487;font-size:18px}.help-section[open] summary{color:#0078d4;border-bottom:1px solid #edf1f6}.help-section[open] summary:after{content:"−";background:#e8f5ff;color:#0078d4}.help-content{padding:17px 18px 19px;font-size:13.5px;line-height:1.62;color:#42576b}.help-content p{margin:0 0 12px}.help-content p:last-child{margin-bottom:0}.help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px;margin:10px 0}.help-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.help-card{padding:13px 14px;border:1px solid #dce4ec;border-radius:13px;background:#f7f9fc}.help-card b{display:block;color:#001d32;margin-bottom:5px}.help-card span{display:block;font-size:12.5px;line-height:1.48}.help-card ul{padding-left:18px;margin:7px 0 0}.help-card li{margin:4px 0}.help-card.success{background:#effbf2;border-color:rgba(44,200,77,.28)}.help-card.manual{background:#fff8e3;border-color:rgba(255,198,0,.38)}.help-note{padding:11px 13px;border-radius:11px;background:#edf5fb;color:#42576b;font-size:12.5px!important}.help-steps{list-style:none;counter-reset:helpstep;display:grid;gap:9px;margin:5px 0}.help-steps li{counter-increment:helpstep;display:grid;grid-template-columns:31px 1fr;column-gap:10px;padding:11px 12px;border-radius:12px;background:#f7f9fc;border:1px solid #edf1f6}.help-steps li:before{content:counter(helpstep);width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#001d32;color:#fff;font-size:12px;font-weight:900;grid-row:1/3}.help-steps li b{color:#001d32}.help-steps li span{font-size:12.5px;line-height:1.45}.help-steps.compact li{padding:9px 11px}.help-list{padding-left:20px;margin:7px 0}.help-list li{margin:6px 0}.term-list{display:grid;gap:8px}.term-list>div{display:grid;grid-template-columns:minmax(120px,.42fr) 1fr;gap:12px;padding:10px 12px;border-radius:11px;background:#f7f9fc;border:1px solid #edf1f6}.term-list b{color:#001d32}.help-contact{display:flex;gap:13px;align-items:center;padding:16px 17px;margin-top:14px;border-radius:16px;background:#001d32;color:#fff}.help-contact-icon{width:39px;height:39px;flex:0 0 39px;border-radius:12px;display:grid;place-items:center;background:#0095ff;font-weight:900;font-size:20px}.help-contact b,.help-contact span{display:block}.help-contact span{font-size:12.5px;color:rgba(255,255,255,.76);margin-top:4px}.help-contact a{color:#ffc600;text-decoration:none;font-weight:800}.section-help{display:inline-grid;place-items:center;width:21px;height:21px;margin-left:7px;vertical-align:2px;border:1px solid #c5d2de;border-radius:7px;background:#f7f9fc;color:#607487;font-size:11px;font-weight:900;cursor:help}.section-help:hover,.section-help:focus{border-color:#0095ff;color:#0095ff;background:#e8f5ff}.ui-tip{position:fixed;z-index:5000;width:max-content;max-width:min(290px,calc(100vw - 24px));padding:9px 11px;border-radius:11px;background:rgba(0,29,50,.96);color:#fff;font-size:11.5px;line-height:1.4;font-weight:650;box-shadow:0 14px 35px rgba(0,29,50,.26);pointer-events:none}.ui-tip:after{content:"";position:absolute;left:var(--tip-arrow,50%);top:100%;margin-left:-6px;border:6px solid transparent;border-top-color:rgba(0,29,50,.96)}.ui-tip.below:after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:rgba(0,29,50,.96)}@keyframes helpSlide{from{transform:translateX(32px);opacity:.35}to{transform:none;opacity:1}}@media(max-width:650px){.help-drawer{width:100vw}.help-head{padding:18px}.help-scroll{padding:15px 14px 30px}.help-hero{padding:21px 19px}.help-hero h3{font-size:22px}.help-hero-mark{display:none}.help-grid.two{grid-template-columns:1fr}.term-list>div{grid-template-columns:1fr;gap:3px}}
+/* ===================== help drawer + tooltips ===================== */
+.help-launch{white-space:nowrap}
+.help-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,29,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;justify-content:flex-end}
+.help-drawer{width:min(760px,100%);height:100%;background:var(--page-bg);display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.help-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;background:var(--surface);
+  border-bottom:1px solid var(--line);padding-top:calc(20px + env(safe-area-inset-top))}
+.help-head h2{font-size:var(--font-h2);letter-spacing:-.03em;margin-top:3px}
+.help-kicker{font-size:var(--font-xs);font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--iv-blue)}
+.help-close{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface);color:var(--text);font-size:24px;line-height:1}
+.help-close:hover{border-color:var(--iv-blue);color:var(--iv-blue)}
+.help-scroll{padding:20px 22px calc(40px + env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.help-hero{position:relative;overflow:hidden;display:flex;gap:20px;align-items:center;padding:24px;margin-bottom:14px;
+  border-radius:var(--radius-xl);color:#fff;background:linear-gradient(128deg,var(--iv-navy),var(--iv-navy-2) 55%,#0a4d7d);box-shadow:var(--shadow-md)}
+.help-hero:after{content:"";position:absolute;width:240px;height:240px;right:-130px;top:-150px;border:38px solid rgba(255,255,255,.07);border-radius:50%}
+.help-hero-copy{position:relative;z-index:1;flex:1;min-width:0}
+.help-hero h3{font-size:var(--font-h2);line-height:1.14;letter-spacing:-.03em;margin:10px 0}
+.help-hero p{font-size:var(--font-body);line-height:1.6;color:rgba(255,255,255,.88)}
+.help-badge{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.16);font-size:var(--font-xs);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.help-hero-mark{position:relative;z-index:1;width:78px;height:78px;flex:0 0 78px;border-radius:var(--radius-lg);background:rgba(255,255,255,.14);display:grid;place-items:center}
+.help-hero-mark svg{width:42px;height:42px}
+.help-callout{padding:14px 16px;margin-bottom:12px;border-radius:var(--radius-md);background:var(--warning-soft);
+  border:1px solid rgba(255,176,0,.45);font-size:13px;line-height:1.6}
+body[data-theme="dark"] .help-callout{color:#f0d9a0}
+.help-section{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface);margin-bottom:10px;overflow:hidden}
+.help-section summary{list-style:none;cursor:pointer;padding:15px 17px;min-height:52px;font-size:var(--font-body);font-weight:800;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.help-section summary::-webkit-details-marker{display:none}
+.help-section summary:after{content:"+";font-size:19px;color:var(--iv-blue);flex:0 0 auto}
+.help-section[open] summary:after{content:"–"}
+.help-content{padding:0 17px 17px;font-size:13.5px;line-height:1.65;color:var(--muted)}
+.help-content p{margin-bottom:10px}
+.help-content b{color:var(--text)}
+.help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
+.help-grid.two{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.help-card{padding:13px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)}
+.help-card b{display:block;margin-bottom:5px;font-size:13px}
+.help-card span,.help-card li{font-size:12.5px;line-height:1.55}
+.help-card ul{margin:0;padding-left:17px}
+.help-card.success{border-color:rgba(44,200,77,.4)}
+.help-card.manual{border-color:rgba(217,168,0,.45)}
+.help-steps{margin:0;padding-left:19px;display:grid;gap:9px}
+.help-steps li{font-size:13px;line-height:1.55}
+.help-steps b{display:block}
+.help-steps span{display:block;color:var(--muted);font-size:12.5px}
+.help-list{margin:0;padding-left:19px;display:grid;gap:6px}
+.help-note{font-size:12.5px;color:var(--muted);line-height:1.55}
+.term-list{display:grid;gap:9px}
+.term-list>div{padding:11px 13px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-soft)}
+.term-list b{display:block;font-size:13px;margin-bottom:3px}
+.term-list span{font-size:12.5px;line-height:1.5}
+.help-contact{display:flex;align-items:center;gap:14px;padding:17px;margin-top:14px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface)}
+.help-contact-icon{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:var(--radius-md);
+  background:var(--iv-blue-soft);color:var(--iv-blue-dark);font-size:20px;font-weight:900}
+.help-contact b{display:block;font-size:13.5px;margin-bottom:3px}
+.help-contact span{font-size:12.5px;color:var(--muted)}
+.section-help{width:44px;height:44px;min-height:44px;flex:0 0 44px;border:1px solid var(--line);border-radius:50%;
+  background:var(--surface-soft);color:var(--muted);font-size:13px;font-weight:900;line-height:1}
+.section-help:hover{border-color:var(--iv-blue);color:var(--iv-blue)}
+.ui-tip{position:fixed;z-index:500;max-width:280px;padding:11px 13px;border-radius:var(--radius-md);background:var(--surface);
+  border:1px solid var(--line);color:var(--text);font-size:12.5px;line-height:1.45;font-weight:600;box-shadow:var(--shadow-md);pointer-events:none}
+.ui-tip:after{content:"";position:absolute;left:var(--tip-arrow,20px);bottom:-6px;width:12px;height:12px;background:var(--surface);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.ui-tip.below:after{top:-6px;bottom:auto;border:0;border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.cell-tooltip-layer{position:fixed;z-index:500;max-width:280px;padding:12px 14px;border-radius:var(--radius-md);background:var(--surface);
+  border:1px solid var(--line);box-shadow:var(--shadow-md);pointer-events:none}
+.cell-tooltip-layer .tt-name{font-size:13px;font-weight:900}
+.cell-tooltip-layer .tt-meta{font-size:var(--font-sm);color:var(--muted);margin-top:4px;line-height:1.45}
+.cell-tooltip-layer .tt-time{font-size:var(--font-xs);color:var(--disabled);margin-top:6px}
+.tt-arrow{position:absolute;width:12px;height:12px;background:var(--surface);transform:translateX(-50%) rotate(45deg);bottom:-7px;
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell-tooltip-layer.below .tt-arrow{top:-7px;bottom:auto;border:0;border-left:1px solid var(--line);border-top:1px solid var(--line)}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 </head>
 <body>
+<div class="map-pattern" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<g id="_s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></g>
+<symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+<symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="m15.4 8.6-2 4.8-4.8 2 2-4.8z"/></symbol>
+<symbol id="i-shovel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 3.4 20.6 9.4M17.6 6.4 9.6 14.4"/><path d="M10.1 13.2 5.8 17.5a3 3 0 0 0 0 4.3l.4-.4a3 3 0 0 0 4.3 0l4.3-4.3z"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.6" cy="8.2" r="4.2"/><path d="m10.7 11.3 8.3 8.3M16.5 17.1l2-2M14.2 14.8l1.7-1.7"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="5"/><path d="M12 8.8v6.4"/></symbol>
+<symbol id="i-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-11"/><path d="M6.5 4a2 2 0 0 0-2 2v1.6h4V6a2 2 0 0 0-2-2"/><path d="M9 10.5h7M9 14h7"/></symbol>
+<symbol id="i-lantern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 3.6h5.2M10.4 3.6v2M13.6 3.6v2"/><rect x="6.8" y="5.6" width="10.4" height="12" rx="2.4"/><path d="M12 9.4c1.5 1.6 2.2 2.7 2.2 3.7a2.2 2.2 0 0 1-4.4 0c0-1 .7-2.1 2.2-3.7z"/><path d="M8.6 20.4h6.8"/></symbol>
+<symbol id="i-chest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 10.6A5 5 0 0 1 8.2 5.6h7.6a5 5 0 0 1 5 5V18a1.6 1.6 0 0 1-1.6 1.6H4.8A1.6 1.6 0 0 1 3.2 18z"/><path d="M3.2 12.6h17.6"/><rect x="10.4" y="10.8" width="3.2" height="4.2" rx="1.1"/></symbol>
+<symbol id="i-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20.5 9 12 21 3.5 9z"/><path d="M3.5 9h17M12 3 8.4 9 12 21M12 3l3.6 6L12 21"/></symbol>
+<symbol id="i-mapfrag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5 9.5 3.4 15 5.5l5-2v12l-5 2-5.5-2.1L4 17.5z"/><path d="M9.5 3.4v13.9"/></symbol>
+<symbol id="i-marker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-5.6 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.6" r="2.4"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.6 15.6 4 4"/></symbol>
+<symbol id="i-trail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3.4"><path d="M3.5 18.5c3.5 0 3.5-6 7-6s3.5-6 7-6h3"/></symbol>
+<symbol id="i-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8.4 8.4 7.2 7.2M15.6 8.4l-7.2 7.2"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.4 12 4l8 6.4V19a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 19z"/><path d="M9.6 20.4v-6h4.8v6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.6" y="3.6" width="7" height="7" rx="1.6"/><rect x="13.4" y="3.6" width="7" height="7" rx="1.6"/><rect x="3.6" y="13.4" width="7" height="7" rx="1.6"/><rect x="13.4" y="13.4" width="7" height="7" rx="1.6"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.4" cy="8.4" r="3.6"/><path d="M3.4 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3.6 3.6 0 0 1 0 6.6M17.4 14.6a6 6 0 0 1 3.2 5.4"/></symbol>
+<symbol id="i-journal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.6A1.6 1.6 0 0 1 6.6 3h11.8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6.6A1.6 1.6 0 0 1 5 19.4z"/><path d="M5 17.4h14.4M8.6 7.4h7M8.6 11h7"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 6.6h15.2M9.4 6.6V4.8a1.4 1.4 0 0 1 1.4-1.4h2.4a1.4 1.4 0 0 1 1.4 1.4v1.8"/><path d="M6.6 6.6 7.5 20a1.4 1.4 0 0 0 1.4 1.3h6.2a1.4 1.4 0 0 0 1.4-1.3l.9-13.4"/><path d="M10.4 10.6v6.2M13.6 10.6v6.2"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"/><path d="M9.6 9.6a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2-2.4 3.4"/><path d="M12 17.4h.01"/></symbol>
+<symbol id="i-account" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.6" r="4"/><path d="M4.6 20.4a7.4 7.4 0 0 1 14.8 0"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.2 14.6a1.5 1.5 0 0 0 .3 1.7l.1.1a1.8 1.8 0 1 1-2.6 2.6l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.4v.2a1.8 1.8 0 1 1-3.6 0v-.1a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.8 1.8 0 1 1-2.6-2.6l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-.9h-.2a1.8 1.8 0 1 1 0-3.6h.1a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.8 1.8 0 1 1 2.6-2.6l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.2a1.8 1.8 0 1 1 3.6 0v.1a1.5 1.5 0 0 0 .9 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.8 1.8 0 1 1 2.6 2.6l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.2a1.8 1.8 0 1 1 0 3.6h-.1a1.5 1.5 0 0 0-1.4.9z"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.2"/><path d="M3.6 9.8h16.8M8.4 3.4v3.6M15.6 3.4v3.6"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 5.4h16.8l-6.6 7.8v6l-3.6 1.8v-7.8z"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.3 1.3"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.3-1.3"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="10.2" width="14.8" height="10.2" rx="2.4"/><path d="M8.2 10.2V7.8a3.8 3.8 0 0 1 7.6 0v2.4"/></symbol>
+<symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="4.2" width="17.2" height="4.4" rx="1.4"/><path d="M5 8.6V19a1.4 1.4 0 0 0 1.4 1.4h11.2A1.4 1.4 0 0 0 19 19V8.6"/><path d="M10 12.4h4"/></symbol>
+<symbol id="i-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 4v4.4h4.4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9.4a6 6 0 1 0-12 0c0 5-2 6.6-2 6.6h16s-2-1.6-2-6.6z"/><path d="M13.7 19.4a2 2 0 0 1-3.4 0"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.8 12.6 4.8 4.8L19.2 7"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 21.4 20.4H2.6z"/><path d="M12 10v4.2M12 17.6h.01"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.4 4.2h9.2v5a4.6 4.6 0 1 1-9.2 0z"/><path d="M7.4 6h-2a2 2 0 0 0 2 2M16.6 6h2a2 2 0 0 1-2 2M9.6 20.4h4.8M12 14v6.4"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-6M4 20h16"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.2V12l3.2 2"/></symbol>
+</defs></svg>
 <section class="dashboard-boot" id="bootScreen" aria-live="polite">
   <div class="dashboard-boot-inner">
     <div class="dashboard-boot-top">
       <div>
         <div class="dashboard-boot-wordmark">ivideon</div>
-        <div class="dashboard-boot-title">Морской бой</div>
-        <div class="dashboard-boot-sub">Панель управления турнирами</div>
+        <div class="dashboard-boot-title">Карта сокровищ</div>
+        <div class="dashboard-boot-sub">Панель управления играми</div>
       </div>
       <div class="dashboard-boot-state"><div class="boot-spinner" aria-hidden="true"></div><span>Восстанавливаем рабочую сессию…</span></div>
     </div>
@@ -63,8 +472,8 @@
   <div class="auth-shell">
     <aside class="auth-brand">
       <div class="auth-wordmark">ivideon</div>
-      <div class="auth-kicker">Универсальная турнирная платформа</div>
-      <h1>Морской<br>бой</h1>
+      <div class="auth-kicker">Корпоративная игра достижений</div>
+      <h1>Карта<br>сокровищ</h1>
       <p>Создавайте игровые соревнования, управляйте доступами и публикуйте результаты для команды.</p>
       <div class="auth-stripes"><span></span><span></span><span></span><span></span><span></span></div>
     </aside>
@@ -100,28 +509,52 @@
     </main>
   </div>
 </section>
-<div class="wrap hidden" id="app">
-  <header class="top">
-    <div class="brand"><div class="brand-wordmark">ivideon</div><div class="brand-divider"></div><div><div class="title">Морской бой</div><div class="sub">Универсальная турнирная площадка</div></div></div>
-    <div class="spacer"></div>
-    <div class="pill" id="serverPill"><i></i><span id="profilePill">Подключение…</span></div>
-    <button class="btn ghost small help-launch" id="helpBtn" type="button">? Инструкция</button>
-    <a class="btn ghost small" href="index.html">Публичное табло</a>
-    <button class="btn ghost small" id="logoutBtn">Выйти</button>
+<div class="hidden" id="app">
+  <header class="appbar">
+    <span class="brand-wordmark">ivideon</span>
+    <span class="brand-divider" aria-hidden="true"></span>
+    <div><div class="title">Карта сокровищ</div><div class="sub">Панель управления</div></div>
+    <span class="spacer"></span>
+    <div class="pill" id="serverPill"><i aria-hidden="true"></i><span id="profilePill">Подключение…</span></div>
+    <button class="btn btn-icon appbar-icon help-launch" id="helpBtn" type="button" aria-label="Инструкция"><svg aria-hidden="true"><use href="#i-help"/></svg></button>
+    <a class="btn ghost small" href="index.html"><svg aria-hidden="true"><use href="#i-link"/></svg>Публичная ссылка</a>
+    <button class="btn btn-icon appbar-icon" id="logoutBtn" type="button" aria-label="Выйти"><svg aria-hidden="true"><use href="#i-lock"/></svg></button>
+    <button class="burger" id="burgerBtn" type="button" aria-label="Меню разделов" aria-expanded="false" aria-controls="sidebar"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
   </header>
-  <div class="system-banner hidden" id="serverBanner"><div><strong>Серверный модуль пока не подключён</strong><span id="serverBannerText">Панель открыта, но создание игр и управление пользователями недоступны до развёртывания Edge Function platform-admin.</span></div><button class="btn ghost small" id="retryServerBtn">Проверить снова</button></div>
-  <nav class="tabs">
-    <button class="tab active" data-tab="games">Игры</button>
-    <button class="tab owner-only hidden" data-tab="users">Пользователи</button>
-    <button class="tab owner-only hidden" data-tab="audit">Журнал действий</button>
-  </nav>
-
-  <section id="pane-games">
-    <div class="panel">
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="shell">
+    <nav class="sidebar" id="sidebar" aria-label="Разделы панели">
+      <button class="side-item tab active" data-tab="games" data-filter="main" type="button"><svg aria-hidden="true"><use href="#i-home"/></svg>Мои игры</button>
+      <button class="side-item tab" data-tab="games" data-filter="all" type="button"><svg aria-hidden="true"><use href="#i-grid"/></svg>Все игры</button>
+      <button class="side-item tab owner-only hidden" data-tab="users" type="button"><svg aria-hidden="true"><use href="#i-users"/></svg>Пользователи</button>
+      <button class="side-item tab owner-only hidden" data-tab="audit" type="button"><svg aria-hidden="true"><use href="#i-journal"/></svg>Журнал исследований</button>
+      <button class="side-item tab" data-tab="games" data-filter="trashed" type="button"><svg aria-hidden="true"><use href="#i-trash"/></svg>Корзина</button>
+      <div class="side-sep" role="presentation"></div>
+      <button class="side-item help-launch" id="helpSideBtn" type="button"><svg aria-hidden="true"><use href="#i-help"/></svg>Инструкция</button>
+      <a class="side-item" href="index.html"><svg aria-hidden="true"><use href="#i-map"/></svg>Публичное табло</a>
+      <div class="side-profile" id="sideProfile"><svg aria-hidden="true"><use href="#i-account"/></svg><span id="sideProfileName">—</span></div>
+      <button class="side-item" id="logoutSideBtn" type="button"><svg aria-hidden="true"><use href="#i-lock"/></svg>Выйти</button>
+      <div class="side-art" aria-hidden="true"><svg><use href="#i-chest"/></svg><div>Карта сокровищ<br>Ivideon</div></div>
+    </nav>
+    <main id="mainCol">
+      <div class="system-banner hidden" id="serverBanner"><div><strong>Серверный модуль пока не подключён</strong><span id="serverBannerText">Панель открыта, но создание игр и управление пользователями недоступны до развёртывания Edge Function platform-admin.</span></div><button class="btn ghost small" id="retryServerBtn">Проверить снова</button></div>
+<section id="pane-games">
+    <div class="panel overview-panel" id="gameOverview" aria-labelledby="overviewGameName">
+      <div class="overview-head">
+        <div>
+          <div class="overview-kicker">Обзор игры</div>
+          <div class="overview-title-line"><h1 id="overviewGameName">Загружаем игру…</h1><span id="overviewGameStatus"></span></div>
+          <div class="overview-period" id="overviewGameMeta">Актуальные показатели, расписание и последние открытия</div>
+        </div>
+        <a class="btn primary small overview-open" id="overviewOpenBtn" href="editor.html"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Открыть редактор</span></a>
+      </div>
+      <div id="overviewBody"><div class="overview-empty">Загружаем обзор…</div></div>
+    </div>
+    <div class="panel create-panel">
       <h2>Создать игру</h2>
       <div class="hint">Новая игра всегда создаётся как черновик и не видна по публичной ссылке, пока её не активируют.</div>
       <div class="row">
-        <div class="field"><label>Название игры</label><input id="newGameName" placeholder="Например: Битва отдела продаж"></div>
+        <div class="field"><label>Название игры</label><input id="newGameName" placeholder="Например: Экспедиция отдела продаж"></div>
         <button class="btn primary" id="createGameBtn">Создать черновик</button>
       </div>
     </div>
@@ -159,6 +592,8 @@
       <div id="auditList"></div>
     </div>
   </section>
+</main>
+  </div>
 </div>
 
 <div class="help-overlay hidden" id="helpOverlay" aria-hidden="true">
@@ -166,7 +601,7 @@
     <div class="help-head">
       <div>
         <div class="help-kicker">Справочник администратора</div>
-        <h2 id="helpTitle">Как работает площадка</h2>
+        <h2 id="helpTitle">Как работает «Карта сокровищ»</h2>
       </div>
       <button class="help-close" id="helpCloseBtn" type="button" aria-label="Закрыть инструкцию">×</button>
     </div>
@@ -174,23 +609,23 @@
       <section class="help-hero">
         <div class="help-hero-copy">
           <span class="help-badge">Ivideon · геймификация</span>
-          <h3>Превращает рабочие результаты в понятный командный турнир</h3>
-          <p>Администратор задаёт показатели, участников, правила допуска, призы и скрыто расставляет флот. Лучшие сотрудники получают выстрелы, а команда следит за ходом игры на публичном табло.</p>
+          <h3>Превращает рабочие результаты в общее командное открытие</h3>
+          <p>Администратор задаёт показатели, сценарии, участников, награды и скрыто размещает сокровища. Победители периодов получают право открыть сектор карты, а команда следит за находками на публичном табло.</p>
         </div>
-        <div class="help-hero-mark">⚓</div>
+        <div class="help-hero-mark" style="font-size:38px">☉</div>
       </section>
 
       <div class="help-callout">
-        <strong>Главная идея:</strong> площадка не заменяет CRM, отчётность или систему KPI. Она берёт уже определённые результаты команды и превращает их в прозрачную, азартную и управляемую механику признания.
+        <b>Главная идея:</b> победа в рабочем периоде даёт право открыть один сектор карты. В секторе может ничего не оказаться, может найтись фрагмент сокровища или неожиданная находка. Основная награда открывается только после полного обнаружения сокровища — поэтому одной победы недостаточно, и желание снова стать лидером сохраняется до конца игры.
       </div>
 
       <details class="help-section" open>
         <summary>Что это и зачем</summary>
         <div class="help-content">
-          <p><b>«Морской бой»</b> — универсальная внутренняя площадка геймификации. Она помогает поддерживать регулярную активность, делать результаты заметными, добавлять игровой азарт и публично отмечать достижения без сложных презентаций и ручного пересчёта рейтинга.</p>
+          <p><b>«Карта сокровищ»</b> — внутренняя площадка геймификации. Она помогает поддерживать регулярную активность, делать результаты заметными, добавлять азарт и публично отмечать достижения без сложных презентаций и ручного пересчёта рейтинга.</p>
           <div class="help-grid two">
-            <div class="help-card"><b>Для руководителя</b><span>Единые правила, понятный прогресс, история действий и быстрый способ поддерживать внимание команды.</span></div>
-            <div class="help-card"><b>Для участников</b><span>Наглядное табло, шанс получить выстрел или приз и понятная связь между результатом и игровым действием.</span></div>
+            <div class="help-card"><b>Для руководителя</b><span>Единые правила, понятный прогресс, история действий и простой способ удерживать внимание команды.</span></div>
+            <div class="help-card"><b>Для участников</b><span>Наглядное табло, шанс открыть сектор и найти награду, понятная связь между результатом и игровым действием.</span></div>
           </div>
         </div>
       </details>
@@ -202,11 +637,11 @@
             <div class="help-card"><b>Продажи</b><span>Звонки, встречи, выручка, оплаты, новые клиенты, конверсия.</span></div>
             <div class="help-card"><b>Аккаунт-менеджмент</b><span>Продления, апсейл, удержание, встречи, качество ведения клиентов.</span></div>
             <div class="help-card"><b>Поддержка и сервис</b><span>Закрытые обращения, SLA, CSAT/NPS, скорость ответа, отсутствие просрочек.</span></div>
-            <div class="help-card"><b>Маркетинг</b><span>Лиды, MQL/SQL, публикации, кампании, встречи, вклад в выручку.</span></div>
+            <div class="help-card"><b>Маркетинг</b><span>Лиды, MQL/SQL, публикации, кампании, вклад в выручку.</span></div>
             <div class="help-card"><b>HR и рекрутинг</b><span>Интервью, закрытые вакансии, скорость найма, выходы, качество воронки.</span></div>
-            <div class="help-card"><b>Проекты и операции</b><span>Завершённые задачи, этапы, внедрения, сроки, качество и командные достижения.</span></div>
+            <div class="help-card"><b>Разработка, проекты и операции</b><span>Завершённые задачи, релизы, этапы, внедрения, сроки и качество.</span></div>
           </div>
-          <p class="help-note">Показатели должны быть числовыми. Название, единицу измерения и минимальный порог администратор задаёт сам.</p>
+          <p class="help-note">Показатели должны быть числовыми. Название, единицу измерения и порог администратор задаёт сам.</p>
         </div>
       </details>
 
@@ -214,10 +649,31 @@
         <summary>Что автоматизировано, а что вносится вручную</summary>
         <div class="help-content">
           <div class="help-grid two">
-            <div class="help-card success"><b>Площадка делает автоматически</b><ul><li>авторизацию и разграничение прав;</li><li>сохранение игры в облаке;</li><li>публикацию только активных игр;</li><li>расчёт выстрелов, попаданий, потоплений и рейтинга;</li><li>обновление публичного табло;</li><li>историю версий, отмену и восстановление;</li><li>журнал действий Owner;</li><li>скрытие расположения живых кораблей.</li></ul></div>
-            <div class="help-card manual"><b>Администратор задаёт вручную</b><ul><li>название и объявление игры;</li><li>участников;</li><li>показатели и пороги допуска;</li><li>призы и плюшки;</li><li>расстановку флота;</li><li>победителя периода и его результаты;</li><li>клетку для выстрела;</li><li>момент активации, паузы и завершения игры.</li></ul></div>
+            <div class="help-card success"><b>Площадка делает автоматически</b><ul>
+              <li>авторизацию и разграничение прав;</li>
+              <li>сохранение игры в облаке;</li>
+              <li>публикацию только активных игр;</li>
+              <li>расчёт открытий, фрагментов, найденных сокровищ и рейтинга;</li>
+              <li>расчёт предлагаемого периода оценки по сценарию;</li>
+              <li>проверку обязательных показателей и порогов допуска;</li>
+              <li>определение результата сектора и завершения сокровища;</li>
+              <li>учёт находок, эффектов и оставшихся использований;</li>
+              <li>обновление публичного табло;</li>
+              <li>историю версий, отмену и восстановление;</li>
+              <li>журнал действий Owner;</li>
+              <li>скрытие расположения ненайденных сокровищ.</li></ul></div>
+            <div class="help-card manual"><b>Администратор задаёт вручную</b><ul>
+              <li>название и объявление игры;</li>
+              <li>участников;</li>
+              <li>показатели, пороги и их роли в сценариях;</li>
+              <li>сценарии открытия и периоды оценки;</li>
+              <li>сокровища, их названия и награды;</li>
+              <li>неожиданные находки и их эффекты;</li>
+              <li>подтверждение победителя периода и его результатов;</li>
+              <li>момент проведения открытия и сам сектор;</li>
+              <li>активацию, паузу и завершение игры.</li></ul></div>
           </div>
-          <p class="help-note"><b>Важно:</b> сейчас данные не подтягиваются автоматически из Bitrix24, CRM, телефонии или других систем. Перед выстрелом администратор вводит подтверждённые показатели вручную.</p>
+          <p class="help-note"><b>Важно:</b> автоматических фоновых задач нет. Данные не подтягиваются из CRM, телефонии или других систем — интеграции на площадке не реализованы. Перед открытием сектора администратор вводит подтверждённые показатели вручную, а сценарий подсказывает период и критерии.</p>
         </div>
       </details>
 
@@ -226,71 +682,129 @@
         <div class="help-content">
           <ol class="help-steps">
             <li><b>Создай черновик.</b><span>В панели укажи название. Черновик не виден участникам.</span></li>
-            <li><b>Открой игру.</b><span>Редактор всегда стартует со «Статистики», чтобы случайно не показать корабли.</span></li>
-            <li><b>Настрой показатели.</b><span>Добавь нужные метрики, обязательность и минимальные пороги.</span></li>
-            <li><b>Добавь участников.</b><span>Внеси имена тех, кто сможет получать выстрелы.</span></li>
-            <li><b>Расставь флот и призы.</b><span>Размести корабли и плюшки, затем запечатай поле.</span></li>
-            <li><b>Активируй игру.</b><span>Во вкладке «Управление» переведи черновик в статус «Активна».</span></li>
-            <li><b>Проводи выстрелы.</b><span>Выбирай победителя, вводи показатели и открывай названную клетку.</span></li>
+            <li><b>Открой игру.</b><span>Редактор всегда стартует со «Статистики», чтобы случайно не показать размещение сокровищ.</span></li>
+            <li><b>Настрой показатели.</b><span>Раздел «Расписание и критерии»: добавь метрики, обязательность и пороги.</span></li>
+            <li><b>Создай сценарии.</b><span>Там же: свой сценарий или готовый шаблон Пн / Ср / Пт, который можно менять как угодно.</span></li>
+            <li><b>Добавь участников.</b><span>Раздел «Карта и сокровища».</span></li>
+            <li><b>Размести сокровища и находки.</b><span>Задай названия и награды, затем запечатай карту.</span></li>
+            <li><b>Активируй игру.</b><span>Раздел «Управление игрой» — статус «Активна».</span></li>
+            <li><b>Проводи открытия.</b><span>Выбирай сценарий, подтверждай победителя, вводи показатели и открывай названный сектор.</span></li>
             <li><b>Подведи итог.</b><span>Заверши игру, раскрой карту и при необходимости архивируй её.</span></li>
           </ol>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Как проходит выстрел</summary>
+        <summary>Сценарии, периоды, показатели и победитель</summary>
         <div class="help-content">
-          <p>Во вкладке <b>«Выстрел недели»</b> администратор выбирает участника и вводит фактические результаты за период. Обязательные показатели должны быть заполнены, а показатели с порогом — соответствовать условиям допуска.</p>
-          <div class="help-callout"><strong>Почему выстрел делает администратор:</strong> это предусмотрено намеренно. Выстрел — кульминация игрового периода, а не незаметное действие в личном кабинете. Соберите команду на общей встрече или созвоне, объявите победителя, попросите его вслух назвать координату и откройте клетку при всех. Такой ритуал усиливает ожидание и азарт, вовлекает команду и превращает результат победителя в заметное публичное признание.</div>
+          <p>Сценарий — это правило «когда и за что даётся открытие сектора». Их может быть сколько угодно, и они независимы друг от друга.</p>
+          <p><b>Когда проводится:</b> каждый день, выбранные дни недели, только понедельник, Пн/Ср/Пт, раз в неделю, раз в месяц, конкретная дата или ручное событие.</p>
+          <p><b>Период оценки настраивается отдельно от дня проведения:</b> предыдущий календарный день, предыдущий рабочий день, предыдущие N дней, выбранные дни недели текущей недели, предыдущая неделя, текущая неделя до события, предыдущий месяц, фиксированный или ручной диапазон.</p>
+          <p>При открытии сектора система показывает рассчитанный диапазон. Его можно скорректировать, и сохраняется тот период, который реально использовали.</p>
+          <div class="term-list">
+            <div><b>Роль «Допуск»</b><span>Показатель работает как порог: участник допускается к открытию, только если условие выполнено.</span></div>
+            <div><b>Роль «Основной критерий»</b><span>Среди допущенных побеждает участник с лучшим значением этого показателя.</span></div>
+            <div><b>Роль «При равенстве»</b><span>Используется, если основной критерий совпал у нескольких участников.</span></div>
+            <div><b>Роль «Только статистика»</b><span>Значение фиксируется в истории, но на победу не влияет.</span></div>
+          </div>
+          <p class="help-note">Пример: для допуска нужно не менее 100 успешных звонков; среди выполнивших порог побеждает сотрудник с максимальной выручкой; при равенстве учитываются оплаты. Победителя в любом случае подтверждает администратор вручную.</p>
+          <p><b>Обычная победа периода даёт одно открытие сектора.</b> Дополнительное открытие возможно только как эффект неожиданной находки.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Как проходит открытие сектора</summary>
+        <div class="help-content">
+          <div class="help-callout"><b>Почему открывает администратор:</b> это сделано намеренно. Открытие сектора — кульминация игрового периода, а не незаметное действие в личном кабинете. Публичный формат усиливает ожидание, азарт, вовлечённость и признание результата победителя.</div>
           <ol class="help-steps compact">
-            <li><b>Выбери участника.</b><span>Это победитель недели или другого установленного периода.</span></li>
-            <li><b>Внеси результаты.</b><span>Например: 42 звонка, 5 встреч, 18 млн выручки.</span></li>
-            <li><b>Получи координату.</b><span>Участник называет клетку, например B4.</span></li>
-            <li><b>Нажми клетку.</b><span>Система сама определит: мимо, попадание, потопление или плюшка.</span></li>
+            <li><b>Команда собирается.</b><span>Общая встреча или созвон.</span></li>
+            <li><b>Администратор объявляет результаты.</b><span>Показатели за период по сценарию.</span></li>
+            <li><b>Объявляется победитель.</b><span>Администратор подтверждает его в списке участников.</span></li>
+            <li><b>Победитель вслух называет сектор.</b><span>Например D4.</span></li>
+            <li><b>Администратор открывает сектор.</b><span>Система определяет результат.</span></li>
+            <li><b>Результат появляется на публичном табло.</b><span>Обновление приходит всем онлайн.</span></li>
           </ol>
-          <p class="help-note">Последний выстрел можно отменить. Более раннее состояние восстанавливается через раздел «История».</p>
+          <p class="help-note">Последнее открытие можно отменить. Более раннее состояние восстанавливается снимком в разделе «История исследований».</p>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Для чего нужно публичное табло</summary>
+        <summary>Фрагменты, сокровища и награды</summary>
         <div class="help-content">
-          <p>Публичное табло — экран для участников и зрителей. Авторизация не требуется. На нём можно выбрать любую игру, которую администратор перевёл в статус <b>«Активна»</b>.</p>
-          <ul class="help-list"><li>показывает открытые клетки и результат выстрелов;</li><li>показывает лидеров, статистику, призы и оставшийся флот;</li><li>обновляется после сохранения изменений;</li><li>не раскрывает расположение непотопленных кораблей;</li><li>не показывает черновики, архив и корзину.</li></ul>
-          <p class="help-note">Для каждой активной игры есть отдельная прямая ссылка. Её удобно отправлять в командный чат или открывать на общем экране.</p>
+          <p>Сокровище занимает от одного до пяти секторов. Каждое удачное открытие раскрывает <b>фрагмент</b>. Когда открыты все секторы сокровища, оно считается <b>найденным полностью</b> — и только тогда команда видит награду за него.</p>
+          <div class="term-list">
+            <div><b>Пустой сектор</b><span>Следов сокровища нет. Ход зафиксирован в истории.</span></div>
+            <div><b>Найден фрагмент сокровища</b><span>Часть сокровища открыта, но награда ещё скрыта.</span></div>
+            <div><b>Сокровище найдено полностью</b><span>Все секторы открыты, награда раскрывается на табло.</span></div>
+          </div>
+          <p class="help-note">Названия сокровищ и награды редактируются в разделе «Карта и сокровища». По умолчанию: Драгоценный камень, Старинный сундук, Коллекция артефактов, Королевская сокровищница, Затерянный клад.</p>
         </div>
       </details>
 
       <details class="help-section">
-        <summary>Роли и права</summary>
+        <summary>Неожиданные находки и лопата</summary>
+        <div class="help-content">
+          <p>Находка — отдельный бонус, спрятанный в секторе. Она может быть в пустом секторе, в секторе с фрагментом или в секторе, завершающем сокровище. Находка <b>не заменяет</b> основное сокровище: сектор может дать и фрагмент, и находку одновременно.</p>
+          <div class="help-grid">
+            <div class="help-card"><b>Лопата</b><span>Даёт одно дополнительное открытие сектора. Можно использовать сразу или сохранить на потом.</span></div>
+            <div class="help-card"><b>Компас</b><span>Ограниченная подсказка: сколько соседних секторов содержат фрагменты.</span></div>
+            <div class="help-card"><b>Фрагмент карты</b><span>Подсказка по строке или столбцу: сколько там скрытых фрагментов.</span></div>
+            <div class="help-card"><b>Фонарь</b><span>Проверка одного сектора без его открытия. Сектор остаётся закрытым.</span></div>
+            <div class="help-card"><b>Старинный ключ</b><span>Мгновенная награда, которую администратор вручает сразу.</span></div>
+            <div class="help-card"><b>Счастливая монета</b><span>Эффект, который администратор подтверждает и выполняет вручную.</span></div>
+            <div class="help-card"><b>Тайник путешественника</b><span>Небольшой мгновенный приз.</span></div>
+          </div>
+          <p><b>Лопата выдаётся один раз</b>, хранит владельца, поддерживает немедленное и отложенное использование, имеет счётчик оставшихся использований, списывается при применении и фиксируется в журнале находок. Повторно применить её нельзя.</p>
+          <p class="help-note">Для неоднозначных эффектов используется тип «ручной эффект»: площадка не имитирует автоматизацию, а фиксирует действие в журнале.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Публичное табло</summary>
+        <div class="help-content">
+          <p>Публичное табло — экран для участников и зрителей. Авторизация не требуется. На нём можно выбрать любую игру со статусом <b>«Активна»</b>.</p>
+          <ul class="help-list">
+            <li>показывает исследованные секторы и результат открытий;</li>
+            <li>показывает лидеров, статистику, найденные сокровища и раскрытые награды;</li>
+            <li>обновляется онлайн после сохранения изменений;</li>
+            <li>не раскрывает расположение ненайденных сокровищ и скрытые находки;</li>
+            <li>не показывает черновики, архив и корзину.</li>
+          </ul>
+          <p class="help-note">У каждой активной игры есть отдельная прямая ссылка. Её удобно отправлять в командный чат или открывать на общем экране.</p>
+        </div>
+      </details>
+
+      <details class="help-section">
+        <summary>Роли, права и статусы</summary>
         <div class="help-content">
           <div class="help-grid two">
-            <div class="help-card"><b>Owner</b><span>Создаёт и блокирует администраторов, управляет их правами, видит все игры, может редактировать чужие игры, передавать владельца, восстанавливать и окончательно удалять данные, просматривать общий журнал.</span></div>
+            <div class="help-card"><b>Owner</b><span>Создаёт и блокирует администраторов, управляет правами, видит все игры, может редактировать чужую игру, передавать владельца, восстанавливать и окончательно удалять данные, просматривать общий журнал.</span></div>
             <div class="help-card"><b>Администратор</b><span>По умолчанию видит и редактирует только свои игры. Доступные действия зависят от прав, выданных Owner.</span></div>
           </div>
-          <p class="help-note">Интерфейс скрывает недоступные действия, а база дополнительно проверяет права на сервере.</p>
-        </div>
-      </details>
-
-      <details class="help-section">
-        <summary>Статусы игры</summary>
-        <div class="help-content">
           <div class="term-list">
             <div><b>Черновик</b><span>Настраивается администратором и не виден на публичном табло.</span></div>
             <div><b>Активна</b><span>Доступна участникам по публичной ссылке.</span></div>
             <div><b>Приостановлена</b><span>Временно скрыта, данные сохраняются.</span></div>
-            <div><b>Завершена</b><span>Турнир окончен; состояние и история остаются.</span></div>
+            <div><b>Завершена</b><span>Игра окончена; состояние и история остаются.</span></div>
             <div><b>Архив</b><span>Убрана из основного рабочего списка, но не удалена.</span></div>
-            <div><b>Корзина</b><span>Мягко удалена и может быть восстановлена.</span></div>
+            <div><b>Корзина</b><span>Мягко удалена и может быть восстановлена. Окончательное удаление подтверждается отдельно.</span></div>
           </div>
+          <p class="help-note">Интерфейс скрывает недоступные действия, а сервер дополнительно проверяет права.</p>
         </div>
       </details>
 
       <details class="help-section">
         <summary>Отмена, история и восстановление</summary>
         <div class="help-content">
-          <p>Перед сохранением площадка создаёт снимок предыдущего состояния. Это позволяет вернуть ошибочное изменение, отменить последний выстрел или восстановить игру целиком.</p>
-          <ul class="help-list"><li><b>«Отменить»</b> — быстро возвращает последнее действие;</li><li><b>«История»</b> — показывает сохранённые снимки игры;</li><li><b>«Восстановить»</b> — создаёт новое текущее состояние на основе выбранного снимка;</li><li><b>«Корзина»</b> — позволяет вернуть удалённую игру;</li><li><b>Журнал Owner</b> — фиксирует ключевые действия пользователей.</li></ul>
+          <p>Перед сохранением площадка создаёт снимок предыдущего состояния. Это позволяет вернуть ошибочное изменение, отменить последнее открытие или восстановить игру целиком.</p>
+          <ul class="help-list">
+            <li><b>«Отменить»</b> — быстро возвращает последнее сохранённое действие;</li>
+            <li><b>Снимки</b> — сохранённые состояния игры в разделе «История исследований»;</li>
+            <li><b>«Восстановить»</b> — создаёт новое текущее состояние на основе выбранного снимка;</li>
+            <li><b>«Корзина»</b> — позволяет вернуть удалённую игру;</li>
+            <li><b>Журнал Owner</b> — фиксирует ключевые действия пользователей.</li>
+          </ul>
+          <p class="help-note">Если игру одновременно правят в двух вкладках, площадка не даст затереть чужие изменения: она предупредит и загрузит актуальную версию.</p>
         </div>
       </details>
 
@@ -298,13 +812,20 @@
         <summary>Термины простыми словами</summary>
         <div class="help-content">
           <div class="term-list">
-            <div><b>Показатель</b><span>Числовой результат, за который участник получает право на выстрел.</span></div>
-            <div><b>Порог</b><span>Минимальное значение показателя для допуска к выстрелу.</span></div>
-            <div><b>Плюшка</b><span>Отдельная клетка с небольшим бонусом или призом.</span></div>
-            <div><b>Запечатать поле</b><span>Зафиксировать расстановку и получить цифровой отпечаток честности.</span></div>
-            <div><b>Отпечаток</b><span>Контрольная строка, подтверждающая, что расстановку не меняли незаметно.</span></div>
+            <div><b>Карта</b><span>Игровое поле из секторов, где спрятаны сокровища и находки.</span></div>
+            <div><b>Сектор</b><span>Одна клетка карты. Победитель называет её координату.</span></div>
+            <div><b>Открытие сектора</b><span>Игровое действие, которое даёт победа в периоде.</span></div>
+            <div><b>Сокровище</b><span>Объект из 1–5 секторов с наградой.</span></div>
+            <div><b>Фрагмент</b><span>Один открытый сектор сокровища.</span></div>
+            <div><b>Коллекция сокровищ</b><span>Все сокровища игры и их состояние.</span></div>
+            <div><b>Неожиданная находка</b><span>Отдельный бонус в секторе: приз, подсказка или дополнительное открытие.</span></div>
+            <div><b>Сценарий</b><span>Правило: когда проводится открытие и по каким критериям выбирается победитель.</span></div>
+            <div><b>Период оценки</b><span>Диапазон дат, за который считаются показатели.</span></div>
+            <div><b>Порог</b><span>Минимальное значение показателя для допуска.</span></div>
+            <div><b>Запечатать карту</b><span>Зафиксировать размещение и получить отпечаток честности.</span></div>
+            <div><b>Отпечаток</b><span>Контрольная строка, подтверждающая, что размещение не меняли незаметно.</span></div>
             <div><b>Снимок</b><span>Предыдущее сохранённое состояние игры для отката.</span></div>
-            <div><b>Публичная ссылка</b><span>Ссылка для участников на безопасное табло без скрытой расстановки.</span></div>
+            <div><b>Публичная ссылка</b><span>Ссылка для участников на безопасное табло без скрытого размещения.</span></div>
           </div>
         </div>
       </details>
@@ -316,6 +837,7 @@
     </div>
   </aside>
 </div>
+
 <div class="ui-tip hidden" id="uiTip" role="tooltip"></div>
 
 <div id="modalRoot"></div>
@@ -323,7 +845,7 @@
 const CFG=window.IVIDEON_SEABATTLE_CONFIG||{};
 const sb=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const STATUS_LABELS={draft:'Черновик',active:'Активна',paused:'Приостановлена',completed:'Завершена',archived:'Архив',trashed:'Корзина'};
-const PERMISSION_LABELS={create_games:'Создание новых игр',publish_games:'Публикация игр',trash_games:'Удаление в корзину',restore_games:'Восстановление из корзины',restore_versions:'Откат версий',edit_shots:'Создание и изменение выстрелов',unseal_board:'Изменение запечатанного поля'};
+const PERMISSION_LABELS={create_games:'Создание новых игр',publish_games:'Публикация игр',trash_games:'Удаление в корзину',restore_games:'Восстановление из корзины',restore_versions:'Откат версий',edit_shots:'Проведение и изменение открытий сектора',unseal_board:'Изменение запечатанной карты'};
 
 let session=null,profile=null,games=[],users=[],serverReady=false;
 let passwordFlow=/(?:[?&#]setup=1)|(?:[?&#]type=(?:invite|recovery))/i.test(location.href);
@@ -331,20 +853,92 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function dt(s){if(!s)return '—';return new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function statusBadge(s){return `<span class="status status-${s}">${STATUS_LABELS[s]||s}</span>`}
 function hasPermission(key){return !!profile&&(profile.role==='owner'||profile.permissions?.[key]===true)}
-async function api(action,body={}){const{data,error}=await sb.functions.invoke('platform-admin',{body:{action,...body}});if(error){let msg=error.message||'Ошибка функции';try{if(error.context&&typeof error.context.json==='function'){const p=await error.context.json();msg=p.error||msg;const e=new Error(msg);e.details=p.details;e.status=error.context.status;throw e}}catch(e){if(e.details!==undefined)throw e}if(/Failed to send|fetch|network/i.test(msg)){setServerState(false,'Edge Function platform-admin не найдена или ещё не развёрнута.');throw new Error('Серверный модуль platform-admin не подключён. Разверните Edge Function в Supabase и повторите проверку.')}setServerState(false,msg);throw new Error(msg)}if(!data||data.ok===false){const e=new Error(data?.error||'Ошибка операции');e.details=data?.details;throw e}serverReady=true;return data}
+async function api(action,body={}){const{data,error}=await sb.functions.invoke('platform-admin',{body:{action,...body}});if(error){let msg=error.message||'Ошибка функции',status=error.context&&error.context.status,details;try{if(error.context&&typeof error.context.json==='function'){const p=await error.context.json();if(p){msg=p.error||msg;details=p.details}}}catch(parseErr){}if(status){const e=new Error(msg);e.status=status;e.details=details;setServerState(false,msg);throw e}if(/Failed to send|fetch|network/i.test(msg)){setServerState(false,'Edge Function platform-admin не найдена или ещё не развёрнута.');throw new Error('Серверный модуль platform-admin не подключён. Разверните Edge Function в Supabase и повторите проверку.')}setServerState(false,msg);throw new Error(msg)}if(!data||data.ok===false){const e=new Error(data?.error||'Ошибка операции');e.details=data?.details;throw e}serverReady=true;return data}
 function setServerState(ok,message=''){serverReady=ok;const pill=document.getElementById('serverPill'),banner=document.getElementById('serverBanner'),text=document.getElementById('serverBannerText');if(!pill)return;pill.classList.remove('ok','warn','bad');pill.classList.add(ok?'ok':'warn');if(profile)pill.querySelector('span').textContent=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);else pill.querySelector('span').textContent=ok?'Онлайн':'Ограниченный режим';if(banner){banner.classList.toggle('hidden',ok);if(text&&message)text.textContent=message}}
 async function checkServer(){try{await api('bootstrap');setServerState(true);return true}catch(e){setServerState(false,e.message);return false}}
-function showModal(content){document.getElementById('modalRoot').innerHTML=`<div class="modal-back"><div class="modal">${content}</div></div>`}
-function closeModal(){document.getElementById('modalRoot').innerHTML=''}
+let modalReturnFocus=null;
+function showModal(content){
+  const root=document.getElementById('modalRoot');
+  modalReturnFocus=document.activeElement;
+  root.innerHTML=`<div class="modal-back"><div class="modal" role="dialog" aria-modal="true" tabindex="-1">${content}</div></div>`;
+  const back=root.querySelector('.modal-back');
+  back.onclick=e=>{if(e.target===back)closeModal()};
+  const first=back.querySelector('input,select,textarea,button');
+  setTimeout(()=>(first||back.querySelector('.modal'))?.focus(),0);
+}
+function closeModal(){
+  document.getElementById('modalRoot').innerHTML='';
+  if(modalReturnFocus&&document.contains(modalReturnFocus))modalReturnFocus.focus();
+  modalReturnFocus=null;
+}
+function modalFocusables(){
+  const back=document.querySelector('#modalRoot .modal-back');
+  return back?[...back.querySelectorAll('a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]:[];
+}
+document.addEventListener('keydown',e=>{
+  if(!document.querySelector('#modalRoot .modal-back'))return;
+  if(e.key==='Escape'){e.preventDefault();closeModal();return}
+  if(e.key!=='Tab')return;
+  const f=modalFocusables();if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+},true);
 function confirmModal(title,text,onYes){showModal(`<h3>${esc(title)}</h3><div class="hint">${text}</div><div class="modal-actions"><button class="btn ghost" id="mCancel">Отмена</button><button class="btn danger" id="mYes">Подтвердить</button></div>`);document.getElementById('mCancel').onclick=closeModal;document.getElementById('mYes').onclick=onYes}
-function blankGame(name){return{id:'pending',name,banner:'Морской бой · '+name,size:8,managers:[],cells:{},ships:[],shots:[],week:1,sealed:false,salt:null,hash:null,finalPrizeSunk:'Главный приз',finalPrizeShots:'Приз за активность',secretsRevealed:false,metrics:[{id:'calls',label:'Звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:250,thresholdNote:'минимум для допуска'},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}]}}
-async function loadProfile(){const{data,error}=await sb.from('platform_users').select('*').eq('id',session.user.id).maybeSingle();if(error)throw error;if(!data)throw new Error('Учётная запись не добавлена в платформу.');if(data.status!=='active')throw new Error('Доступ приостановлен.');profile=data;document.getElementById('profilePill').textContent=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);document.querySelectorAll('.owner-only').forEach(x=>x.classList.toggle('hidden',profile.role!=='owner'))}
-async function loadGames(){const{data,error}=await sb.from('games').select('*').order('updated_at',{ascending:false});if(error)throw error;games=data||[];renderGames()}
+function blankGame(name){return{id:'pending',schemaVersion:4,name,banner:'Карта сокровищ · '+name,size:8,managers:[],cells:{},ships:[],shots:[],week:1,sealed:false,salt:null,hash:null,hashVersion:null,finalPrizeSunk:'Главная награда',finalPrizeShots:'Награда за активность',secretsRevealed:false,scenarios:[],bonusGrants:[],findLog:[],metrics:[{id:'calls',label:'Успешные звонки',unit:'шт.',enabled:true,required:true,thresholdEnabled:true,threshold:100,thresholdNote:'минимум для допуска'},{id:'revenue',label:'Выручка',unit:'₽',enabled:true,required:true,thresholdEnabled:false,threshold:0,thresholdNote:''}]}}
+async function loadProfile(){const{data,error}=await sb.from('platform_users').select('*').eq('id',session.user.id).maybeSingle();if(error)throw error;if(!data)throw new Error('Учётная запись не добавлена в платформу.');if(data.status!=='active')throw new Error('Доступ приостановлен.');profile=data;const who=(profile.role==='owner'?'Owner · ':'Администратор · ')+(profile.display_name||profile.email);document.getElementById('profilePill').textContent=who;const sp=document.getElementById('sideProfileName');if(sp)sp.textContent=who;document.querySelectorAll('.owner-only').forEach(x=>{const pane=x.id==='pane-users'||x.id==='pane-audit';if(pane){if(profile.role!=='owner')x.classList.add('hidden');return}x.classList.toggle('hidden',profile.role!=='owner')})}
+async function loadGames(){const{data,error}=await sb.from('games').select('*').order('updated_at',{ascending:false});if(error)throw error;games=data||[];renderGames();renderOverview()}
 function gameOwnerName(g){const u=users.find(x=>x.id===g.owner_id);return u?(u.display_name||u.email):(g.owner_id===profile.id?(profile.display_name||profile.email):'Другой администратор')}
 function publicLink(id){return location.origin+location.pathname.replace(/admin\.html$/,'')+'?game='+encodeURIComponent(id)}
 function filteredGames(){const f=document.getElementById('gameFilter').value;if(f==='all')return games;if(f==='main')return games.filter(g=>!['archived','trashed'].includes(g.status));return games.filter(g=>g.status===f)}
-function renderGames(){const box=document.getElementById('gameCards'),list=filteredGames();box.innerHTML='';const createBtn=document.getElementById('createGameBtn');if(createBtn)createBtn.disabled=!hasPermission('create_games');if(!list.length){box.innerHTML='<div class="empty">По выбранному фильтру игр нет.</div>';return}list.forEach(g=>{const el=document.createElement('div');el.className='game '+g.status;const state=g.state||{};el.innerHTML=`<div class="game-head"><div><div class="game-title">${esc(g.title)}</div><div class="meta">${profile.role==='owner'?'Владелец: '+esc(gameOwnerName(g))+' · ':''}обновлено ${dt(g.updated_at)}<br>участников: ${(state.managers||[]).length} · выстрелов: ${(state.shots||[]).length}</div></div>${statusBadge(g.status)}</div><div class="actions"></div>`;const a=el.querySelector('.actions');const open=document.createElement('a');open.className='btn dark small';open.textContent='Открыть';open.href='editor.html?game='+encodeURIComponent(g.id);a.appendChild(open);if(g.status==='active'){const pub=document.createElement('a');pub.className='btn ghost small';pub.textContent='Публичная ссылка';pub.href=publicLink(g.id);pub.target='_blank';a.appendChild(pub)}if(g.status==='trashed'){if(hasPermission('restore_games')){const restore=document.createElement('button');restore.className='btn primary small';restore.textContent='Восстановить';restore.onclick=()=>restoreGame(g);a.appendChild(restore)}if(profile.role==='owner'){const hard=document.createElement('button');hard.className='btn danger small';hard.textContent='Удалить окончательно';hard.onclick=()=>hardDeleteGame(g);a.appendChild(hard)}}else{if(hasPermission('trash_games')){const trash=document.createElement('button');trash.className='btn danger small';trash.textContent='В корзину';trash.onclick=()=>trashGame(g);a.appendChild(trash)}}if(profile.role==='owner'&&users.length&&g.status!=='trashed'){const transfer=document.createElement('button');transfer.className='btn ghost small';transfer.textContent='Передать';transfer.onclick=()=>transferGame(g);a.appendChild(transfer)}box.appendChild(el)})}
-async function createGame(){if(!hasPermission('create_games')){alert('Owner запретил создание новых игр для этой учётной записи.');return}const input=document.getElementById('newGameName'),name=input.value.trim()||'Новый турнир',btn=document.getElementById('createGameBtn');btn.disabled=true;try{const data=await api('create_game',{name,state:blankGame(name)});input.value='';await loadGames();location.href='editor.html?game='+encodeURIComponent(data.game.id)}catch(e){alert(e.message)}finally{btn.disabled=false}}
+function overviewGame(){const available=games.filter(g=>g.status!=='trashed');return available.find(g=>g.status==='active')||available.find(g=>!['archived','completed'].includes(g.status))||available[0]||games[0]||null}
+function overviewIcon(id,cls=''){return `<span class="overview-kpi-icon ${cls}"><svg aria-hidden="true"><use href="#${id}"/></svg></span>`}
+function overviewScheduleLabel(s){
+  const days=['','Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  if(s.scheduleType==='daily')return 'Каждый день';
+  if(s.scheduleType==='weekdays'){const list=(Array.isArray(s.weekdays)?s.weekdays:[]).map(Number).sort((a,b)=>a-b).map(x=>days[x]).filter(Boolean);return list.length?list.join(' · '):'Дни не выбраны'}
+  if(s.scheduleType==='weekly')return Number(s.recurrence||1)>1?'Раз в '+Number(s.recurrence)+' недели':'Раз в неделю';
+  if(s.scheduleType==='monthly')return Number(s.recurrence||1)>1?'Раз в '+Number(s.recurrence)+' месяца':'Раз в месяц';
+  if(s.scheduleType==='date'&&s.date){const d=new Date(s.date+'T00:00:00');return Number.isNaN(d.getTime())?s.date:d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}
+  return 'Ручное событие';
+}
+function overviewEvalLabel(s){return({prev_day:'Предыдущий календарный день',prev_workday:'Предыдущий рабочий день',prev_n_days:'Предыдущие '+Number(s.evalConfig?.n||7)+' дней',weekdays:'Выбранные дни текущей недели',prev_week:'Предыдущая неделя',current_week_to_date:'Текущая неделя до события',prev_month:'Предыдущий месяц',fixed_range:'Фиксированный период',manual:'Период задаётся вручную'})[s.evalType]||'Период задаётся вручную'}
+function overviewShotDate(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function overviewSector(s){const r=Number(s.r),c=Number(s.c);return Number.isFinite(r)&&Number.isFinite(c)?String.fromCharCode(65+c)+(r+1):'—'}
+function overviewOpeningLabel(s){if(s.result==='hit')return(s.sunk||s.finalBlow||s.inSunkShip)?'Сокровище найдено':'Найден фрагмент';if(s.result==='perk'||s.findLabel||s.findName||s.perkLabel)return'Неожиданная находка';return'Пустой сектор'}
+function overviewAction(href,icon,title,description){return `<a class="overview-action" href="${href}"><svg aria-hidden="true"><use href="#${icon}"/></svg><div><b>${title}</b><span>${description}</span></div></a>`}
+function renderOverview(){
+  const title=document.getElementById('overviewGameName'),status=document.getElementById('overviewGameStatus'),meta=document.getElementById('overviewGameMeta'),body=document.getElementById('overviewBody'),open=document.getElementById('overviewOpenBtn');
+  if(!title||!status||!meta||!body||!open)return;
+  const g=overviewGame();
+  if(!g){title.textContent='Игры пока не созданы';status.innerHTML='';meta.textContent='Создайте черновик, чтобы увидеть обзор.';open.classList.add('hidden');body.innerHTML='<div class="overview-empty">После создания игры здесь появятся показатели, расписание и последние открытия.</div>';return}
+  open.classList.remove('hidden');open.href='editor.html?game='+encodeURIComponent(g.id)+'&view=admin&tab=stats';title.textContent=g.title||g.state?.name||'Без названия';status.innerHTML=statusBadge(g.status);meta.textContent='Обновлено '+dt(g.updated_at)+' · обзор активной рабочей игры';
+  const state=g.state||{},shots=Array.isArray(state.shots)?state.shots:[],treasures=Array.isArray(state.ships)?state.ships:[],managers=Array.isArray(state.managers)?state.managers:[],size=Math.max(1,Number(state.size||8));
+  const completed=new Set(shots.filter(s=>s.result==='hit'&&(s.sunk||s.finalBlow||s.inSunkShip)).map(s=>s.shipId||s.shipName).filter(Boolean));
+  const found=treasures.filter(t=>t.sunk||completed.has(t.id)||completed.has(t.name)).length;
+  const findCount=shots.filter(s=>s.result==='perk'||s.findLabel||s.findName||s.perkLabel).length;
+  const scenarioList=(Array.isArray(state.scenarios)?state.scenarios:[]).filter(s=>!s.deletedAt).slice().sort((a,b)=>Number(a.sortOrder||0)-Number(b.sortOrder||0)).slice(0,3);
+  const schedule=scenarioList.length?scenarioList.map(s=>{const paused=s.enabled===false||!!(s.pausedUntil&&new Date(s.pausedUntil).getTime()>=Date.now());return `<div class="schedule-item"><span class="overview-row-icon"><svg aria-hidden="true"><use href="#i-calendar"/></svg></span><div><div class="overview-row-title">${esc(s.name||overviewScheduleLabel(s))}</div><div class="overview-row-meta">${esc(overviewScheduleLabel(s))} · ${esc(overviewEvalLabel(s))}</div></div><span class="overview-state ${paused?'paused':''}">${paused?'Пауза':'Активно'}</span></div>`}).join(''):'<div class="overview-list-empty">Сценарии открытий ещё не настроены.</div>';
+  const recent=shots.slice(-3).reverse();
+  const recentHtml=recent.length?recent.map(s=>`<div class="recent-item"><span class="recent-date">${overviewShotDate(s.ts)}</span><div><div class="overview-row-title">${esc(s.manager||'Без участника')}</div><div class="overview-row-meta">${esc(overviewOpeningLabel(s))}</div></div><span class="recent-sector">${overviewSector(s)}</span></div>`).join(''):'<div class="overview-list-empty">Открытий пока не было.</div>';
+  const href='editor.html?game='+encodeURIComponent(g.id)+'&view=admin&tab=';
+  body.innerHTML=`<div class="overview-kpis">
+    <article class="overview-kpi">${overviewIcon('i-users')}<div><div class="overview-kpi-label">Участников</div><div class="overview-kpi-value">${managers.length}</div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-grid','sand')}<div><div class="overview-kpi-label">Открыто секторов</div><div class="overview-kpi-value">${shots.length} <small>/ ${size*size}</small></div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-chest','gold')}<div><div class="overview-kpi-label">Найдено сокровищ</div><div class="overview-kpi-value">${found} <small>/ ${treasures.length}</small></div></div></article>
+    <article class="overview-kpi">${overviewIcon('i-compass','purple')}<div><div class="overview-kpi-label">Неожиданные находки</div><div class="overview-kpi-value">${findCount}</div></div></article>
+  </div><div class="overview-middle">
+    <section class="overview-block"><div class="overview-block-head">Расписание открытий <span>${scenarioList.length?'Ближайшие сценарии':'Не настроено'}</span></div><div class="overview-list">${schedule}</div></section>
+    <section class="overview-block"><div class="overview-block-head">Последние открытия <span>${shots.length?'Всего '+shots.length:'Нет данных'}</span></div><div class="overview-list">${recentHtml}</div></section>
+  </div><nav class="overview-actions" aria-label="Быстрые действия с игрой">
+    ${overviewAction(href+'schedule','i-settings','Настройки игры','Показатели, роли и доступ')}
+    ${overviewAction(href+'map','i-map','Карта и сокровища','Размещение и запечатывание')}
+    ${overviewAction(href+'map','i-compass','Неожиданные находки','Эффекты и награды')}
+    ${overviewAction(href+'manage','i-lock','Управление игрой','Статус, архив и удаление')}
+  </nav>`;
+}
+function renderGames(){const box=document.getElementById('gameCards'),list=filteredGames();box.innerHTML='';const createBtn=document.getElementById('createGameBtn');if(createBtn)createBtn.disabled=!hasPermission('create_games');if(!list.length){box.innerHTML='<div class="empty">По выбранному фильтру игр нет.</div>';return}list.forEach(g=>{const el=document.createElement('div');el.className='game '+g.status;const state=g.state||{};el.innerHTML=`<div class="game-head"><div><div class="game-title">${esc(g.title)}</div><div class="meta">${profile.role==='owner'?'Владелец: '+esc(gameOwnerName(g))+' · ':''}обновлено ${dt(g.updated_at)}<br>участников: ${(state.managers||[]).length} · открытий: ${(state.shots||[]).length}</div></div>${statusBadge(g.status)}</div><div class="actions"></div>`;const a=el.querySelector('.actions');const open=document.createElement('a');open.className='btn dark small';open.textContent='Открыть';open.href='editor.html?game='+encodeURIComponent(g.id);a.appendChild(open);if(g.status==='active'){const pub=document.createElement('a');pub.className='btn ghost small';pub.textContent='Публичная ссылка';pub.href=publicLink(g.id);pub.target='_blank';a.appendChild(pub)}if(g.status==='trashed'){if(hasPermission('restore_games')){const restore=document.createElement('button');restore.className='btn primary small';restore.textContent='Восстановить';restore.onclick=()=>restoreGame(g);a.appendChild(restore)}if(profile.role==='owner'){const hard=document.createElement('button');hard.className='btn danger small';hard.textContent='Удалить окончательно';hard.onclick=()=>hardDeleteGame(g);a.appendChild(hard)}}else{if(hasPermission('trash_games')){const trash=document.createElement('button');trash.className='btn danger small';trash.textContent='В корзину';trash.onclick=()=>trashGame(g);a.appendChild(trash)}}if(profile.role==='owner'&&users.length&&g.status!=='trashed'){const transfer=document.createElement('button');transfer.className='btn ghost small';transfer.textContent='Передать';transfer.onclick=()=>transferGame(g);a.appendChild(transfer)}box.appendChild(el)})}
+async function createGame(){if(!hasPermission('create_games')){alert('Owner запретил создание новых игр для этой учётной записи.');return}const input=document.getElementById('newGameName'),name=input.value.trim()||'Новая экспедиция',btn=document.getElementById('createGameBtn');btn.disabled=true;try{const data=await api('create_game',{name,state:blankGame(name)});input.value='';await loadGames();location.href='editor.html?game='+encodeURIComponent(data.game.id)}catch(e){alert(e.message)}finally{btn.disabled=false}}
 async function trashGame(g){if(!hasPermission('trash_games')){alert('Owner запретил удаление игр.');return}confirmModal('Переместить игру в корзину?',`«${esc(g.title)}» исчезнет с публичного табло, но её можно восстановить.`,async()=>{try{await api('trash_game',{gameId:g.id});closeModal();await loadGames()}catch(e){alert(e.message)}})}
 async function restoreGame(g){if(!hasPermission('restore_games')){alert('Owner запретил восстановление игр.');return}try{await api('restore_game',{gameId:g.id});await loadGames()}catch(e){alert(e.message)}}
 async function hardDeleteGame(g){confirmModal('Удалить окончательно?',`Игра «${esc(g.title)}» и вся история версий будут удалены без возможности восстановления.`,async()=>{try{await api('hard_delete_game',{gameId:g.id});closeModal();await loadGames()}catch(e){alert(e.message)}})}
@@ -356,7 +950,18 @@ async function changeUserStatus(u,action){const label=action==='suspend_admin'?'
 async function passwordReset(u){try{await api('send_password_reset',{email:u.email});alert('Ссылка для смены пароля отправлена на '+u.email)}catch(e){alert(e.message)}}
 async function createAdmins(){const emails=document.getElementById('adminEmails').value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean),mode=document.getElementById('adminMode').value,password=document.getElementById('tempPassword').value,department=document.getElementById('adminDepartment').value.trim(),btn=document.getElementById('createAdminsBtn'),out=document.getElementById('createUsersResult');if(!emails.length){alert('Добавьте хотя бы одну почту.');return}btn.disabled=true;out.textContent='';const results=[];for(const email of emails){try{await api('create_admin',{email,displayName:'',department,mode,password});results.push('✓ '+email)}catch(e){results.push('✗ '+email+': '+e.message)}}out.innerHTML=results.map(esc).join('<br>');btn.disabled=false;await loadUsers()}
 async function loadAudit(){if(profile.role!=='owner')return;const box=document.getElementById('auditList');box.innerHTML='<div class="empty">Загружаем…</div>';const{data,error}=await sb.from('audit_logs').select('*').order('id',{ascending:false}).limit(300);if(error){box.innerHTML='<div class="err">'+esc(error.message)+'</div>';return}box.innerHTML='';(data||[]).forEach(x=>{const row=document.createElement('div');row.className='audit-row';row.innerHTML=`<div><b>${esc(x.summary||x.action)}</b><div class="smalltext">${esc(x.action)}</div></div><div>${esc(x.actor_email||'Система')}</div><div>${dt(x.created_at)}</div><div class="smalltext">${esc(x.entity_type)} ${esc(x.entity_id||'')}</div>`;box.appendChild(row)});if(!data?.length)box.innerHTML='<div class="empty">Журнал пока пуст.</div>'}
-function switchTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));['games','users','audit'].forEach(x=>document.getElementById('pane-'+x).classList.toggle('hidden',x!==name));if(name==='users')loadUsers();if(name==='audit')loadAudit()}
+function switchTab(name,el){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  if(el)el.classList.add('active');
+  else{const first=document.querySelector('.tab[data-tab="'+name+'"]');if(first)first.classList.add('active')}
+  ['games','users','audit'].forEach(x=>document.getElementById('pane-'+x).classList.toggle('hidden',x!==name));
+  if(el&&el.dataset.filter){const f=document.getElementById('gameFilter');if(f){f.value=el.dataset.filter;renderGames()}}
+  if(name==='users')loadUsers();
+  if(name==='audit')loadAudit();
+  closeDrawer();
+}
+function openDrawer(){document.getElementById('sidebar')?.classList.add('open');document.getElementById('drawerBackdrop')?.classList.add('open');document.getElementById('burgerBtn')?.setAttribute('aria-expanded','true')}
+function closeDrawer(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('drawerBackdrop')?.classList.remove('open');document.getElementById('burgerBtn')?.setAttribute('aria-expanded','false')}
 function hideBoot(){document.getElementById('bootScreen').classList.add('hidden')}
 function showLogin(message=''){hideBoot();document.getElementById('app').classList.add('hidden');hidePasswordSetup();document.getElementById('loginScreen').classList.remove('hidden');if(message)document.getElementById('loginError').textContent=message}
 function safeNextUrl(){const raw=new URLSearchParams(location.search).get('next');if(!raw)return'';try{const u=new URL(raw,location.href);if(u.origin!==location.origin)return'';const base=location.pathname.replace(/admin\.html$/,'');if(!u.pathname.startsWith(base))return'';return u.pathname.split('/').pop()+u.search+u.hash}catch(e){return''}}
@@ -415,7 +1020,12 @@ function initHelpUX(){
   decorateAdminHelp();new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)decorateAdminHelp(n)}))).observe(document.body,{childList:true,subtree:true});
 }
 
-async function init(){initHelpUX();if(!sb){showLogin('Не найден config.js.');return}document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));document.getElementById('createGameBtn').onclick=createGame;document.getElementById('gameFilter').onchange=renderGames;document.getElementById('createAdminsBtn').onclick=createAdmins;document.getElementById('adminMode').onchange=()=>document.getElementById('tempPasswordField').style.display=document.getElementById('adminMode').value==='temporary_password'?'block':'none';document.getElementById('adminMode').dispatchEvent(new Event('change'));document.getElementById('refreshAuditBtn').onclick=loadAudit;document.getElementById('logoutBtn').onclick=()=>sb.auth.signOut();document.getElementById('retryServerBtn').onclick=async()=>{const b=document.getElementById('retryServerBtn');b.disabled=true;const ready=await checkServer();if(ready&&profile?.role==='owner')await loadUsers();b.disabled=false};document.getElementById('setPasswordBtn').onclick=finishPasswordSetup;document.getElementById('newPasswordConfirm').onkeydown=e=>{if(e.key==='Enter')finishPasswordSetup()};document.getElementById('loginBtn').onclick=async()=>{const btn=document.getElementById('loginBtn'),err=document.getElementById('loginError');err.textContent='';btn.disabled=true;const{data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});btn.disabled=false;if(error){err.textContent=error.message;return}try{await handleSession(data.session)}catch(e){showLogin(e.message);await sb.auth.signOut()}};document.getElementById('password').onkeydown=e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()};sb.auth.onAuthStateChange(async(event,s)=>{if(event==='PASSWORD_RECOVERY'){passwordFlow=true;showPasswordSetup();return}if(passwordFlow&&s){showPasswordSetup();return}if(event==='SIGNED_OUT')showLogin()});const{data}=await sb.auth.getSession();if(data.session){try{await handleSession(data.session)}catch(e){await sb.auth.signOut();showLogin(e.message)}}else showLogin()}
+async function init(){initHelpUX();if(!sb){showLogin('Не найден config.js.');return}document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab,t));
+document.getElementById('burgerBtn').onclick=()=>{const open=document.getElementById('sidebar').classList.contains('open');open?closeDrawer():openDrawer()};
+document.getElementById('drawerBackdrop').onclick=closeDrawer;
+document.getElementById('helpSideBtn').onclick=()=>{closeDrawer();openHelp()};
+document.getElementById('logoutSideBtn').onclick=()=>sb.auth.signOut();
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});document.getElementById('createGameBtn').onclick=createGame;document.getElementById('gameFilter').onchange=renderGames;document.getElementById('createAdminsBtn').onclick=createAdmins;document.getElementById('adminMode').onchange=()=>document.getElementById('tempPasswordField').style.display=document.getElementById('adminMode').value==='temporary_password'?'block':'none';document.getElementById('adminMode').dispatchEvent(new Event('change'));document.getElementById('refreshAuditBtn').onclick=loadAudit;document.getElementById('logoutBtn').onclick=()=>sb.auth.signOut();document.getElementById('retryServerBtn').onclick=async()=>{const b=document.getElementById('retryServerBtn');b.disabled=true;const ready=await checkServer();if(ready&&profile?.role==='owner')await loadUsers();b.disabled=false};document.getElementById('setPasswordBtn').onclick=finishPasswordSetup;document.getElementById('newPasswordConfirm').onkeydown=e=>{if(e.key==='Enter')finishPasswordSetup()};document.getElementById('loginBtn').onclick=async()=>{const btn=document.getElementById('loginBtn'),err=document.getElementById('loginError');err.textContent='';btn.disabled=true;const{data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});btn.disabled=false;if(error){err.textContent=error.message;return}try{await handleSession(data.session)}catch(e){showLogin(e.message);await sb.auth.signOut()}};document.getElementById('password').onkeydown=e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()};sb.auth.onAuthStateChange(async(event,s)=>{if(event==='PASSWORD_RECOVERY'){passwordFlow=true;showPasswordSetup();return}if(passwordFlow&&s){showPasswordSetup();return}if(event==='SIGNED_OUT')showLogin()});const{data}=await sb.auth.getSession();if(data.session){try{await handleSession(data.session)}catch(e){await sb.auth.signOut();showLogin(e.message)}}else showLogin()}
 addEventListener('pageshow',event=>{if(event.persisted&&session&&profile&&!passwordFlow){hideBoot();hidePasswordSetup();document.getElementById('loginScreen').classList.add('hidden');document.getElementById('app').classList.remove('hidden')}});
 init();
 </script>
