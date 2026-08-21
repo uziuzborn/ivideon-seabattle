@@ -174,6 +174,8 @@ const legacyRevenueShots=[
   {manager:"Амаль",periodStart:"2026-07-27",periodEnd:"2026-08-02",revenue:1031191,ts:3},
 ];
 assert.equal(h.nonOverlappingRevenueTotal(legacyRevenueShots,"Амаль"),1031191);
+assert.match(html,/class="btn btn-ghost btn-sm wr-off"/);
+assert.match(html,/function toggleNotWorked\(tr,off,defaultDays\)/);
 
 // Bonus openings do not consume the ordinary quota; one-time completion is derived.
 const scenario = { id: "once", oneTime: true, defaultOpenings: 2 };

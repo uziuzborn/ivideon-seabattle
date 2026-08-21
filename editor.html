@@ -2519,11 +2519,20 @@ function syncWeeklyRating(){
   }else note.innerHTML='<b>Пока никто не допущен.</b> Для участия нужны хотя бы 1 отработанный день и 50 звонков за каждый такой день.';
   updateGateFlag();
 }
+function toggleNotWorked(tr,off,defaultDays){
+  const days=tr.querySelector('.wr-days'),calls=tr.querySelector('.wr-calls'),revenue=tr.querySelector('.wr-revenue'),button=tr.querySelector('.wr-off');
+  if(off){days.dataset.previous=days.value||String(defaultDays);days.value='0';calls.value='0';revenue.value='0'}
+  else days.value=days.dataset.previous||String(defaultDays);
+  [days,calls,revenue].forEach(input=>input.disabled=off);
+  tr.classList.toggle('off',off);button.dataset.off=off?'1':'0';button.textContent=off?'Вернуть':'Не работал';
+  syncWeeklyRating();
+}
 function renderWeeklyResults(){
   const g=G(),table=document.getElementById('weeklyResultsTable');if(!table)return;
   const defaultDays=businessDaysInPeriod(document.getElementById('periodStart').value,document.getElementById('periodEnd').value),defaultTarget=defaultDays*50;
-  table.innerHTML='<thead><tr><th class="c">Место</th><th>Менеджер</th><th class="c">Отработано дней</th><th class="c">Персональная норма</th><th class="c">Факт звонков</th><th class="c">Выполнение</th><th class="c">Выручка, ₽</th><th class="c">Допуск</th></tr></thead><tbody>'+g.managers.map(name=>'<tr data-manager="'+escapeAttr(name)+'"><td class="c wr-place">—</td><td><b>'+esc(name)+'</b></td><td class="c"><input class="wr-days" type="number" min="0" max="5" step="1" value="'+defaultDays+'" aria-label="Отработанные дни: '+escapeAttr(name)+'"></td><td class="c wr-target">'+defaultTarget+'</td><td class="c"><input class="wr-calls" type="number" min="0" step="1" value="0" aria-label="Звонки: '+escapeAttr(name)+'"></td><td class="c wr-percent">0%</td><td class="c"><input class="wr-revenue" type="number" min="0" step="any" value="0" aria-label="Выручка: '+escapeAttr(name)+'"></td><td class="c wr-status"></td></tr>').join('')+'</tbody>';
-  table.querySelectorAll('input').forEach(input=>input.oninput=syncWeeklyRating);syncWeeklyRating();
+  table.innerHTML='<thead><tr><th class="c">Место</th><th>Менеджер</th><th class="c">Отработано дней</th><th class="c">Персональная норма</th><th class="c">Факт звонков</th><th class="c">Выполнение</th><th class="c">Выручка, ₽</th><th class="c">Допуск</th></tr></thead><tbody>'+g.managers.map(name=>'<tr data-manager="'+escapeAttr(name)+'"><td class="c wr-place">—</td><td><b>'+esc(name)+'</b></td><td class="c"><input class="wr-days" type="number" min="0" max="5" step="1" value="'+defaultDays+'" aria-label="Отработанные дни: '+escapeAttr(name)+'"><button type="button" class="btn btn-ghost btn-sm wr-off" style="margin-top:6px;width:100%" data-off="0">Не работал</button></td><td class="c wr-target">'+defaultTarget+'</td><td class="c"><input class="wr-calls" type="number" min="0" step="1" value="0" aria-label="Звонки: '+escapeAttr(name)+'"></td><td class="c wr-percent">0%</td><td class="c"><input class="wr-revenue" type="number" min="0" step="any" value="0" aria-label="Выручка: '+escapeAttr(name)+'"></td><td class="c wr-status"></td></tr>').join('')+'</tbody>';
+  table.querySelectorAll('input').forEach(input=>input.oninput=syncWeeklyRating);
+  table.querySelectorAll('.wr-off').forEach(button=>button.onclick=()=>toggleNotWorked(button.closest('tr'),button.dataset.off!=='1',defaultDays));syncWeeklyRating();
 }
 function currentScenario(){const g=G();const id=document.getElementById('scenarioSel').value;return id?scenarioById(g,id):null}
 function renderOpeningTab(){
