@@ -2499,8 +2499,9 @@ function syncWeeklyRating(){
   });
   const winner=rows.find(r=>r.eligible),note=document.getElementById('weeklyWinnerNote'),sel=document.getElementById('winnerSel');
   if(winner){sel.value=winner.name;note.innerHTML='<b>Победитель по расчёту: '+esc(winner.name)+'</b> · выручка '+winner.revenue.toLocaleString('ru-RU')+' ₽ · выполнение нормы '+winner.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
-    const calls=document.getElementById('mi_calls'),revenue=document.getElementById('mi_revenue');if(calls)calls.value=winner.calls;if(revenue)revenue.value=winner.revenue;updateGateFlag();renderBonusBox();
+    const calls=document.getElementById('mi_calls'),revenue=document.getElementById('mi_revenue');if(calls)calls.value=winner.calls;if(revenue)revenue.value=winner.revenue;renderBonusBox();
   }else note.innerHTML='<b>Пока никто не допущен.</b> Для участия нужны хотя бы 1 отработанный день и 50 звонков за каждый такой день.';
+  updateGateFlag();
 }
 function renderWeeklyResults(){
   const g=G(),table=document.getElementById('weeklyResultsTable');if(!table)return;
