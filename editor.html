@@ -2473,6 +2473,9 @@ function rankWeeklyResults(rows){
   return (rows||[]).map(weeklyResult).sort((a,b)=>
     Number(b.eligible)-Number(a.eligible)||b.revenue-a.revenue||b.attainment-a.attainment||String(a.name).localeCompare(String(b.name),'ru'));
 }
+function effectiveGateValue(def,weeklyRow){
+  return def.metric.id==='calls'&&weeklyRow?weeklyResult(weeklyRow).personalTarget:def.value;
+}
 function readWeeklyResults(){
   return [...document.querySelectorAll('#weeklyResultsTable tbody tr')].map(tr=>weeklyResult({
     name:tr.dataset.manager,workedDays:tr.querySelector('.wr-days').value,
@@ -2513,7 +2516,7 @@ function renderOpeningTab(){
   const previousWinner=wSel.value;
   wSel.innerHTML=g.managers.length?g.managers.map(m=>'<option>'+esc(m)+'</option>').join(''):'<option value="">— добавь участников —</option>';
   if(g.managers.includes(previousWinner))wSel.value=previousWinner;
-  wSel.onchange=renderBonusBox;
+  wSel.onchange=()=>{renderBonusBox();updateGateFlag()};
   applyScenarioPeriod();renderMetricInputs();renderWeeklyResults();renderBonusBox();
   buildPlayBoard();
   document.getElementById('remainingCount').textContent=g.ships.filter(t=>!isFound(g,t)).length+' / '+g.ships.length;
@@ -2551,17 +2554,20 @@ function renderMetricInputs(){
 function updateGateFlag(){
   const g=G(),s=currentScenario(),summary=document.getElementById('gateFlag');
   if(!summary)return;
+  const winner=document.getElementById('winnerSel').value;
+  const weeklyRow=readWeeklyResults().find(r=>r.name===winner);
   const messages=[];
   scenarioMetricsFor(g,s).forEach(def=>{
     const m=def.metric,input=document.getElementById('mi_'+m.id),el=document.getElementById('mg_'+m.id);
     if(!input||!el)return;
     const raw=input.value.trim();
-    if(def.role!=='threshold'||def.value===null||def.value===undefined){
+    const gateValue=effectiveGateValue(def,weeklyRow);
+    if(def.role!=='threshold'||gateValue===null||gateValue===undefined){
       el.textContent=def.required?'обязательное поле':'необязательное поле';el.style.color='';return;
     }
-    const cond=OPERATORS[def.operator]+' '+fmtMetricValue(m,def.value);
+    const cond=OPERATORS[def.operator]+' '+fmtMetricValue(m,gateValue);
     if(raw===''){el.textContent='допуск: '+cond;el.style.color='';return}
-    const ok=compare(def.operator,Number(raw),Number(def.value));
+    const ok=compare(def.operator,Number(raw),Number(gateValue));
     el.textContent=(ok?'✓ допуск пройден':'✗ не проходит допуск')+' ('+cond+')';
     el.style.color=ok?'var(--green)':'var(--red)';
     messages.push((ok?'✓ ':'✗ ')+m.label);
@@ -2767,7 +2773,8 @@ function openSector(r,c){
     const raw=input?input.value.trim():'';
     if(def.required&&raw==='')missing.push(m.label);
     metricValues[m.id]=raw===''?null:Number(raw);
-    if(def.role==='threshold'&&def.value!==null&&def.value!==undefined&&raw!=='')gateResults[m.id]=compare(def.operator,Number(raw),Number(def.value));
+    const gateValue=effectiveGateValue(def,calculatedWinner);
+    if(def.role==='threshold'&&gateValue!==null&&gateValue!==undefined&&raw!=='')gateResults[m.id]=compare(def.operator,Number(raw),Number(gateValue));
   });
   if(missing.length){alert('Заполни обязательные показатели: '+missing.join(', '));return}
   const failed=defs.filter(d=>gateResults[d.metric.id]===false);

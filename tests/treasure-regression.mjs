@@ -59,7 +59,7 @@ const hooks = [
   "safeIconId", "icon", "normalizeGame", "canonicalLegacy", "canonicalV2", "canonical",
   "sealGameState",
   "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted",
-  "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults",
+  "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -154,6 +154,9 @@ assert.equal(weekly[0].name, "Тай-брейк");
 assert.equal(weekly[1].name, "Четыре дня");
 assert.equal(weekly.at(-1).eligible, false);
 assert.equal(h.weeklyResult({workedDays:0,calls:100,revenue:1}).eligible, false);
+const callsGate = { metric: { id: "calls" }, value: 100 };
+assert.equal(h.effectiveGateValue(callsGate, { workedDays: 1, calls: 50 }), 50);
+assert.equal(h.effectiveGateValue(callsGate, { workedDays: 2, calls: 100 }), 100);
 
 // Bonus openings do not consume the ordinary quota; one-time completion is derived.
 const scenario = { id: "once", oneTime: true, defaultOpenings: 2 };
