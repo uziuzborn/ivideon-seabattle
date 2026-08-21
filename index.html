@@ -544,6 +544,7 @@ function metricValue(s,id){
   return null;
 }
 function fmtMetric(m,v){if(v===null||v===undefined||v===''||Number.isNaN(Number(v)))return '—';return Number(v).toLocaleString('ru-RU')+(m.unit?' '+m.unit:'')}
+function latestWeeklyRanking(g){const last=(g.shots||[]).slice().reverse().find(s=>Array.isArray(s.weeklyResults)&&s.weeklyResults.length);return last?last.weeklyResults.slice().sort((a,b)=>Number(b.eligible)-Number(a.eligible)||Number(b.revenue)-Number(a.revenue)||Number(b.attainment)-Number(a.attainment)):[]}
 
 function aggregate(g){
   const defs=metrics(g),map={};
@@ -718,12 +719,12 @@ function render(state,dbTime){
     (openingRows.length>3?'<details class="more-list"><summary>Вся история</summary>'+openingRows.slice(3).join('')+'</details>':''):
     '<div class="empty-note">Открытий ещё не было.</div>';
 
-  const ranked=rows.slice().sort((a,b)=>b.found-a.found||b.fragments-a.fragments||b.openings-a.openings).slice(0,8);
+  const weeklyRanked=latestWeeklyRanking(g),ranked=weeklyRanked.length?weeklyRanked:rows.slice().sort((a,b)=>b.found-a.found||b.fragments-a.fragments||b.openings-a.openings).slice(0,8);
   const ratingRows=ranked.map((r,i)=>
     '<div class="rank-row"><div class="rank-pos">'+(i+1)+'</div>'+
     '<div><div class="rank-name">'+esc(r.name)+'</div>'+
-    '<div class="tl-meta">'+r.openings+' откр. · '+r.fragments+' фрагм. · '+r.found+' сокр.</div></div>'+
-    '<div class="rank-val">'+(leadMetric?esc(fmtMetric(leadMetric,r.metricTotals[leadMetric.id]||0)):'')+'</div></div>'
+    '<div class="tl-meta">'+(weeklyRanked.length?(r.workedDays+' дн. · норма '+r.personalTarget+' · факт '+r.calls+' · '+Number(r.attainment||0).toLocaleString('ru-RU',{maximumFractionDigits:1})+'% · '+(r.eligible?'допущен':'не допущен')):(r.openings+' откр. · '+r.fragments+' фрагм. · '+r.found+' сокр.'))+'</div></div>'+
+    '<div class="rank-val">'+(weeklyRanked.length?(Number(r.revenue)||0).toLocaleString('ru-RU')+' ₽':(leadMetric?esc(fmtMetric(leadMetric,r.metricTotals[leadMetric.id]||0)):''))+'</div></div>'
   );
   const rating=ratingRows.length?ratingRows.slice(0,3).join('')+
     (ratingRows.length>3?'<details class="more-list"><summary>Полный рейтинг</summary>'+ratingRows.slice(3).join('')+'</details>':''):

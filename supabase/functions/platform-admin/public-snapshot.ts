@@ -145,6 +145,10 @@ export function buildPublicState(rawState: unknown): Json {
     for (const id of Object.keys(src)) {
       if (metricIds.has(id)) metricValues[id] = num(src[id]);
     }
+    const weeklyResults = (Array.isArray(s?.weeklyResults) ? s.weeklyResults : []).map((r: Json) => ({
+      name: str(r?.name, 200), workedDays: num(r?.workedDays), personalTarget: num(r?.personalTarget),
+      calls: num(r?.calls), revenue: num(r?.revenue), attainment: num(r?.attainment), eligible: !!r?.eligible,
+    })).filter((r: Json) => r.name).slice(0, 500);
 
     return {
       // --- прежние поля снимка (без изменений) ---
@@ -169,6 +173,7 @@ export function buildPublicState(rawState: unknown): Json {
       scenarioName: str(s?.scenarioName, 160),
       periodStart: str(s?.periodStart, 20),
       periodEnd: str(s?.periodEnd, 20),
+      weeklyResults,
       // найденная неожиданная находка (в т.ч. поверх фрагмента сокровища)
       findLabel: find?.findLabel ?? null,
       findDesc: find?.findDesc ?? null,

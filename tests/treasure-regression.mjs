@@ -7,7 +7,7 @@ import { buildPublicState } from "../supabase/functions/platform-admin/public-sn
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const editorPath = path.join(here, "..", "editor.html");
-const html = fs.readFileSync(editorPath, "utf8");
+const html = fs.readFileSync(editorPath, "utf8").replace(/\r\n/g, "\n");
 const start = html.indexOf("<script>\n'use strict';");
 const end = html.indexOf("</script>", start);
 assert.ok(start >= 0 && end > start, "editor inline script was not found");
@@ -59,7 +59,7 @@ const hooks = [
   "safeIconId", "icon", "normalizeGame", "canonicalLegacy", "canonicalV2", "canonical",
   "sealGameState",
   "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted",
-  "classifySectorForOpening", "applyImmediateGrant",
+  "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -143,6 +143,18 @@ const manualMetric = h.scenarioMetricsFor(metricGame, null)[0];
 assert.equal(manualMetric.role, "threshold");
 assert.equal(manualMetric.value, 100);
 
+// Weekly admission scales with worked days; ranking is revenue, then call-target attainment.
+const weekly = h.rankWeeklyResults([
+  { name: "Пять дней", workedDays: 5, calls: 250, revenue: 500000 },
+  { name: "Четыре дня", workedDays: 4, calls: 210, revenue: 700000 },
+  { name: "Не допущен", workedDays: 5, calls: 249, revenue: 900000 },
+  { name: "Тай-брейк", workedDays: 4, calls: 220, revenue: 700000 },
+]);
+assert.equal(weekly[0].name, "Тай-брейк");
+assert.equal(weekly[1].name, "Четыре дня");
+assert.equal(weekly.at(-1).eligible, false);
+assert.equal(h.weeklyResult({workedDays:0,calls:100,revenue:1}).eligible, false);
+
 // Bonus openings do not consume the ordinary quota; one-time completion is derived.
 const scenario = { id: "once", oneTime: true, defaultOpenings: 2 };
 const quotaGame = { shots: [
@@ -189,11 +201,14 @@ assert.equal(manual.remainingUses, 1);
 const publicState = buildPublicState({
   size: 8, managers: ["Али"], metrics: [], ships: [],
   cells: { "0,0": { type: "perk", perkLabel: "Секрет", find: { findName: "Секрет", enabled: false, consumedAt: 1 } } },
-  shots: [{ r: 0, c: 0, manager: "Али", result: "perk", perkLabel: "Секрет", ts: 1 }],
+  shots: [{ r: 0, c: 0, manager: "Али", result: "perk", perkLabel: "Секрет", ts: 1,
+    weeklyResults: [{ name: "Али", workedDays: 4, personalTarget: 200, calls: 210, revenue: 700000, attainment: 105, eligible: true, privateNote: "hidden" }] }],
 });
 assert.equal(publicState.shots[0].result, "miss");
 assert.equal(publicState.shots[0].perkLabel, null);
 assert.equal(publicState.shots[0].findLabel, null);
+assert.deepEqual(Object.keys(publicState.shots[0].weeklyResults[0]).sort(), ["attainment", "calls", "eligible", "name", "personalTarget", "revenue", "workedDays"]);
+assert.equal(publicState.shots[0].weeklyResults[0].personalTarget, 200);
 assert.equal("cells" in publicState, false);
 
-console.log("treasure regression checks: 41 assertions passed");
+console.log("treasure regression checks passed");
