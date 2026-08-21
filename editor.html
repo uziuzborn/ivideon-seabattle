@@ -2483,6 +2483,20 @@ function businessDaysInPeriod(startIso,endIso){
   while(d<=end&&guard++<370){const day=d.getDay();if(day>=1&&day<=5)count++;d.setDate(d.getDate()+1)}
   return Math.max(0,Math.min(5,count));
 }
+function nonOverlappingRevenueTotal(shots,manager){
+  const byPeriod=new Map();
+  (shots||[]).forEach(s=>{
+    const row=(Array.isArray(s.weeklyResults)?s.weeklyResults:[]).find(r=>r.name===manager);
+    if(!row||!s.periodStart||!s.periodEnd)return;
+    const start=Date.parse(s.periodStart+'T00:00:00Z'),end=Date.parse(s.periodEnd+'T00:00:00Z');
+    if(!Number.isFinite(start)||!Number.isFinite(end)||end<start)return;
+    const record={start,end,revenue:Math.max(0,Number(row.revenue)||0),ts:Number(s.ts)||0};
+    const key=s.periodStart+'|'+s.periodEnd,old=byPeriod.get(key);if(!old||record.ts>=old.ts)byPeriod.set(key,record);
+  });
+  const records=[...byPeriod.values()].sort((a,b)=>(b.end-b.start)-(a.end-a.start)||b.ts-a.ts),accepted=[];
+  records.forEach(x=>{if(!accepted.some(y=>x.start<=y.end&&y.start<=x.end))accepted.push(x)});
+  return records.length?accepted.reduce((sum,x)=>sum+x.revenue,0):null;
+}
 function readWeeklyResults(){
   return [...document.querySelectorAll('#weeklyResultsTable tbody tr')].map(tr=>weeklyResult({
     name:tr.dataset.manager,workedDays:tr.querySelector('.wr-days').value,
@@ -2911,6 +2925,7 @@ function aggregate(g){
     else r.empty++;
     if(s.findLabel&&s.result!=='perk')r.finds++;
   });
+  Object.values(map).forEach(r=>{const total=nonOverlappingRevenueTotal(g.shots,r.name);if(total!==null)r.metricTotals.revenue=total});
   return Object.values(map);
 }
 function leader(rows,key){let best=null;rows.forEach(r=>{if(r[key]>0&&(!best||r[key]>best[key]))best=r});return best}

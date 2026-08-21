@@ -59,7 +59,7 @@ const hooks = [
   "safeIconId", "icon", "normalizeGame", "canonicalLegacy", "canonicalV2", "canonical",
   "sealGameState",
   "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted",
-  "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue", "businessDaysInPeriod",
+  "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue", "businessDaysInPeriod", "nonOverlappingRevenueTotal",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -160,6 +160,14 @@ assert.equal(h.effectiveGateValue(callsGate, { workedDays: 2, calls: 100 }), 100
 assert.equal(h.businessDaysInPeriod("2026-08-19", "2026-08-20"), 2);
 assert.equal(h.businessDaysInPeriod("2026-08-17", "2026-08-21"), 5);
 assert.equal(h.businessDaysInPeriod("2026-08-22", "2026-08-23"), 0);
+const revenueShot=(start,end,revenue,ts)=>({periodStart:start,periodEnd:end,ts,weeklyResults:[{name:"Амаль",revenue}]});
+const partialRevenue=[
+  revenueShot("2026-08-17","2026-08-18",100,1),
+  revenueShot("2026-08-19","2026-08-20",150,2),
+];
+assert.equal(h.nonOverlappingRevenueTotal(partialRevenue,"Амаль"),250);
+assert.equal(h.nonOverlappingRevenueTotal([...partialRevenue,revenueShot("2026-08-17","2026-08-21",300,3)],"Амаль"),300);
+assert.equal(h.nonOverlappingRevenueTotal([...partialRevenue,revenueShot("2026-08-17","2026-08-21",300,3),revenueShot("2026-08-10","2026-08-14",400,4)],"Амаль"),700);
 
 // Bonus openings do not consume the ordinary quota; one-time completion is derived.
 const scenario = { id: "once", oneTime: true, defaultOpenings: 2 };
