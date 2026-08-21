@@ -2486,7 +2486,9 @@ function businessDaysInPeriod(startIso,endIso){
 function nonOverlappingRevenueTotal(shots,manager){
   const byPeriod=new Map();
   (shots||[]).forEach(s=>{
-    const row=(Array.isArray(s.weeklyResults)?s.weeklyResults:[]).find(r=>r.name===manager);
+    const saved=(Array.isArray(s.weeklyResults)?s.weeklyResults:[]).find(r=>r.name===manager);
+    const legacyRevenue=openingMetricValue(s,'revenue');
+    const row=saved||(s.manager===manager&&legacyRevenue!==null?{revenue:legacyRevenue}:null);
     if(!row||!s.periodStart||!s.periodEnd)return;
     const start=Date.parse(s.periodStart+'T00:00:00Z'),end=Date.parse(s.periodEnd+'T00:00:00Z');
     if(!Number.isFinite(start)||!Number.isFinite(end)||end<start)return;

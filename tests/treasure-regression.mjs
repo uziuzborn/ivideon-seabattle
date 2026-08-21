@@ -168,6 +168,12 @@ const partialRevenue=[
 assert.equal(h.nonOverlappingRevenueTotal(partialRevenue,"Амаль"),250);
 assert.equal(h.nonOverlappingRevenueTotal([...partialRevenue,revenueShot("2026-08-17","2026-08-21",300,3)],"Амаль"),300);
 assert.equal(h.nonOverlappingRevenueTotal([...partialRevenue,revenueShot("2026-08-17","2026-08-21",300,3),revenueShot("2026-08-10","2026-08-14",400,4)],"Амаль"),700);
+const legacyRevenueShots=[
+  {manager:"Амаль",periodStart:"2026-07-27",periodEnd:"2026-07-28",revenue:320067,ts:1},
+  {manager:"Амаль",periodStart:"2026-07-29",periodEnd:"2026-07-30",revenue:539644,ts:2},
+  {manager:"Амаль",periodStart:"2026-07-27",periodEnd:"2026-08-02",revenue:1031191,ts:3},
+];
+assert.equal(h.nonOverlappingRevenueTotal(legacyRevenueShots,"Амаль"),1031191);
 
 // Bonus openings do not consume the ordinary quota; one-time completion is derived.
 const scenario = { id: "once", oneTime: true, defaultOpenings: 2 };
