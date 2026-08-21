@@ -2476,6 +2476,13 @@ function rankWeeklyResults(rows){
 function effectiveGateValue(def,weeklyRow){
   return def.metric.id==='calls'&&weeklyRow?weeklyResult(weeklyRow).personalTarget:def.value;
 }
+function businessDaysInPeriod(startIso,endIso){
+  if(!startIso||!endIso)return 5;
+  let d=new Date(startIso+'T12:00:00'),end=new Date(endIso+'T12:00:00'),count=0,guard=0;
+  if(Number.isNaN(d.getTime())||Number.isNaN(end.getTime())||d>end)return 5;
+  while(d<=end&&guard++<370){const day=d.getDay();if(day>=1&&day<=5)count++;d.setDate(d.getDate()+1)}
+  return Math.max(0,Math.min(5,count));
+}
 function readWeeklyResults(){
   return [...document.querySelectorAll('#weeklyResultsTable tbody tr')].map(tr=>weeklyResult({
     name:tr.dataset.manager,workedDays:tr.querySelector('.wr-days').value,
@@ -2497,7 +2504,8 @@ function syncWeeklyRating(){
 }
 function renderWeeklyResults(){
   const g=G(),table=document.getElementById('weeklyResultsTable');if(!table)return;
-  table.innerHTML='<thead><tr><th class="c">Место</th><th>Менеджер</th><th class="c">Отработано дней</th><th class="c">Персональная норма</th><th class="c">Факт звонков</th><th class="c">Выполнение</th><th class="c">Выручка, ₽</th><th class="c">Допуск</th></tr></thead><tbody>'+g.managers.map(name=>'<tr data-manager="'+escapeAttr(name)+'"><td class="c wr-place">—</td><td><b>'+esc(name)+'</b></td><td class="c"><input class="wr-days" type="number" min="0" max="5" step="1" value="5" aria-label="Отработанные дни: '+escapeAttr(name)+'"></td><td class="c wr-target">250</td><td class="c"><input class="wr-calls" type="number" min="0" step="1" value="0" aria-label="Звонки: '+escapeAttr(name)+'"></td><td class="c wr-percent">0%</td><td class="c"><input class="wr-revenue" type="number" min="0" step="any" value="0" aria-label="Выручка: '+escapeAttr(name)+'"></td><td class="c wr-status"></td></tr>').join('')+'</tbody>';
+  const defaultDays=businessDaysInPeriod(document.getElementById('periodStart').value,document.getElementById('periodEnd').value),defaultTarget=defaultDays*50;
+  table.innerHTML='<thead><tr><th class="c">Место</th><th>Менеджер</th><th class="c">Отработано дней</th><th class="c">Персональная норма</th><th class="c">Факт звонков</th><th class="c">Выполнение</th><th class="c">Выручка, ₽</th><th class="c">Допуск</th></tr></thead><tbody>'+g.managers.map(name=>'<tr data-manager="'+escapeAttr(name)+'"><td class="c wr-place">—</td><td><b>'+esc(name)+'</b></td><td class="c"><input class="wr-days" type="number" min="0" max="5" step="1" value="'+defaultDays+'" aria-label="Отработанные дни: '+escapeAttr(name)+'"></td><td class="c wr-target">'+defaultTarget+'</td><td class="c"><input class="wr-calls" type="number" min="0" step="1" value="0" aria-label="Звонки: '+escapeAttr(name)+'"></td><td class="c wr-percent">0%</td><td class="c"><input class="wr-revenue" type="number" min="0" step="any" value="0" aria-label="Выручка: '+escapeAttr(name)+'"></td><td class="c wr-status"></td></tr>').join('')+'</tbody>';
   table.querySelectorAll('input').forEach(input=>input.oninput=syncWeeklyRating);syncWeeklyRating();
 }
 function currentScenario(){const g=G();const id=document.getElementById('scenarioSel').value;return id?scenarioById(g,id):null}
@@ -2511,7 +2519,7 @@ function renderOpeningTab(){
   const prev=scSel.value;
   scSel.innerHTML='<option value="">Ручное событие (без сценария)</option>'+list.map(s=>'<option value="'+escapeAttr(s.id)+'">'+esc(s.name)+' · '+esc(scheduleSummary(s))+'</option>').join('');
   scSel.value=list.some(s=>s.id===prev)?prev:'';
-  scSel.onchange=()=>{applyScenarioPeriod();renderMetricInputs();renderBonusBox()};
+  scSel.onchange=()=>{applyScenarioPeriod();renderMetricInputs();renderWeeklyResults();renderBonusBox()};
   const wSel=document.getElementById('winnerSel');
   const previousWinner=wSel.value;
   wSel.innerHTML=g.managers.length?g.managers.map(m=>'<option>'+esc(m)+'</option>').join(''):'<option value="">— добавь участников —</option>';
