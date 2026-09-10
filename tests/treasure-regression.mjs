@@ -58,8 +58,9 @@ context.IVIDEON_SEABATTLE_CONFIG = {};
 const hooks = [
   "safeIconId", "icon", "normalizeGame", "canonicalLegacy", "canonicalV2", "canonical",
   "sealGameState",
-  "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted",
+  "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted", "normalizeScenario",
   "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue", "businessDaysInPeriod", "nonOverlappingRevenueTotal",
+  "eligibleWeeklyWinners", "winnerOpenedEvent", "activeWinnerContext",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -232,5 +233,89 @@ assert.equal(publicState.shots[0].findLabel, null);
 assert.deepEqual(Object.keys(publicState.shots[0].weeklyResults[0]).sort(), ["attainment", "calls", "eligible", "name", "personalTarget", "revenue", "workedDays"]);
 assert.equal(publicState.shots[0].weeklyResults[0].personalTarget, 200);
 assert.equal("cells" in publicState, false);
+
+// Configurable winner count per excavation event (1 or 2 raskopatscheki).
+// Eligibility/ranking is unchanged (rankWeeklyResults); winnerCount only
+// decides how many already-eligible managers get to open their own sector.
+const wcRows = h.rankWeeklyResults([
+  { name: "Первый", workedDays: 5, calls: 260, revenue: 900000 },
+  { name: "Второй", workedDays: 5, calls: 255, revenue: 700000 },
+  { name: "Третий", workedDays: 5, calls: 250, revenue: 500000 },
+  { name: "Не допущен", workedDays: 5, calls: 100, revenue: 999999 },
+]);
+
+// 1 winner selected -> exactly the top eligible manager.
+assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 1).map(r => r.name), ["Первый"]);
+// 2 winners selected, 3+ eligible -> top two only, no manager invented.
+assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 2).map(r => r.name), ["Первый", "Второй"]);
+// 2 eligible but winnerCount=1 -> still only 1 winner.
+const twoEligible = wcRows.filter(r => r.name === "Первый" || r.name === "Второй");
+assert.deepEqual(h.eligibleWeeklyWinners(twoEligible, 1).map(r => r.name), ["Первый"]);
+// Only 1 eligible while winnerCount=2 -> do not invent a second winner.
+const oneEligible = wcRows.filter(r => r.name === "Первый");
+assert.deepEqual(h.eligibleWeeklyWinners(oneEligible, 2).map(r => r.name), ["Первый"]);
+// Invalid/missing counts fall back to 1 winner.
+assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 0).map(r => r.name), ["Первый"]);
+assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 5).map(r => r.name), ["Первый"]);
+
+// activeWinnerContext: an event is identified by (scenario, eventDate, period).
+const wcScenario = { id: "sc-wc" };
+const wcArgs = [wcScenario, "2026-09-10", "2026-09-01", "2026-09-07"];
+const emptyGame = { shots: [] };
+const ctx1 = h.activeWinnerContext(emptyGame, wcRows, ...wcArgs, 1);
+assert.equal(ctx1.winners.length, 1);
+assert.equal(ctx1.active.name, "Первый");
+assert.equal(ctx1.allOpened, false);
+
+const ctx2Fresh = h.activeWinnerContext(emptyGame, wcRows, ...wcArgs, 2);
+assert.deepEqual(ctx2Fresh.winners.map(r => r.name), ["Первый", "Второй"]);
+assert.equal(ctx2Fresh.active.name, "Первый", "winner 1 opens first");
+assert.deepEqual(ctx2Fresh.openedFlags, [false, false]);
+
+// First winner excavates for this event -> second winner remains available
+// and does not disappear; active turn moves to them.
+const afterFirst = { shots: [
+  { manager: "Первый", result: "miss", scenarioId: "sc-wc", eventDate: "2026-09-10",
+    periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario", r: 0, c: 0 },
+] };
+assert.equal(h.winnerOpenedEvent(afterFirst, "Первый", ...wcArgs), true);
+assert.equal(h.winnerOpenedEvent(afterFirst, "Второй", ...wcArgs), false);
+const ctx2AfterFirst = h.activeWinnerContext(afterFirst, wcRows, ...wcArgs, 2);
+assert.deepEqual(ctx2AfterFirst.openedFlags, [true, false]);
+assert.equal(ctx2AfterFirst.active.name, "Второй", "second winner still available, distinct sector");
+assert.equal(ctx2AfterFirst.allOpened, false);
+
+// Both openings recorded independently in history: distinct manager and
+// coordinate, same event (scenario/period), each with its own result.
+const bothOpened = { shots: [
+  ...afterFirst.shots,
+  { manager: "Второй", result: "hit", scenarioId: "sc-wc", eventDate: "2026-09-10",
+    periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario", r: 3, c: 4 },
+] };
+assert.equal(bothOpened.shots.length, 2);
+assert.equal(bothOpened.shots[0].manager, "Первый");
+assert.equal(bothOpened.shots[1].manager, "Второй");
+assert.notEqual(bothOpened.shots[0].r + "," + bothOpened.shots[0].c, bothOpened.shots[1].r + "," + bothOpened.shots[1].c);
+const ctx2Done = h.activeWinnerContext(bothOpened, wcRows, ...wcArgs, 2);
+assert.deepEqual(ctx2Done.openedFlags, [true, true]);
+assert.equal(ctx2Done.active, null);
+assert.equal(ctx2Done.allOpened, true);
+// Quota must expand to fit real winners even if defaultOpenings is lower.
+const wcQuota = h.scenarioOpeningState(bothOpened, { id: "sc-wc", defaultOpenings: 1 }, "2026-09-10", "2026-09-01", "2026-09-07", 2);
+assert.equal(wcQuota.used, 2);
+assert.equal(wcQuota.total, 2);
+
+// Legacy scenarios/openings without winnerCount default to exactly 1 winner.
+assert.equal(h.normalizeScenario({}).winnerCount, 1);
+assert.equal(h.normalizeScenario({ winnerCount: 2 }).winnerCount, 2);
+assert.equal(h.normalizeScenario({ winnerCount: 7 }).winnerCount, 1);
+assert.equal(h.normalizeScenario({ winnerCount: "2" }).winnerCount, 2);
+
+// UI: the compact winner-count control and per-slot status live in a
+// wrap-safe row/period-preview container, matching this app's existing
+// mobile-safe layout primitives (no fixed widths, no new overflow source).
+assert.match(html, /<div class="row" style="margin-bottom:10px;align-items:center">\s*<span class="fld" style="margin:0">Количество раскапывающих<\/span>\s*<div id="winnerCountToggle"/);
+assert.match(html, /id="weeklyWinnerNote" class="period-preview"/);
+assert.match(html, /\.wincount-btn\{min-width:44px;min-height:40px;/);
 
 console.log("treasure regression checks passed");

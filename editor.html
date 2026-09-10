@@ -329,6 +329,13 @@ body[data-theme="dark"] .fin.secret{color:var(--gold-light)}
 .role-table select,.role-table input{min-height:40px;font-size:var(--font-body)}
 .period-preview{padding:13px 15px;border-radius:var(--radius-md);background:var(--iv-blue-soft);
   border:1px solid rgba(0,149,255,.24);font-size:13px;line-height:1.55}
+#winnerCountToggle{display:inline-flex;gap:6px}
+.wincount-btn{min-width:44px;min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--radius-md);
+  background:var(--surface);font-size:13px;font-weight:800;cursor:pointer}
+.wincount-btn:hover{border-color:var(--iv-blue)}
+.wincount-btn.active{background:var(--iv-navy);color:#fff;border-color:var(--iv-navy)}
+.winner-slot{padding:6px 0}
+.winner-slot+.winner-slot{border-top:1px solid rgba(0,149,255,.18);margin-top:8px;padding-top:8px}
 /* finds */
 .find-card{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;margin-bottom:10px;
   border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:var(--radius-lg);background:var(--surface)}
@@ -856,7 +863,7 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
           <div class="hint">Кульминация игрового периода. Собери команду, объяви результаты и победителя, попроси назвать сектор вслух и открой его при всех.</div>
           <div class="grid2">
             <div><label class="fld" for="scenarioSel">Сценарий открытия</label><select id="scenarioSel"></select></div>
-            <div><label class="fld" for="winnerSel">Победитель периода</label><select id="winnerSel"></select></div>
+            <div><label class="fld" for="winnerSel">Раскапывает сейчас</label><select id="winnerSel"></select></div>
           </div>
           <div class="grid2" style="margin-top:12px">
             <div><label class="fld" for="periodStart">Период оценки: с</label><input id="periodStart" type="date"></div>
@@ -866,7 +873,14 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
           <div class="divider"></div>
           <h2 style="font-size:16px">Недельный допуск и итоговый рейтинг</h2>
           <div class="hint">Укажи фактически отработанные дни после вычета отпуска, больничного и согласованных выходных. Персональная норма — 50 успешных звонков за каждый отработанный день. Среди допущенных выше тот, у кого больше выручка; при равенстве — выше процент выполнения нормы звонков.</div>
-          <div class="data-wrap" style="margin-top:12px"><table class="data" id="weeklyResultsTable"></table></div>
+          <div class="row" style="margin-bottom:10px;align-items:center">
+            <span class="fld" style="margin:0">Количество раскапывающих</span>
+            <div id="winnerCountToggle" role="group" aria-label="Количество победителей за раскопки">
+              <button type="button" class="wincount-btn" data-count="1">1</button>
+              <button type="button" class="wincount-btn" data-count="2">2</button>
+            </div>
+          </div>
+          <div class="data-wrap"><table class="data" id="weeklyResultsTable"></table></div>
           <div id="weeklyWinnerNote" class="period-preview" style="margin-top:12px"></div>
           <div class="divider"></div>
           <h2 style="font-size:16px">Показатели за период</h2>
@@ -1778,7 +1792,7 @@ function newScenario(patch){
     id:uid(),name:'Новый сценарий',description:'',enabled:true,oneTime:false,
     scheduleType:'weekdays',weekdays:[1],recurrence:1,date:'',
     evalType:'prev_week',evalConfig:{n:7,weekdays:[1,2],start:'',end:''},
-    defaultOpenings:1,metrics:[],pausedUntil:null,sortOrder:0,deletedAt:null
+    defaultOpenings:1,winnerCount:1,metrics:[],pausedUntil:null,sortOrder:0,deletedAt:null
   },patch||{});
 }
 function normalizeScenario(s){
@@ -1788,6 +1802,8 @@ function normalizeScenario(s){
   out.evalConfig=Object.assign({n:7,weekdays:[1,2],start:'',end:''},out.evalConfig||{});
   out.evalConfig.weekdays=Array.isArray(out.evalConfig.weekdays)?out.evalConfig.weekdays.map(Number).filter(v=>v>=1&&v<=7):[1,2];
   out.defaultOpenings=Math.max(1,Number(out.defaultOpenings||1));
+  // Старые сценарии без winnerCount всегда выбирали ровно одного победителя.
+  out.winnerCount=[1,2].includes(Number(out.winnerCount))?Number(out.winnerCount):1;
   out.metrics=Array.isArray(out.metrics)?out.metrics.map(m=>({
     metricId:m.metricId,role:ROLE_LABELS[m.role]?m.role:'informational',
     requiredOverride:m.requiredOverride===null||m.requiredOverride===undefined?null:!!m.requiredOverride,
@@ -1815,8 +1831,10 @@ function openingEventDate(shot){
   if(shot&&/^\d{4}-\d{2}-\d{2}$/.test(String(shot.eventDate||'')))return shot.eventDate;
   return shot&&shot.ts?toISO(new Date(shot.ts)):null;
 }
-function scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd){
-  const total=Math.max(1,Number(scenario&&scenario.defaultOpenings||1));
+function scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd,minTotal){
+  // Число раскапывающих за это событие (1 или 2) не должно быть ограничено
+  // квотой обычных открытий ниже фактического числа выбранных победителей.
+  const total=Math.max(1,Number(scenario&&scenario.defaultOpenings||1),Number(minTotal||1));
   if(!scenario)return{used:0,total,remaining:total};
   const used=(g.shots||[]).filter(s=>
     s.scenarioId===scenario.id&&s.openingSource!=='bonus'&&openingEventDate(s)===eventDate&&
@@ -1826,7 +1844,7 @@ function scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd){
 }
 function scenarioIsCompleted(g,scenario){
   if(!scenario||!scenario.oneTime)return false;
-  const total=Math.max(1,Number(scenario.defaultOpenings||1));
+  const total=Math.max(1,Number(scenario.defaultOpenings||1),Number(scenario.winnerCount||1));
   return (g.shots||[]).filter(s=>s.scenarioId===scenario.id&&s.openingSource!=='bonus').length>=total;
 }
 function completeOneTimeScenario(g,scenario){return scenarioIsCompleted(g,scenario)}
@@ -2020,6 +2038,7 @@ function scenarioCard(g,s){
         '<span class="tag '+(s.enabled&&!paused&&!completed?'tag-done':'tag-empty')+'">'+(completed?'завершён':paused?'на паузе до '+esc(fmtDate(s.pausedUntil)):(s.enabled?'активен':'выключен'))+'</span>'+
         '<span class="tag tag-empty">'+(s.oneTime?'разовый':'повторяющийся')+'</span>'+
         '<span class="tag tag-fragment">открытий: '+Number(s.defaultOpenings||1)+'</span>'+
+        '<span class="tag tag-find">победителей: '+Number(s.winnerCount||1)+'</span>'+
       '</div></div>'+
       '<div class="scenario-actions">'+
         '<button class="btn btn-ghost btn-sm act-toggle">'+(s.enabled?'Выключить':'Включить')+'</button>'+
@@ -2032,6 +2051,7 @@ function scenarioCard(g,s){
       '<div class="grid2">'+
         '<div><label class="fld">Название</label><input class="f-name" value="'+escapeAttr(s.name)+'"></div>'+
         '<div><label class="fld">Количество обычных открытий</label><input class="f-openings" type="number" min="1" value="'+Number(s.defaultOpenings||1)+'"></div>'+
+        '<div><label class="fld">Победителей за раскопки</label><select class="f-wincount">'+[1,2].map(n=>'<option value="'+n+'"'+(Number(s.winnerCount||1)===n?' selected':'')+'>'+n+(n===1?' победитель':' победителя')+'</option>').join('')+'</select></div>'+
       '</div>'+
       '<div><label class="fld">Описание</label><textarea class="f-desc" placeholder="Например: итоги понедельника и вторника">'+esc(s.description||'')+'</textarea></div>'+
       '<div class="grid2">'+
@@ -2106,6 +2126,7 @@ function scenarioCard(g,s){
     sc.name=q('.f-name').value.trim()||'Сценарий';
     sc.description=q('.f-desc').value.trim();
     sc.defaultOpenings=Math.max(1,Number(q('.f-openings').value||1));
+    sc.winnerCount=[1,2].includes(Number(q('.f-wincount').value))?Number(q('.f-wincount').value):1;
     sc.scheduleType=q('.f-sched').value;
     sc.recurrence=Math.max(1,Number(q('.f-recur').value||1));
     sc.date=q('.f-date').value||'';
@@ -2505,7 +2526,75 @@ function readWeeklyResults(){
     calls:tr.querySelector('.wr-calls').value,revenue:tr.querySelector('.wr-revenue').value
   }));
 }
+/* =========================================================================
+   1 ИЛИ 2 ПОБЕДИТЕЛЯ ЗА РАСКОПКИ
+   Допуск и ранжирование остаются общими: eligibility и порядок считает
+   rankWeeklyResults() как и раньше. winnerCount лишь решает, сколько верхних
+   допущенных менеджеров получают право лично открыть свой сектор за это
+   событие. Третий и далее допущенные winnerCount не создают — только
+   ограничивают, сколько из уже допущенных реально раскапывают. */
+let sessionWinnerCount=1,sessionWinnerCountKey=null;
+function ensureSessionWinnerCount(scenario){
+  const key=scenario?scenario.id:'__manual__';
+  if(sessionWinnerCountKey!==key){
+    sessionWinnerCountKey=key;
+    sessionWinnerCount=[1,2].includes(Number(scenario&&scenario.winnerCount))?Number(scenario.winnerCount):1;
+  }
+  return sessionWinnerCount;
+}
+function eligibleWeeklyWinners(weeklyResults,count){
+  const n=[1,2].includes(Number(count))?Number(count):1;
+  return (weeklyResults||[]).filter(r=>r.eligible).slice(0,n);
+}
+function winnerOpenedEvent(g,name,scenario,eventDate,periodStart,periodEnd){
+  return (g.shots||[]).some(s=>
+    s.manager===name&&s.openingSource!=='bonus'&&
+    (s.scenarioId||null)===(scenario?scenario.id:null)&&openingEventDate(s)===eventDate&&
+    (s.periodStart||null)===(periodStart||null)&&(s.periodEnd||null)===(periodEnd||null));
+}
+/* Единая точка расчёта «кто сейчас раскапывает». Победитель 1 всегда
+   верхний допущенный; победитель 2 (если winnerCount=2 и есть второй
+   допущенный) получает свой сектор только после того, как первый уже открыл
+   свой — и остаётся доступен, пока сам не откроет. */
+function activeWinnerContext(g,weeklyResults,scenario,eventDate,periodStart,periodEnd,count){
+  const winners=eligibleWeeklyWinners(weeklyResults,count);
+  const openedFlags=winners.map(w=>winnerOpenedEvent(g,w.name,scenario,eventDate,periodStart,periodEnd));
+  const activeIndex=openedFlags.findIndex(done=>!done);
+  return{winners,openedFlags,activeIndex,
+    active:activeIndex>=0?winners[activeIndex]:null,
+    allOpened:winners.length>0&&openedFlags.every(Boolean)};
+}
+function winnerCountEventContext(g,weeklyResults){
+  const scenario=currentScenario();
+  ensureSessionWinnerCount(scenario);
+  const periodStart=document.getElementById('periodStart').value||null;
+  const periodEnd=document.getElementById('periodEnd').value||null;
+  const eventDate=toISO(new Date());
+  return{scenario,periodStart,periodEnd,eventDate,
+    ctx:activeWinnerContext(g,weeklyResults||rankWeeklyResults(readWeeklyResults()),scenario,eventDate,periodStart,periodEnd,sessionWinnerCount)};
+}
+function renderWinnerCountToggle(){
+  const box=document.getElementById('winnerCountToggle');if(!box)return;
+  box.querySelectorAll('.wincount-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.count)===sessionWinnerCount));
+}
+function winnerSlotHTML(ctx,index){
+  const w=ctx.winners[index],label='Победитель '+(index+1);
+  if(!w)return '<div class="winner-slot"><b>'+label+'</b> <span class="tag tag-empty">нет второго допущенного</span></div>';
+  const opened=ctx.openedFlags[index],active=index===ctx.activeIndex;
+  const status=opened?'<span class="tag tag-done">сектор открыт</span>':active?'<span class="tag tag-fragment">открывает сейчас</span>':'<span class="tag tag-empty">ожидает</span>';
+  return '<div class="winner-slot"><b>'+label+': '+esc(w.name)+'</b> '+status+
+    '<div class="hint" style="margin:4px 0 0">выручка '+w.revenue.toLocaleString('ru-RU')+' ₽ · выполнение нормы '+w.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%</div></div>';
+}
+function renderWinnerSlots(ctx){
+  const note=document.getElementById('weeklyWinnerNote');if(!note)return;
+  if(!ctx.winners.length){note.innerHTML='<b>Пока никто не допущен.</b> Для участия нужны хотя бы 1 отработанный день и 50 звонков за каждый такой день.';return}
+  let html=ctx.winners.map((w,i)=>winnerSlotHTML(ctx,i)).join('');
+  if(sessionWinnerCount>1&&ctx.winners.length<2)html+=winnerSlotHTML(ctx,1);
+  if(ctx.allOpened)html+='<div class="hint" style="margin-top:8px">Все выбранные победители уже раскопали сектор в этом событии.</div>';
+  note.innerHTML=html;
+}
 function syncWeeklyRating(){
+  const g=G();
   const rows=rankWeeklyResults(readWeeklyResults()),table=document.getElementById('weeklyResultsTable');
   rows.forEach((r,i)=>{const tr=[...table.querySelectorAll('tbody tr')].find(x=>x.dataset.manager===r.name);if(!tr)return;
     tr.querySelector('.wr-target').textContent=r.personalTarget.toLocaleString('ru-RU');
@@ -2513,10 +2602,16 @@ function syncWeeklyRating(){
     tr.querySelector('.wr-place').textContent=r.eligible?String(rows.filter(x=>x.eligible).findIndex(x=>x.name===r.name)+1):'—';
     tr.querySelector('.wr-percent').textContent=r.personalTarget?r.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%':'—';
   });
-  const winner=rows.find(r=>r.eligible),note=document.getElementById('weeklyWinnerNote'),sel=document.getElementById('winnerSel');
-  if(winner){sel.value=winner.name;note.innerHTML='<b>Победитель по расчёту: '+esc(winner.name)+'</b> · выручка '+winner.revenue.toLocaleString('ru-RU')+' ₽ · выполнение нормы '+winner.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%';
-    const calls=document.getElementById('mi_calls'),revenue=document.getElementById('mi_revenue');if(calls)calls.value=winner.calls;if(revenue)revenue.value=winner.revenue;renderBonusBox();
-  }else note.innerHTML='<b>Пока никто не допущен.</b> Для участия нужны хотя бы 1 отработанный день и 50 звонков за каждый такой день.';
+  const{ctx}=winnerCountEventContext(g,rows);
+  renderWinnerCountToggle();
+  renderWinnerSlots(ctx);
+  const sel=document.getElementById('winnerSel');
+  sel.value=ctx.active?ctx.active.name:'';
+  if(ctx.active){
+    const calls=document.getElementById('mi_calls'),revenue=document.getElementById('mi_revenue');
+    if(calls)calls.value=ctx.active.calls;if(revenue)revenue.value=ctx.active.revenue;
+  }
+  renderBonusBox();
   updateGateFlag();
 }
 function toggleNotWorked(tr,off,defaultDays){
@@ -2792,19 +2887,23 @@ function paintOpenedBoard(boardEl,g){
 function openSector(r,c){
   if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
   const g=G();ensureMetrics(g);
-  const winner=document.getElementById('winnerSel').value;
-  if(!winner){alert('Сначала подтверди победителя периода.');return}
   if(openingAt(g,r,c)){alert('Этот сектор уже открыт.');return}
-  const weeklyResults=rankWeeklyResults(readWeeklyResults()),calculatedWinner=weeklyResults.find(x=>x.eligible);
-  if(!calculatedWinner){alert('Ни один менеджер не выполнил персональную норму звонков. Открытие недоступно.');return}
-  if(winner!==calculatedWinner.name){alert('Победитель должен соответствовать итоговому рейтингу: '+calculatedWinner.name+'.');return}
-  const scenario=currentScenario();
+  const weeklyResults=rankWeeklyResults(readWeeklyResults());
+  const{scenario,periodStart,periodEnd,eventDate,ctx}=winnerCountEventContext(g,weeklyResults);
+  if(!ctx.winners.length){alert('Ни один менеджер не выполнил персональную норму звонков. Открытие недоступно.');return}
+  if(!ctx.active){alert('На это событие уже раскопали все выбранные победители.');return}
+  const calculatedWinner=ctx.active,winner=calculatedWinner.name;
+  const uiWinner=document.getElementById('winnerSel').value;
+  if(uiWinner&&uiWinner!==winner){alert('Победитель должен соответствовать итоговому рейтингу: '+winner+'.');return}
   const defs=scenarioMetricsFor(g,scenario);
   if(!defs.length){alert('Включи хотя бы один показатель в разделе «Расписание и критерии».');return}
   const metricValues={},gateResults={},missing=[];
   defs.forEach(def=>{
     const m=def.metric,input=document.getElementById('mi_'+m.id);
-    const raw=input?input.value.trim():'';
+    // Звонки и выручка всегда берутся из собственной строки этого победителя
+    // в недельном рейтинге — общие поля показателей отражают лишь того, кто
+    // сейчас раскапывает, и не годятся как источник для второго победителя.
+    const raw=(m.id==='calls'||m.id==='revenue')?String(calculatedWinner[m.id]??''):(input?input.value.trim():'');
     if(def.required&&raw==='')missing.push(m.label);
     metricValues[m.id]=raw===''?null:Number(raw);
     const gateValue=effectiveGateValue(def,calculatedWinner);
@@ -2823,10 +2922,11 @@ function openSector(r,c){
     if(!usedGrant){alert('Доступной находки с дополнительным открытием у участника нет.');return}
   }
 
-  const periodStart=document.getElementById('periodStart').value||null;
-  const periodEnd=document.getElementById('periodEnd').value||null;
-  const now=Date.now(),eventDate=toISO(new Date(now));
-  const quota=scenario?scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd):null;
+  const now=Date.now();
+  // Квота обычных открытий не может быть меньше, чем число реально
+  // допущенных победителей за это событие: иначе второй победитель не смог
+  // бы получить свой сектор.
+  const quota=scenario?scenarioOpeningState(g,scenario,eventDate,periodStart,periodEnd,ctx.winners.length):null;
   if(scenario&&!usedGrant&&quota.remaining<=0){
     alert('Для сценария «'+scenario.name+'» уже проведено '+quota.total+' обычных открытий за это событие. Дополнительное открытие возможно только по находке.');return;
   }
@@ -2838,6 +2938,7 @@ function openSector(r,c){
     gateThreshold:g.threshold||0,passedGate,r,c,result,shipId,perkLabel,ts:now,eventDate,
     scenarioId:scenario?scenario.id:null,scenarioName:scenario?scenario.name:'Ручное событие',
     periodStart,periodEnd,weeklyResults,
+    winnerCount:sessionWinnerCount,winnerSlot:ctx.activeIndex+1,
     openingSource:usedGrant?'bonus':(scenario?'scenario':'manual'),bonusGrantId:usedGrant?usedGrant.id:null,
     scenarioOpeningNumber:scenario&&!usedGrant?quota.used+1:null,scenarioOpeningTotal:scenario&&!usedGrant?quota.total:null
   };
@@ -2900,6 +3001,11 @@ function openSector(r,c){
   else showModal('i-empty','Пустой сектор',
     '<p><b>'+esc(winner)+'</b> исследовал сектор <b>'+esc(label)+'</b> — следов сокровища нет. До следующего периода!</p>'+extra);
 }
+document.getElementById('winnerCountToggle').onclick=e=>{
+  const btn=e.target.closest('.wincount-btn');if(!btn)return;
+  const n=Number(btn.dataset.count);if(![1,2].includes(n))return;
+  sessionWinnerCount=n;syncWeeklyRating();
+};
 document.getElementById('undoOpeningBtn').onclick=()=>{
   const g=G();
   if(!g.shots.length){alert('Открытий ещё не было.');return}
