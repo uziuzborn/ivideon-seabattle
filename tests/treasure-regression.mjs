@@ -60,7 +60,9 @@ const hooks = [
   "sealGameState",
   "scenarioIsPaused", "scenarioMetricsFor", "scenarioOpeningState", "scenarioIsCompleted", "normalizeScenario",
   "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue", "businessDaysInPeriod", "nonOverlappingRevenueTotal",
-  "eligibleWeeklyWinners", "winnerOpenedEvent", "activeWinnerContext",
+  "eligibleWeeklyWinners",
+  "emptyEvaluationSnapshot", "normalizeEvaluationSnapshot", "snapshotMatchesContext",
+  "snapshotWinnerRow", "nextPendingWinner", "evaluationIsComplete",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -258,50 +260,11 @@ assert.deepEqual(h.eligibleWeeklyWinners(oneEligible, 2).map(r => r.name), ["П�
 assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 0).map(r => r.name), ["Первый"]);
 assert.deepEqual(h.eligibleWeeklyWinners(wcRows, 5).map(r => r.name), ["Первый"]);
 
-// activeWinnerContext: an event is identified by (scenario, eventDate, period).
-const wcScenario = { id: "sc-wc" };
-const wcArgs = [wcScenario, "2026-09-10", "2026-09-01", "2026-09-07"];
-const emptyGame = { shots: [] };
-const ctx1 = h.activeWinnerContext(emptyGame, wcRows, ...wcArgs, 1);
-assert.equal(ctx1.winners.length, 1);
-assert.equal(ctx1.active.name, "Первый");
-assert.equal(ctx1.allOpened, false);
-
-const ctx2Fresh = h.activeWinnerContext(emptyGame, wcRows, ...wcArgs, 2);
-assert.deepEqual(ctx2Fresh.winners.map(r => r.name), ["Первый", "Второй"]);
-assert.equal(ctx2Fresh.active.name, "Первый", "winner 1 opens first");
-assert.deepEqual(ctx2Fresh.openedFlags, [false, false]);
-
-// First winner excavates for this event -> second winner remains available
-// and does not disappear; active turn moves to them.
-const afterFirst = { shots: [
-  { manager: "Первый", result: "miss", scenarioId: "sc-wc", eventDate: "2026-09-10",
-    periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario", r: 0, c: 0 },
-] };
-assert.equal(h.winnerOpenedEvent(afterFirst, "Первый", ...wcArgs), true);
-assert.equal(h.winnerOpenedEvent(afterFirst, "Второй", ...wcArgs), false);
-const ctx2AfterFirst = h.activeWinnerContext(afterFirst, wcRows, ...wcArgs, 2);
-assert.deepEqual(ctx2AfterFirst.openedFlags, [true, false]);
-assert.equal(ctx2AfterFirst.active.name, "Второй", "second winner still available, distinct sector");
-assert.equal(ctx2AfterFirst.allOpened, false);
-
-// Both openings recorded independently in history: distinct manager and
-// coordinate, same event (scenario/period), each with its own result.
-const bothOpened = { shots: [
-  ...afterFirst.shots,
-  { manager: "Второй", result: "hit", scenarioId: "sc-wc", eventDate: "2026-09-10",
-    periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario", r: 3, c: 4 },
-] };
-assert.equal(bothOpened.shots.length, 2);
-assert.equal(bothOpened.shots[0].manager, "Первый");
-assert.equal(bothOpened.shots[1].manager, "Второй");
-assert.notEqual(bothOpened.shots[0].r + "," + bothOpened.shots[0].c, bothOpened.shots[1].r + "," + bothOpened.shots[1].c);
-const ctx2Done = h.activeWinnerContext(bothOpened, wcRows, ...wcArgs, 2);
-assert.deepEqual(ctx2Done.openedFlags, [true, true]);
-assert.equal(ctx2Done.active, null);
-assert.equal(ctx2Done.allOpened, true);
 // Quota must expand to fit real winners even if defaultOpenings is lower.
-const wcQuota = h.scenarioOpeningState(bothOpened, { id: "sc-wc", defaultOpenings: 1 }, "2026-09-10", "2026-09-01", "2026-09-07", 2);
+const wcQuota = h.scenarioOpeningState({ shots: [
+  { scenarioId: "sc-wc", eventDate: "2026-09-10", periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario" },
+  { scenarioId: "sc-wc", eventDate: "2026-09-10", periodStart: "2026-09-01", periodEnd: "2026-09-07", openingSource: "scenario" },
+] }, { id: "sc-wc", defaultOpenings: 1 }, "2026-09-10", "2026-09-01", "2026-09-07", 2);
 assert.equal(wcQuota.used, 2);
 assert.equal(wcQuota.total, 2);
 
@@ -310,6 +273,97 @@ assert.equal(h.normalizeScenario({}).winnerCount, 1);
 assert.equal(h.normalizeScenario({ winnerCount: 2 }).winnerCount, 2);
 assert.equal(h.normalizeScenario({ winnerCount: 7 }).winnerCount, 1);
 assert.equal(h.normalizeScenario({ winnerCount: "2" }).winnerCount, 2);
+
+// =========================================================================
+// Evaluation snapshot: entered metrics + calculated winners must persist
+// across excavations instead of resetting when winner 1 opens their sector.
+// =========================================================================
+
+assert.deepEqual(clone(h.emptyEvaluationSnapshot()), {
+  scenarioId: null, eventDate: null, periodStart: "", periodEnd: "",
+  metricsByManager: {}, eligibleNames: [], winnerCount: 1, winners: [], confirmedAt: null,
+});
+
+// confirmEvaluation() freezes scenario/period/metrics/winners into exactly
+// this shape; normalizeEvaluationSnapshot must round-trip it unchanged.
+const snap2 = h.normalizeEvaluationSnapshot({
+  scenarioId: "sc-wc", eventDate: "2026-09-10", periodStart: "2026-09-01", periodEnd: "2026-09-07",
+  metricsByManager: {
+    "Первый": { workedDays: 5, calls: 260, revenue: 900000 },
+    "Второй": { workedDays: 5, calls: 255, revenue: 700000 },
+  },
+  eligibleNames: ["Первый", "Второй", "Третий"],
+  winnerCount: 2,
+  winners: [
+    { name: "Первый", status: "pending", openingId: null },
+    { name: "Второй", status: "pending", openingId: null },
+  ],
+  confirmedAt: 1000,
+});
+assert.deepEqual(clone(h.normalizeEvaluationSnapshot(clone(snap2))), clone(snap2), "normalization is idempotent");
+
+const ctx2 = { scenarioId: "sc-wc", eventDate: "2026-09-10", periodStart: "2026-09-01", periodEnd: "2026-09-07" };
+assert.equal(h.snapshotMatchesContext(snap2, ctx2), true);
+// A different scenario, day or period is a different event -> not active here.
+assert.equal(h.snapshotMatchesContext(snap2, { ...ctx2, scenarioId: "other" }), false);
+assert.equal(h.snapshotMatchesContext(snap2, { ...ctx2, eventDate: "2026-09-11" }), false);
+assert.equal(h.snapshotMatchesContext(snap2, { ...ctx2, periodStart: "2026-09-02" }), false);
+// An un-confirmed draft is never "active" (nothing to protect yet).
+assert.equal(h.snapshotMatchesContext({ ...snap2, confirmedAt: null }, ctx2), false);
+
+// Winner 1 excavates -> only their own status/openingId change. Winner 2's
+// entered metrics and pending status are untouched (this was the reported
+// bug: the whole table used to reset and force re-entry for winner 2).
+assert.equal(h.nextPendingWinner(snap2).name, "Первый");
+assert.equal(h.evaluationIsComplete(snap2), false);
+const afterFirstExcavation = clone(snap2);
+afterFirstExcavation.winners[0].status = "excavated";
+afterFirstExcavation.winners[0].openingId = "op-1";
+assert.equal(h.snapshotWinnerRow(afterFirstExcavation, "Второй").status, "pending");
+assert.deepEqual(afterFirstExcavation.metricsByManager["Второй"], { workedDays: 5, calls: 255, revenue: 700000 });
+assert.equal(h.nextPendingWinner(afterFirstExcavation).name, "Второй", "second winner becomes active without re-entering data");
+assert.equal(h.evaluationIsComplete(afterFirstExcavation), false);
+
+// Admin can skip winner 2 instead of forcing a sector open -> event completes.
+const skippedSecond = clone(afterFirstExcavation);
+skippedSecond.winners[1].status = "skipped";
+assert.equal(h.nextPendingWinner(skippedSecond), null);
+assert.equal(h.evaluationIsComplete(skippedSecond), true);
+
+// Both winners excavate -> also fully completed.
+const bothExcavated = clone(afterFirstExcavation);
+bothExcavated.winners[1].status = "excavated";
+bothExcavated.winners[1].openingId = "op-2";
+assert.equal(h.evaluationIsComplete(bothExcavated), true);
+
+// Legacy games without an evaluationSnapshot normalize to an empty draft and
+// never invent a winner; re-normalizing an in-progress snapshot (e.g. a
+// realtime reload from another admin device mid-event) is a no-op.
+const legacyGame = {
+  size: 8, salt: "x", sealed: false, cells: {}, ships: [], shots: [],
+  managers: ["Иван"], scenarios: [], bonusGrants: [], findLog: [], metrics: [],
+};
+h.normalizeGame(legacyGame);
+assert.deepEqual(clone(legacyGame.evaluationSnapshot), clone(h.emptyEvaluationSnapshot()));
+const reloadedInput = clone(legacyGame);
+reloadedInput.evaluationSnapshot = clone(afterFirstExcavation);
+const reloaded = h.normalizeGame(reloadedInput);
+assert.deepEqual(clone(reloaded.evaluationSnapshot), clone(afterFirstExcavation));
+
+// UI wiring: excavation is gated on a confirmed, context-matching snapshot
+// (this is the actual fix — openSector no longer recomputes winners live),
+// undo returns an excavated winner to "pending", and the weekly table reads
+// locked values from the snapshot instead of always rendering zeroed inputs.
+assert.match(html, /function openSector\(r,c\)\{[\s\S]*?const snap=activeEvaluationSnapshot\(g\);\s*\n\s*if\(!snap\)\{alert\(/);
+assert.match(html, /const active=nextPendingWinner\(snap\);/);
+assert.match(html, /snap\.winners\[winnerIndex\]\.status='excavated';\s*\n\s*snap\.winners\[winnerIndex\]\.openingId=openingId;/);
+assert.match(html, /if\(last\.id&&g\.evaluationSnapshot\)\{[\s\S]*?w\.status='pending';w\.openingId=null/);
+assert.match(html, /const saved=locked\?snap\.metricsByManager\[name\]:null;/);
+assert.match(html, /id="calcWinnersBtn">Рассчитать победителей<\/button>/);
+assert.match(html, /id="resetEvaluationBtn">Сбросить оценку<\/button>/);
+assert.match(html, /getElementById\('calcWinnersBtn'\)\.onclick=confirmEvaluation;/);
+assert.match(html, /getElementById\('resetEvaluationBtn'\)\.onclick=resetEvaluation;/);
+assert.match(html, /getElementById\('weeklyWinnerNote'\)\.onclick=e=>\{\s*\n\s*const btn=e\.target\.closest\('\.winner-skip-btn'\);/);
 
 // UI: the compact winner-count control and per-slot status live in a
 // wrap-safe row/period-preview container, matching this app's existing
