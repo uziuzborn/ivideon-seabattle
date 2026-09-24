@@ -62,7 +62,8 @@ const hooks = [
   "classifySectorForOpening", "applyImmediateGrant", "weeklyResult", "rankWeeklyResults", "effectiveGateValue", "businessDaysInPeriod", "nonOverlappingRevenueTotal",
   "eligibleWeeklyWinners",
   "emptyEvaluationSnapshot", "normalizeEvaluationSnapshot", "snapshotMatchesContext",
-  "snapshotWinnerRow", "nextPendingWinner", "evaluationIsComplete",
+  "snapshotWinnerRow", "nextPendingWinner", "evaluationIsComplete", "evaluationSlots",
+  "canAddManualExcavator", "canRemoveManualExcavator",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -281,7 +282,7 @@ assert.equal(h.normalizeScenario({ winnerCount: "2" }).winnerCount, 2);
 
 assert.deepEqual(clone(h.emptyEvaluationSnapshot()), {
   scenarioId: null, eventDate: null, periodStart: "", periodEnd: "",
-  metricsByManager: {}, eligibleNames: [], winnerCount: 1, winners: [], confirmedAt: null,
+  metricsByManager: {}, eligibleNames: [], winnerCount: 1, winners: [], manualExcavators: [], confirmedAt: null,
 });
 
 // confirmEvaluation() freezes scenario/period/metrics/winners into exactly
@@ -355,15 +356,165 @@ assert.deepEqual(clone(reloaded.evaluationSnapshot), clone(afterFirstExcavation)
 // undo returns an excavated winner to "pending", and the weekly table reads
 // locked values from the snapshot instead of always rendering zeroed inputs.
 assert.match(html, /function openSector\(r,c\)\{[\s\S]*?const snap=activeEvaluationSnapshot\(g\);\s*\n\s*if\(!snap\)\{alert\(/);
-assert.match(html, /const active=nextPendingWinner\(snap\);/);
-assert.match(html, /snap\.winners\[winnerIndex\]\.status='excavated';\s*\n\s*snap\.winners\[winnerIndex\]\.openingId=openingId;/);
+assert.match(html, /const picked=uiWinner\?snapshotWinnerRow\(snap,uiWinner\):null;/);
+assert.match(html, /const active=\(picked&&picked\.status==='pending'\)\?picked:nextPendingWinner\(snap\);/);
+assert.match(html, /active\.status='excavated';\s*\n\s*active\.openingId=openingId;/);
 assert.match(html, /if\(last\.id&&g\.evaluationSnapshot\)\{[\s\S]*?w\.status='pending';w\.openingId=null/);
 assert.match(html, /const saved=locked\?snap\.metricsByManager\[name\]:null;/);
 assert.match(html, /id="calcWinnersBtn">Рассчитать победителей<\/button>/);
 assert.match(html, /id="resetEvaluationBtn">Сбросить оценку<\/button>/);
 assert.match(html, /getElementById\('calcWinnersBtn'\)\.onclick=confirmEvaluation;/);
 assert.match(html, /getElementById\('resetEvaluationBtn'\)\.onclick=resetEvaluation;/);
-assert.match(html, /getElementById\('weeklyWinnerNote'\)\.onclick=e=>\{\s*\n\s*const btn=e\.target\.closest\('\.winner-skip-btn'\);/);
+assert.match(html, /getElementById\('weeklyWinnerNote'\)\.onclick=e=>\{\s*\n\s*const skipBtn=e\.target\.closest\('\.winner-skip-btn'\);/);
+
+// =========================================================================
+// Manual extra excavators: admin may add up to 2 people beyond the
+// automatically calculated winners. winnerCount stays 1|2 (automatic
+// ranking is untouched); extras live in their own manualExcavators list
+// with the same {name,status,openingId} shape plus addedAt, capped at 2,
+// so an event has at most 2 automatic + 2 manual = 4 excavators.
+// =========================================================================
+
+// 1. 1 automatic + 1 manual extra -> two independent, simultaneously
+// pending slots.
+const oneAndOne = clone(snap2);
+oneAndOne.winners = oneAndOne.winners.slice(0, 1);
+oneAndOne.manualExcavators = [{ name: "Мария", status: "pending", openingId: null, addedAt: 1 }];
+assert.deepEqual(clone(h.evaluationSlots(oneAndOne).map(w => w.name)), ["Первый", "Мария"]);
+
+// 2. 2 automatic + 2 manual extras -> four independent slots, winnerCount
+// is never expanded past 2 to fit them.
+const twoAndTwo = clone(snap2); // already has winners: Первый, Второй
+twoAndTwo.manualExcavators = [
+  { name: "Мария", status: "pending", openingId: null, addedAt: 1 },
+  { name: "Павел", status: "pending", openingId: null, addedAt: 2 },
+];
+assert.equal(twoAndTwo.winnerCount, 2);
+assert.equal(h.evaluationSlots(twoAndTwo).length, 4);
+
+// 3. A manual extra needs no eligibility: canAddManualExcavator only checks
+// roster membership / duplicates / the 2-extra cap, never eligibleNames.
+const gManagers = { managers: ["Первый", "Второй", "Третий", "Мария", "Павел"] };
+assert.equal(snap2.eligibleNames.includes("Мария"), false, "Мария was never ranked/eligible");
+assert.equal(h.canAddManualExcavator(snap2, gManagers, "Мария"), null);
+
+// 4. Duplicate automatic winner cannot be added as a manual extra.
+assert.notEqual(h.canAddManualExcavator(snap2, gManagers, "Первый"), null);
+
+// 5. Same manual manager cannot be added twice.
+const withOneExtra = clone(snap2);
+withOneExtra.manualExcavators = [{ name: "Мария", status: "pending", openingId: null, addedAt: 1 }];
+assert.notEqual(h.canAddManualExcavator(withOneExtra, gManagers, "Мария"), null);
+
+// 6. Maximum 2 manual extras -- refused even for a brand-new name once the
+// cap is reached.
+assert.notEqual(h.canAddManualExcavator(twoAndTwo, gManagers, "Третий"), null);
+
+// 7. An automatic winner excavates; both manual extras stay untouched and
+// available (the original winner-1/winner-2 persistence fix, extended).
+const mixedAfterFirst = clone(twoAndTwo);
+mixedAfterFirst.winners[0].status = "excavated";
+mixedAfterFirst.winners[0].openingId = "op-1";
+assert.equal(h.nextPendingWinner(mixedAfterFirst).name, "Второй", "second automatic winner is next, not a manual extra");
+assert.deepEqual(mixedAfterFirst.manualExcavators.map(w => w.status), ["pending", "pending"]);
+assert.equal(h.evaluationIsComplete(mixedAfterFirst), false);
+
+// 8. Reload (normalizeGame round-trip) preserves extras and their statuses.
+const preReload = clone(twoAndTwo);
+preReload.winners[0].status = "excavated"; preReload.winners[0].openingId = "op-1";
+preReload.manualExcavators[0].status = "excavated"; preReload.manualExcavators[0].openingId = "op-3";
+const reloadGame = h.normalizeGame({
+  size: 8, salt: "x", sealed: true, cells: {}, ships: [], shots: [],
+  managers: gManagers.managers, scenarios: [], bonusGrants: [], findLog: [], metrics: [],
+  evaluationSnapshot: clone(preReload),
+});
+assert.deepEqual(clone(reloadGame.evaluationSnapshot), clone(preReload));
+
+// 9. A manual extra excavates like anyone else: once all automatic winners
+// are resolved, the first manual extra becomes the next pending slot, then
+// the second once the first is done -- no metrics re-entry required.
+const allAutoDone = clone(twoAndTwo);
+allAutoDone.winners.forEach(w => { w.status = "excavated"; w.openingId = "op-auto"; });
+assert.equal(h.nextPendingWinner(allAutoDone).name, "Мария");
+allAutoDone.manualExcavators[0].status = "excavated";
+allAutoDone.manualExcavators[0].openingId = "op-manual-1";
+assert.equal(h.nextPendingWinner(allAutoDone).name, "Павел");
+
+// 10. A manual extra can be skipped instead of excavating.
+const skipManual = clone(twoAndTwo);
+skipManual.manualExcavators[0].status = "skipped";
+assert.equal(h.snapshotWinnerRow(skipManual, "Мария").status, "skipped");
+
+// 11. A pending extra can be removed.
+assert.equal(h.canRemoveManualExcavator(twoAndTwo, "Мария"), null);
+
+// 12. An excavated (or skipped) extra cannot be removed.
+const excavatedExtra = clone(twoAndTwo);
+excavatedExtra.manualExcavators[0].status = "excavated";
+excavatedExtra.manualExcavators[0].openingId = "op-3";
+assert.notEqual(h.canRemoveManualExcavator(excavatedExtra, "Мария"), null);
+const skippedExtra = clone(twoAndTwo);
+skippedExtra.manualExcavators[0].status = "skipped";
+assert.notEqual(h.canRemoveManualExcavator(skippedExtra, "Мария"), null);
+
+// 13. Undo returns a manual extra to pending: the same evaluationSlots()
+// lookup openSector uses to freeze a slot is what undoOpeningBtn uses to
+// find and revert it by opening id, regardless of which list it lives in.
+const undone = clone(excavatedExtra);
+const undoneSlot = h.evaluationSlots(undone).find(w => w.openingId === "op-3");
+undoneSlot.status = "pending"; undoneSlot.openingId = null;
+assert.equal(h.snapshotWinnerRow(undone, "Мария").status, "pending");
+assert.match(html, /const w=evaluationSlots\(g\.evaluationSnapshot\)\.find\(x=>x\.openingId===last\.id\);/);
+
+// 14. The event completes only once every automatic winner AND every
+// manual extra is resolved; adding a manual extra to an otherwise-finished
+// event reopens it until that person is resolved too.
+const allButOneManual = clone(twoAndTwo);
+allButOneManual.winners.forEach(w => { w.status = "excavated"; w.openingId = "x"; });
+allButOneManual.manualExcavators[0].status = "skipped";
+allButOneManual.manualExcavators[1].status = "excavated"; allButOneManual.manualExcavators[1].openingId = "y";
+assert.equal(h.evaluationIsComplete(allButOneManual), true);
+const reopened = clone(allButOneManual);
+reopened.manualExcavators.push({ name: "Иван", status: "pending", openingId: null, addedAt: 3 });
+assert.equal(h.evaluationIsComplete(reopened), false, "adding a new manual extra reopens a completed event");
+
+// 15. Legacy snapshots confirmed before manualExcavators existed load
+// normally and normalize to an empty list, never crashing or inventing one.
+const legacySnapGame = h.normalizeGame({
+  size: 8, salt: "x", sealed: true, cells: {}, ships: [], shots: [],
+  managers: ["Первый"], scenarios: [], bonusGrants: [], findLog: [], metrics: [],
+  evaluationSnapshot: {
+    scenarioId: null, eventDate: "2026-01-01", periodStart: "2025-12-25", periodEnd: "2025-12-31",
+    metricsByManager: { "Первый": { workedDays: 5, calls: 300, revenue: 100000 } },
+    eligibleNames: ["Первый"], winnerCount: 1,
+    winners: [{ name: "Первый", status: "excavated", openingId: "legacy-1" }],
+    confirmedAt: 500,
+    // no manualExcavators key at all -- this is the pre-existing shape
+  },
+});
+assert.deepEqual(clone(legacySnapGame.evaluationSnapshot.manualExcavators), []);
+assert.equal(legacySnapGame.evaluationSnapshot.winners[0].status, "excavated");
+
+// UI: source is recorded per opening (automatic ranking vs. manual extra),
+// distinguishable in history, and the quota of "ordinary" openings expands
+// to cover manual extras exactly like it already does for winnerCount=2.
+assert.match(html, /const selectionSource=\(snap\.winners\|\|\[\]\)\.some\(w=>w\.name===winner\)\?'ranking':'manual';/);
+assert.match(html, /s\.selectionSource==='manual'\?'<div class="hint" style="margin:2px 0 0">добавлен вручную<\/div>':''/);
+assert.match(html, /const allSlots=evaluationSlots\(snap\),globalSlot=allSlots\.indexOf\(active\)\+1;/);
+assert.match(html, /scenarioOpeningState\(g,scenario,snap\.eventDate,snap\.periodStart,snap\.periodEnd,allSlots\.length\)/);
+
+// UI: adding/removing a manual extra goes through the same canEditCurrent
+// guard and pure validators as every other mutating evaluation action, and
+// the "+ Добавить участника для раскопки" control lives right after the
+// winner list, matching the requested label and placement.
+assert.match(html, /function canAddManualExcavator\(snap,g,name\)\{/);
+assert.match(html, /function canRemoveManualExcavator\(snap,name\)\{/);
+assert.match(html, /function addManualExcavator\(name\)\{\s*\n\s*if\(!canEditCurrent\(\)\)\{alert\('Редактирование заблокировано\.'\);return\}\s*\n\s*const g=G\(\),snap=activeEvaluationSnapshot\(g\);\s*\n\s*const err=canAddManualExcavator\(snap,g,name\);/);
+assert.match(html, /function removeManualExcavator\(name\)\{\s*\n\s*if\(!canEditCurrent\(\)\)\{alert\('Редактирование заблокировано\.'\);return\}\s*\n\s*const g=G\(\),snap=activeEvaluationSnapshot\(g\);\s*\n\s*const err=canRemoveManualExcavator\(snap,name\);/);
+assert.match(html, /id="manualExcavatorBox"/);
+assert.match(html, /\+ Добавить участника для раскопки<\/button>/);
+assert.match(html, /const removeBtn=e\.target\.closest\('\.winner-remove-btn'\);\s*\n\s*if\(removeBtn\)\{removeManualExcavator\(removeBtn\.dataset\.name\);return\}/);
+assert.match(html, /const excavateBtn=e\.target\.closest\('\.winner-excavate-btn'\);\s*\n\s*if\(excavateBtn\)\{armExcavator\(excavateBtn\.dataset\.name\);return\}/);
 
 // UI: the compact winner-count control and per-slot status live in a
 // wrap-safe row/period-preview container, matching this app's existing

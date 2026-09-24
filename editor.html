@@ -883,6 +883,7 @@ body[data-theme="dark"] .help-callout{color:#f0d9a0}
           </div>
           <div class="data-wrap"><table class="data" id="weeklyResultsTable"></table></div>
           <div id="weeklyWinnerNote" class="period-preview" style="margin-top:12px"></div>
+          <div id="manualExcavatorBox" style="margin-top:10px"></div>
           <div class="row" style="margin-top:12px">
             <button type="button" class="btn btn-primary btn-sm" id="calcWinnersBtn">Рассчитать победителей</button>
             <button type="button" class="btn btn-ghost btn-sm" id="resetEvaluationBtn">Сбросить оценку</button>
@@ -2565,7 +2566,18 @@ function eligibleWeeklyWinners(weeklyResults,count){
 }
 function emptyEvaluationSnapshot(){
   return{scenarioId:null,eventDate:null,periodStart:'',periodEnd:'',
-    metricsByManager:{},eligibleNames:[],winnerCount:1,winners:[],confirmedAt:null};
+    metricsByManager:{},eligibleNames:[],winnerCount:1,winners:[],manualExcavators:[],confirmedAt:null};
+}
+function normalizeSlotList(list,withAddedAt){
+  return(Array.isArray(list)?list:[]).map(w=>{
+    const row={
+      name:String((w&&w.name)||''),
+      status:['pending','excavated','skipped'].includes(w&&w.status)?w.status:'pending',
+      openingId:(w&&w.openingId)||null
+    };
+    if(withAddedAt)row.addedAt=Number(w&&w.addedAt)||Date.now();
+    return row;
+  }).filter(w=>w.name);
 }
 function normalizeEvaluationSnapshot(s){
   const out=Object.assign(emptyEvaluationSnapshot(),s&&typeof s==='object'?s:{});
@@ -2576,11 +2588,11 @@ function normalizeEvaluationSnapshot(s){
   out.metricsByManager=out.metricsByManager&&typeof out.metricsByManager==='object'?out.metricsByManager:{};
   out.eligibleNames=Array.isArray(out.eligibleNames)?out.eligibleNames.filter(n=>typeof n==='string'):[];
   out.winnerCount=[1,2].includes(Number(out.winnerCount))?Number(out.winnerCount):1;
-  out.winners=Array.isArray(out.winners)?out.winners.map(w=>({
-    name:String((w&&w.name)||''),
-    status:['pending','excavated','skipped'].includes(w&&w.status)?w.status:'pending',
-    openingId:(w&&w.openingId)||null
-  })).filter(w=>w.name):[];
+  out.winners=normalizeSlotList(out.winners);
+  // Ручные дополнительные раскапывающие — независимы от автоматического
+  // ранжирования, не входят в winnerCount и ограничены двумя местами
+  // (2 автоматических + 2 ручных = 4 раскопки максимум на событие).
+  out.manualExcavators=normalizeSlotList(out.manualExcavators,true).slice(0,2);
   out.confirmedAt=out.confirmedAt?Number(out.confirmedAt):null;
   return out;
 }
@@ -2603,14 +2615,22 @@ function activeEvaluationSnapshot(g){
   const snap=g.evaluationSnapshot;
   return snapshotMatchesContext(snap,evaluationContext())?snap:null;
 }
+/* Единый список всех раскапывающих этого события — автоматические
+   победители, затем ручные дополнительные, в этом же порядке. Элементы —
+   те же объекты, что лежат в snap.winners/manualExcavators, так что их можно
+   мутировать напрямую (например, менять .status) без повторного поиска. */
+function evaluationSlots(snap){
+  return[...((snap&&snap.winners)||[]),...((snap&&snap.manualExcavators)||[])];
+}
 function snapshotWinnerRow(snap,name){
-  return (snap&&snap.winners||[]).find(w=>w.name===name)||null;
+  return evaluationSlots(snap).find(w=>w.name===name)||null;
 }
 function nextPendingWinner(snap){
-  return (snap&&snap.winners||[]).find(w=>w.status==='pending')||null;
+  return evaluationSlots(snap).find(w=>w.status==='pending')||null;
 }
 function evaluationIsComplete(snap){
-  return !!(snap&&snap.winners.length&&snap.winners.every(w=>w.status!=='pending'));
+  const all=evaluationSlots(snap);
+  return all.length>0&&all.every(w=>w.status!=='pending');
 }
 /* Расчёт победителей: читает текущий черновик таблицы и замораживает его в
    g.evaluationSnapshot. С этого момента таблица блокируется, а открытие
@@ -2640,8 +2660,8 @@ function confirmEvaluation(){
 function resetEvaluation(){
   if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
   const g=G(),snap=g.evaluationSnapshot;
-  if(snap&&snap.confirmedAt&&snap.winners.some(w=>w.status==='excavated')){
-    if(!confirm('Часть победителей уже раскопала сектор. Сбросить расчёт? Уже открытые секторы останутся в истории.'))return;
+  if(snap&&snap.confirmedAt&&evaluationSlots(snap).some(w=>w.status==='excavated')){
+    if(!confirm('Часть участников уже раскопала сектор. Сбросить расчёт? Уже открытые секторы останутся в истории.'))return;
   }
   g.evaluationSnapshot=emptyEvaluationSnapshot();
   save('Сброшен расчёт победителей раскопок');
@@ -2660,6 +2680,46 @@ function skipEvaluationWinner(name){
   save('Пропущена раскопка: '+name);
   renderOpeningTab();
 }
+/* Проверки для ручного добавления/удаления дополнительного раскапывающего —
+   вынесены отдельно от действия, чтобы правила были проверяемы без DOM. */
+function canAddManualExcavator(snap,g,name){
+  if(!snap)return'Сначала рассчитай победителей.';
+  if(!g||!g.managers.includes(name))return'Такого участника нет в игре.';
+  if(snapshotWinnerRow(snap,name))return name+' уже участвует в этом событии.';
+  if((snap.manualExcavators||[]).length>=2)return'Можно добавить не более 2 дополнительных участников.';
+  return null;
+}
+function canRemoveManualExcavator(snap,name){
+  if(!snap)return'Сначала рассчитай победителей.';
+  const entry=(snap.manualExcavators||[]).find(w=>w.name===name);
+  if(!entry)return'Участник не найден среди дополнительных.';
+  if(entry.status!=='pending')return'Нельзя убрать: раскопка уже проведена или пропущена.';
+  return null;
+}
+/* Ручное добавление раскапывающего сверх автоматических победителей. Не
+   меняет winnerCount и ранжирование — только добавляет независимый слот со
+   своим статусом. Метрики не запрашиваются заново: если они уже есть в
+   metricsByManager (менеджер попадал в недельную таблицу на момент расчёта),
+   они используются для справки; если нет — раскопка всё равно разрешена. */
+function addManualExcavator(name){
+  if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
+  const g=G(),snap=activeEvaluationSnapshot(g);
+  const err=canAddManualExcavator(snap,g,name);
+  if(err){alert(err);return}
+  snap.manualExcavators.push({name,status:'pending',openingId:null,addedAt:Date.now()});
+  save('Добавлен участник для раскопки: '+name);
+  renderOpeningTab();
+}
+function removeManualExcavator(name){
+  if(!canEditCurrent()){alert('Редактирование заблокировано.');return}
+  const g=G(),snap=activeEvaluationSnapshot(g);
+  const err=canRemoveManualExcavator(snap,name);
+  if(err){alert(err);return}
+  if(!confirm(name+': убрать из списка дополнительных участников?'))return;
+  snap.manualExcavators=snap.manualExcavators.filter(w=>w.name!==name);
+  save('Убран участник для раскопки: '+name);
+  renderOpeningTab();
+}
 function renderWinnerCountToggle(locked,count){
   const box=document.getElementById('winnerCountToggle');if(!box)return;
   box.querySelectorAll('.wincount-btn').forEach(b=>{
@@ -2667,15 +2727,24 @@ function renderWinnerCountToggle(locked,count){
     b.disabled=locked;
   });
 }
-function evaluationWinnerSlotHTML(snap,index){
-  const w=snap.winners[index],label='Победитель '+(index+1);
-  const metrics=weeklyResult(Object.assign({name:w.name},snap.metricsByManager[w.name]||{}));
+function evaluationWinnerSlotHTML(snap,w,label,source){
+  const saved=snap.metricsByManager[w.name]||null;
+  const metrics=saved?weeklyResult(Object.assign({name:w.name},saved)):null;
   const status=w.status==='excavated'?'<span class="tag tag-done">сектор открыт</span>'
     :w.status==='skipped'?'<span class="tag tag-empty">пропущен</span>'
     :'<span class="tag tag-fragment">ожидает раскопки</span>';
-  const action=w.status==='pending'?' <button type="button" class="btn btn-ghost btn-sm winner-skip-btn" data-name="'+escapeAttr(w.name)+'">Пропустить</button>':'';
-  return '<div class="winner-slot"><b>'+label+': '+esc(w.name)+'</b> '+status+action+
-    '<div class="hint" style="margin:4px 0 0">выручка '+metrics.revenue.toLocaleString('ru-RU')+' ₽ · выполнение нормы '+metrics.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%</div></div>';
+  const sourceTag=source==='manual'?' <span class="tag tag-find">добавлен вручную</span>':'';
+  let actions='';
+  if(w.status==='pending'){
+    actions=' <button type="button" class="btn btn-primary btn-sm winner-excavate-btn" data-name="'+escapeAttr(w.name)+'">Раскопать</button>'+
+      ' <button type="button" class="btn btn-ghost btn-sm winner-skip-btn" data-name="'+escapeAttr(w.name)+'">Пропустить</button>';
+    if(source==='manual')actions+=' <button type="button" class="btn btn-ghost btn-sm winner-remove-btn" data-name="'+escapeAttr(w.name)+'">Убрать</button>';
+  }
+  const metricsLine=metrics
+    ?'выручка '+metrics.revenue.toLocaleString('ru-RU')+' ₽ · выполнение нормы '+metrics.attainment.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%'
+    :'показатели за период не вводились';
+  return '<div class="winner-slot"><b>'+label+'. '+esc(w.name)+'</b> '+status+sourceTag+actions+
+    '<div class="hint" style="margin:4px 0 0">'+metricsLine+'</div></div>';
 }
 function draftWinnerSlotHTML(w,index){
   return '<div class="winner-slot"><b>Победитель '+(index+1)+': '+esc(w.name)+'</b> <span class="tag tag-empty">черновик</span>'+
@@ -2684,15 +2753,51 @@ function draftWinnerSlotHTML(w,index){
 function renderWinnerSlots(snap,draftWinners){
   const note=document.getElementById('weeklyWinnerNote');if(!note)return;
   if(snap){
-    if(!snap.winners.length){note.innerHTML='<b>Победители не найдены.</b> На момент расчёта никто не выполнил персональную норму.';return}
-    let html=snap.winners.map((w,i)=>evaluationWinnerSlotHTML(snap,i)).join('');
-    if(evaluationIsComplete(snap))html+='<div class="hint" style="margin-top:8px">Событие завершено: все выбранные победители раскопали сектор или были пропущены.</div>';
+    if(!snap.winners.length&&!snap.manualExcavators.length){note.innerHTML='<b>Победители не найдены.</b> На момент расчёта никто не выполнил персональную норму.';return}
+    let html='';
+    if(snap.winners.length){
+      html+='<div class="eyebrow">Победители по результатам</div>'+
+        snap.winners.map((w,i)=>evaluationWinnerSlotHTML(snap,w,String(i+1),'ranking')).join('');
+    }
+    if(snap.manualExcavators.length){
+      html+='<div class="eyebrow" style="margin-top:10px">Дополнительно</div>'+
+        snap.manualExcavators.map((w,i)=>evaluationWinnerSlotHTML(snap,w,String(snap.winners.length+i+1),'manual')).join('');
+    }
+    if(evaluationIsComplete(snap))html+='<div class="hint" style="margin-top:8px">Событие завершено: все участники раскопали сектор или были пропущены.</div>';
     note.innerHTML=html;
     return;
   }
   if(!draftWinners.length){note.innerHTML='<b>Пока никто не допущен.</b> Для участия нужны хотя бы 1 отработанный день и 50 звонков за каждый такой день.';return}
   note.innerHTML='<div class="hint" style="margin-bottom:8px">Предварительный расчёт. Нажми «Рассчитать победителей», чтобы зафиксировать результат — тогда открытие сектора одним победителем не потревожит данные остальных.</div>'+
     draftWinners.map((w,i)=>draftWinnerSlotHTML(w,i)).join('');
+}
+/* Кнопка «Раскопать» у конкретной строки лишь выбирает, кто раскапывает
+   следующим — так же, как раньше это делал выбор в winnerSel. Реальная
+   раскопка происходит по клику на сектор карты (openSector). Это позволяет
+   администратору выбрать порядок из нескольких одновременно ожидающих
+   (например, сначала Марию, а не по умолчанию первого победителя). */
+function armExcavator(name){
+  const sel=document.getElementById('winnerSel');if(!sel)return;
+  sel.value=name;
+  renderBonusBox();updateGateFlag();
+}
+function renderManualExcavatorControl(snap){
+  const box=document.getElementById('manualExcavatorBox');if(!box)return;
+  if(!snap){box.innerHTML='';return}
+  const g=G();
+  if(snap.manualExcavators.length>=2){
+    box.innerHTML='<div class="hint" style="margin:0">Достигнут максимум дополнительных участников (2).</div>';
+    return;
+  }
+  const used=new Set(evaluationSlots(snap).map(w=>w.name));
+  box.innerHTML='<button type="button" class="btn btn-ghost btn-sm" id="addManualExcavatorBtn">+ Добавить участника для раскопки</button>'+
+    '<select id="manualExcavatorSel" class="hidden" style="margin-top:8px">'+
+    '<option value="">— выбери участника —</option>'+
+    g.managers.map(m=>'<option value="'+escapeAttr(m)+'"'+(used.has(m)?' disabled':'')+'>'+esc(m)+(used.has(m)?' (уже участвует)':'')+'</option>').join('')+
+    '</select>';
+  const addBtn=document.getElementById('addManualExcavatorBtn'),sel=document.getElementById('manualExcavatorSel');
+  addBtn.onclick=()=>{sel.classList.toggle('hidden');if(!sel.classList.contains('hidden'))sel.focus()};
+  sel.onchange=()=>{if(sel.value)addManualExcavator(sel.value)};
 }
 function syncWeeklyRating(){
   const g=G();
@@ -2709,6 +2814,7 @@ function syncWeeklyRating(){
   const draftWinners=snap?[]:eligibleWeeklyWinners(rows,sessionWinnerCount);
   renderWinnerCountToggle(!!snap,snap?snap.winnerCount:sessionWinnerCount);
   renderWinnerSlots(snap,draftWinners);
+  renderManualExcavatorControl(snap);
   const active=snap?nextPendingWinner(snap):(draftWinners[0]||null);
   const sel=document.getElementById('winnerSel');
   sel.value=active?active.name:'';
@@ -3011,11 +3117,17 @@ function openSector(r,c){
   if(openingAt(g,r,c)){alert('Этот сектор уже открыт.');return}
   const snap=activeEvaluationSnapshot(g);
   if(!snap){alert('Сначала введи показатели и нажми «Рассчитать победителей».');return}
-  const active=nextPendingWinner(snap);
-  if(!active){alert('На это событие уже раскопали (или пропустили) всех выбранных победителей.');return}
-  const winner=active.name;
+  // Кто именно раскапывает, определяет выбор администратора (кнопка
+  // «Раскопать» у конкретной строки, отражённая в winnerSel) — а не жёсткий
+  // порядок. Если явного выбора нет или он больше не ожидает раскопки,
+  // используется первый ожидающий по умолчанию (совместимо со старым
+  // поведением, когда одновременно ожидал только один человек).
   const uiWinner=document.getElementById('winnerSel').value;
-  if(uiWinner&&uiWinner!==winner){alert('Победитель должен соответствовать итоговому рейтингу: '+winner+'.');return}
+  const picked=uiWinner?snapshotWinnerRow(snap,uiWinner):null;
+  const active=(picked&&picked.status==='pending')?picked:nextPendingWinner(snap);
+  if(!active){alert('На это событие уже раскопали (или пропустили) всех участников.');return}
+  const winner=active.name;
+  const selectionSource=(snap.winners||[]).some(w=>w.name===winner)?'ranking':'manual';
   const scenario=currentScenario();
   const defs=scenarioMetricsFor(g,scenario);
   if(!defs.length){alert('Включи хотя бы один показатель в разделе «Расписание и критерии».');return}
@@ -3046,11 +3158,11 @@ function openSector(r,c){
   }
 
   const now=Date.now();
-  const winnerIndex=snap.winners.findIndex(w=>w.name===winner);
+  const allSlots=evaluationSlots(snap),globalSlot=allSlots.indexOf(active)+1;
   // Квота обычных открытий не может быть меньше, чем число реально
-  // допущенных победителей за это событие: иначе второй победитель не смог
-  // бы получить свой сектор.
-  const quota=scenario?scenarioOpeningState(g,scenario,snap.eventDate,snap.periodStart,snap.periodEnd,snap.winners.length):null;
+  // раскапывающих за это событие: и автоматических победителей, и вручную
+  // добавленных — иначе кто-то из них не смог бы получить свой сектор.
+  const quota=scenario?scenarioOpeningState(g,scenario,snap.eventDate,snap.periodStart,snap.periodEnd,allSlots.length):null;
   if(scenario&&!usedGrant&&quota.remaining<=0){
     alert('Для сценария «'+scenario.name+'» уже проведено '+quota.total+' обычных открытий за это событие. Дополнительное открытие возможно только по находке.');return;
   }
@@ -3063,7 +3175,7 @@ function openSector(r,c){
     gateThreshold:g.threshold||0,passedGate,r,c,result,shipId,perkLabel,ts:now,eventDate:snap.eventDate,
     scenarioId:scenario?scenario.id:null,scenarioName:scenario?scenario.name:'Ручное событие',
     periodStart:snap.periodStart,periodEnd:snap.periodEnd,weeklyResults:rankWeeklyResults(readWeeklyResults()),
-    winnerCount:snap.winnerCount,winnerSlot:winnerIndex+1,
+    winnerCount:snap.winnerCount,winnerSlot:globalSlot,selectionSource,
     openingSource:usedGrant?'bonus':(scenario?'scenario':'manual'),bonusGrantId:usedGrant?usedGrant.id:null,
     scenarioOpeningNumber:scenario&&!usedGrant?quota.used+1:null,scenarioOpeningTotal:scenario&&!usedGrant?quota.total:null
   };
@@ -3098,8 +3210,8 @@ function openSector(r,c){
   const scenarioCompleted=!!(scenario&&!usedGrant&&completeOneTimeScenario(g,scenario));
   if(scenarioCompleted)opening.completedScenario=true;
 
-  snap.winners[winnerIndex].status='excavated';
-  snap.winners[winnerIndex].openingId=openingId;
+  active.status='excavated';
+  active.openingId=openingId;
 
   g.week++;
   save('Открыт сектор '+colLetter(c)+(r+1)+' · '+winner);
@@ -3136,8 +3248,12 @@ document.getElementById('winnerCountToggle').onclick=e=>{
   sessionWinnerCount=n;syncWeeklyRating();
 };
 document.getElementById('weeklyWinnerNote').onclick=e=>{
-  const btn=e.target.closest('.winner-skip-btn');if(!btn)return;
-  skipEvaluationWinner(btn.dataset.name);
+  const skipBtn=e.target.closest('.winner-skip-btn');
+  if(skipBtn){skipEvaluationWinner(skipBtn.dataset.name);return}
+  const removeBtn=e.target.closest('.winner-remove-btn');
+  if(removeBtn){removeManualExcavator(removeBtn.dataset.name);return}
+  const excavateBtn=e.target.closest('.winner-excavate-btn');
+  if(excavateBtn){armExcavator(excavateBtn.dataset.name);return}
 };
 document.getElementById('calcWinnersBtn').onclick=confirmEvaluation;
 document.getElementById('resetEvaluationBtn').onclick=resetEvaluation;
@@ -3156,9 +3272,10 @@ document.getElementById('undoOpeningBtn').onclick=()=>{
     const back=(g.bonusGrants||[]).find(b=>b.id===last.bonusGrantId);
     if(back){back.remainingUses=Number(back.remainingUses)+1;back.consumedAt=null}
   }
-  // возвращаем победителя, если отменяем именно его раскопку
+  // возвращаем победителя или дополнительного участника, если отменяем
+  // именно его раскопку (ищем в обоих списках — автоматическом и ручном)
   if(last.id&&g.evaluationSnapshot){
-    const w=(g.evaluationSnapshot.winners||[]).find(x=>x.openingId===last.id);
+    const w=evaluationSlots(g.evaluationSnapshot).find(x=>x.openingId===last.id);
     if(w){w.status='pending';w.openingId=null}
   }
   logFind(g,{participant:last.manager,effectType:'manual_effect',findName:'Отмена открытия',detail:'отменено открытие сектора '+colLetter(last.c)+(last.r+1)});
@@ -3270,7 +3387,7 @@ function renderResearch(){
     if(s.findLabel&&s.result!=='perk')under+=' + находка: '+esc(s.findLabel);
     const gate=s.passedGate===true?'<span class="tag tag-done">пройден</span>':(s.passedGate===false?'<span class="tag tag-fragment">ниже</span>':'—');
     const period=s.periodStart||s.periodEnd?esc(fmtDate(s.periodStart))+' — '+esc(fmtDate(s.periodEnd)):'—';
-    t+='<tr><td class="c">'+(i+1)+'</td><td><b>'+esc(s.manager)+'</b>'+(s.openingSource==='bonus'?'<div class="hint" style="margin:2px 0 0">по находке</div>':'')+'</td>'+
+    t+='<tr><td class="c">'+(i+1)+'</td><td><b>'+esc(s.manager)+'</b>'+(s.openingSource==='bonus'?'<div class="hint" style="margin:2px 0 0">по находке</div>':'')+(s.selectionSource==='manual'?'<div class="hint" style="margin:2px 0 0">добавлен вручную</div>':'')+'</td>'+
       '<td>'+esc(s.scenarioName||'—')+'</td><td>'+period+'</td>'+
       metrics.map(m=>'<td class="c">'+esc(fmtMetricValue(m,openingMetricValue(s,m.id)))+'</td>').join('')+
       '<td class="c">'+gate+'</td><td class="c">'+esc(label)+'</td><td>'+tag+'</td><td>'+under+'</td><td>'+esc(fmtDateTime(s.ts))+'</td></tr>';
