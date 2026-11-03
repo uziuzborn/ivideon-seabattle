@@ -64,6 +64,7 @@ const hooks = [
   "emptyEvaluationSnapshot", "normalizeEvaluationSnapshot", "snapshotMatchesContext",
   "snapshotWinnerRow", "nextPendingWinner", "evaluationIsComplete", "evaluationSlots",
   "canAddManualExcavator", "canRemoveManualExcavator",
+  "initialEditorRoute",
 ];
 const script = html.slice(start + "<script>\n".length, end)
   + `\nglobalThis.__treasureHooks={${hooks.join(",")}};`;
@@ -522,5 +523,39 @@ assert.match(html, /const excavateBtn=e\.target\.closest\('\.winner-excavate-btn
 assert.match(html, /<div class="row" style="margin-bottom:10px;align-items:center">\s*<span class="fld" style="margin:0">Количество раскапывающих<\/span>\s*<div id="winnerCountToggle"/);
 assert.match(html, /id="weeklyWinnerNote" class="period-preview"/);
 assert.match(html, /\.wincount-btn\{min-width:44px;min-height:40px;/);
+
+// =========================================================================
+// Navigation between panel, editor and public board.
+// =========================================================================
+const adminHtml = fs.readFileSync(path.join(here, "..", "admin.html"), "utf8");
+const indexHtml = fs.readFileSync(path.join(here, "..", "index.html"), "utf8");
+
+// The editor opens in edit mode by default; the participant preview is opt-in.
+assert.equal(h.initialEditorRoute().view, "admin");
+assert.equal(h.initialEditorRoute().tab, "stats");
+assert.match(html, /params\.get\('view'\)==='public'\?'public':'admin'/);
+// Tab and view are written back into the address after every switch.
+assert.match(html, /if\(tab==='manage'\)renderManagement\(\);\s*\n\s*syncEditorUrl\(\);/);
+assert.match(html, /history\.replaceState\(null,'',location\.pathname\+'\?'\+params\.toString\(\)/);
+// Labelled way back to the panel, game switcher, one participant-link button.
+assert.match(html, /id="backToPanelBtn" href="admin\.html"[^>]*>[\s\S]*?<span class="hdr-label">Все игры<\/span>/);
+assert.match(html, /id="gameSwitchBtn"/);
+assert.match(html, /id="shareLinkBtn"[\s\S]*?Ссылка для участников/);
+assert.match(html, /id="onlineSignOutBtn"[^>]*>[\s\S]*?<span class="hdr-label">Выйти<\/span>/);
+assert.doesNotMatch(html, /id="vPublic"|id="vAdmin"/);
+
+// Panel: cards go straight into the editor, header names the public board.
+assert.match(adminHtml, /open\.textContent=g\.status==='trashed'\?'Посмотреть':'Редактировать';open\.href=editorHref\(g\.id\)/);
+assert.match(adminHtml, /function editorHref\(id,tab\)\{return 'editor\.html\?game='\+encodeURIComponent\(id\)\+'&view=admin'/);
+assert.match(adminHtml, /<use href="#i-map"\/><\/svg>Публичное табло<\/a>/);
+assert.match(adminHtml, /copy\.textContent='Копировать ссылку'/);
+assert.match(adminHtml, /open\.querySelector\('span'\)\.textContent=resume\?'Продолжить':'Открыть редактор'/);
+// Editor and panel agree on the "continue where you left off" key.
+assert.match(html, /LAST_EDITOR_KEY='ivideon_treasure_last_editor'/);
+assert.match(adminHtml, /LAST_EDITOR_KEY='ivideon_treasure_last_editor'/);
+
+// Public board: discreet admin entry; edit link only after an RLS-checked read.
+assert.match(indexHtml, /id="adminEntry"><a href="admin\.html">[\s\S]*?Вход для администратора<\/a>/);
+assert.match(indexHtml, /const\{data\}=await sb\.from\('games'\)\.select\('id'\)\.eq\('id',id\)\.maybeSingle\(\);\s*\n\s*if\(seq!==adminCheckSeq\|\|!data\)return;/);
 
 console.log("treasure regression checks passed");

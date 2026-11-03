@@ -315,6 +315,19 @@ body[data-theme="dark"] .fcard.tone-gold .fcard-ico{color:var(--gold-light)}
 .hash{padding:14px 16px;border-radius:var(--radius-md);background:var(--iv-navy);color:#d9e9f6;
   font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.6;word-break:break-all}
 .foot{text-align:center;color:var(--muted);font-size:var(--font-sm);margin:14px 0 20px}
+.admin-entry{display:flex;justify-content:center;margin:-10px 0 24px}
+.admin-entry a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 10px;color:var(--muted);font-size:var(--font-sm);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.admin-entry a:hover{color:var(--iv-blue)}
+.admin-entry svg{width:15px;height:15px}
+.admin-bar{padding:8px 16px 0}
+.admin-bar-inner{max-width:var(--content-max);margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;
+  padding:8px 8px 8px 14px;border-radius:var(--radius-xl);background:var(--iv-navy);color:#fff;font-size:var(--font-body);font-weight:600}
+.admin-bar-actions{display:flex;flex-wrap:wrap;gap:8px}
+.admin-bar-btn{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid rgba(255,255,255,.28);border-radius:var(--radius-md);color:#fff;font-weight:700;text-decoration:none}
+.admin-bar-btn:hover{border-color:#fff;color:#fff}
+.admin-bar-btn.primary{background:var(--iv-blue);border-color:var(--iv-blue)}
+.admin-bar-btn.primary:hover{background:var(--iv-blue-dark);border-color:var(--iv-blue-dark)}
+.admin-bar.hidden,.admin-entry.hidden,.admin-bar-btn.hidden{display:none}
 /* ---- tooltip (spec 20) ---- */
 .tip{position:fixed;z-index:900;max-width:280px;padding:12px 14px;border-radius:var(--radius-md);background:var(--surface);
   border:1px solid var(--line);box-shadow:var(--shadow-md);pointer-events:none}
@@ -370,6 +383,8 @@ body[data-theme="dark"] .fcard.tone-gold .fcard-ico{color:var(--gold-light)}
   .map-legend{gap:4px;margin-top:8px}.map-legend span{padding:5px 6px;font-size:10px}
   .more-list summary{min-height:44px}
   .bottom-nav{display:block}
+  .admin-entry{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
+  .admin-bar{padding:6px 10px 0}
   .tl-item{grid-template-columns:34px minmax(0,1fr)}
   .tl-right{grid-column:1/-1;text-align:left}
   .mobile-pane{display:none}
@@ -446,11 +461,21 @@ body[data-theme="dark"] .fcard.tone-gold .fcard-ico{color:var(--gold-light)}
     <button class="burger" id="burgerBtn" type="button" aria-label="Меню" aria-expanded="false"><svg aria-hidden="true"><use href="#i-menu"/></svg></button>
   </div>
 </header>
+<div class="admin-bar hidden" id="adminBar">
+  <div class="admin-bar-inner">
+    <span>Вы вошли как администратор — так табло видят участники</span>
+    <span class="admin-bar-actions">
+      <a class="admin-bar-btn primary hidden" id="adminEditLink" href="admin.html">Редактировать эту игру</a>
+      <a class="admin-bar-btn" href="admin.html">Все игры</a>
+    </span>
+  </div>
+</div>
 
 <main class="wrap" id="content">
   <div class="boot"><h2>Разворачиваем карту…</h2><p>Подключаемся к общему табло.</p></div>
 </main>
 <div class="foot" id="foot"></div>
+<div class="admin-entry" id="adminEntry"><a href="admin.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Вход для администратора</a></div>
 
 <nav class="bottom-nav" id="bottomNav" aria-label="Разделы табло">
   <ul>
@@ -634,6 +659,25 @@ function chooseGameId(){
   if(id){try{localStorage.setItem(PUBLIC_GAME_KEY,id)}catch(e){}}
   return id;
 }
+let adminSignedIn=false,adminCheckSeq=0;
+async function updateAdminLinks(){
+  const bar=document.getElementById('adminBar'),entry=document.getElementById('adminEntry'),edit=document.getElementById('adminEditLink');
+  if(!bar||!entry||!edit)return;
+  bar.classList.toggle('hidden',!adminSignedIn);
+  entry.classList.toggle('hidden',adminSignedIn);
+  edit.classList.add('hidden');
+  if(!adminSignedIn||!selectedGameId||!sb)return;
+  const seq=++adminCheckSeq,id=selectedGameId;
+  const{data}=await sb.from('games').select('id').eq('id',id).maybeSingle();
+  if(seq!==adminCheckSeq||!data)return;
+  edit.href='editor.html?game='+encodeURIComponent(id)+'&view=admin';
+  edit.classList.remove('hidden');
+}
+async function detectAdminSession(){
+  if(!sb)return;
+  try{const{data}=await sb.auth.getSession();adminSignedIn=!!(data&&data.session)}catch(e){adminSignedIn=false}
+  updateAdminLinks();
+}
 function renderPicker(){
   const s=document.getElementById('gameSelect');
   s.innerHTML=catalog.map(x=>'<option value="'+esc(x.game_id)+'">'+esc(x.title||'Игра')+'</option>').join('');
@@ -641,7 +685,7 @@ function renderPicker(){
   s.disabled=catalog.length<2;
   syncBurger();
   s.parentElement.classList.toggle('is-empty',!catalog.length);
-  s.onchange=()=>{selectedGameId=s.value;
+  s.onchange=()=>{selectedGameId=s.value;updateAdminLinks();
     try{localStorage.setItem(PUBLIC_GAME_KEY,selectedGameId)}catch(e){}
     history.replaceState({},'',selectedGameId?'?game='+encodeURIComponent(selectedGameId):location.pathname);
     loadSelectedGame(true)};
@@ -872,6 +916,7 @@ async function loadSelectedGame(force=false){
 async function start(){
   setLive('','Загружаем активные игры…');
   const ok=await loadCatalog();
+  detectAdminSession();
   if(ok)await loadSelectedGame(false);
   if(!sb)return;
   sb.channel('ivideon-treasure-public-v4').on('postgres_changes',{event:'*',schema:'public',table:'public_games'},payload=>{
